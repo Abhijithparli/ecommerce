@@ -1,0 +1,88 @@
+.social_login {
+    font-size: 0;
+    margin: 0 -3px;
+    margin-bottom: 5px;
+    display: flex;
+    flex-wrap: wrap;
+}
+.small-button.social_login {
+    display: block;
+}
+.social_login li {
+    display: inline-block;
+    margin: 3px;
+    margin-bottom: 6px;
+    margin-top: 0;
+    flex: 1;
+}
+.social_login li a {
+    color: #fff !important;
+    padding: 5px 15px;
+    display: block;
+    border-radius: 2px;
+    white-space: nowrap;
+}
+.small-button.social_login li a {
+    padding: 0;
+    width: 35px;
+    line-height: 35px;
+    text-align: center;
+}
+.social_login li i {
+    font-size: 20px;
+    line-height: 0;
+    vertical-align: middle;
+}
+.small-button.social_login li i {
+    font-size: 24px;
+}
+.social_login li span {
+    vertical-align: middle;
+    margin-left: 5px;
+    font-size: 1.4rem;
+}
+.social_login li a.facebook{
+	background:#3b5998;
+}
+.social_login li a.google{
+	background:#4285f4;
+}
+.social_login li a.twitter{
+	background:#1da1f2;
+}
+.social_login li a.instagram{
+	background:#b4455b;
+}
+.social_login li a.linked{
+	background:#0a66c2;
+}
+.social_login li a.yahoo{
+	background:#6001d2;
+}
+.social_login li a.live{
+	background:#00bbf1;
+}
+.social_login li a.foursquare{
+	background:#f94877;
+}
+.social_login li a.amazon{
+	background:#ff9900;
+}
+.social_login li a.paypal{
+	background:#1f4375;
+}
+.social_login li a.github{
+	background:#171312;
+}
+.social_login li a.disqus{
+	background:#2e9fff;
+}
+.social_login li a.vk{
+	background:#4a76a8;
+}
+.social_login li a.wordpress{
+	background:#666463;
+}
+.social_login li a.dropbox{
+	background:#3f96e5;
+}

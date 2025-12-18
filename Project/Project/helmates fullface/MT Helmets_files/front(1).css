@@ -1,0 +1,383 @@
+#moda_popupnewsletter .modal-dialog{
+	padding: 0;
+	background-position: left top;
+	background-repeat: no-repeat;
+}
+
+#moda_popupnewsletter.popup-text-color-dark .modal-dialog {
+	background-color: #ffffff;
+}
+
+#moda_popupnewsletter.popup-text-color-light .modal-dialog {
+	color: #ffffff;
+	background-color: #010101;
+}
+
+#moda_popupnewsletter.popup-text-color-light .popup_title, #moda_popupnewsletter label, #moda_popupnewsletter.popup-text-color-light.popup-type-1 .popup_icon {
+	color: inherit;
+}
+
+#moda_popupnewsletter label {
+	font-size: 1.3rem;
+}
+
+#moda_popupnewsletter .form-content input {
+    background-color: transparent;
+}
+
+#moda_popupnewsletter button.close {
+	right: -44px;
+	top: -44px;
+	color: #fff;
+}
+
+#moda_popupnewsletter button.close:hover {
+	opacity: 0.5;
+}
+
+@media (max-width: 767px) {
+	#moda_popupnewsletter button.close {
+		right: -12px;
+	}
+	#moda_popupnewsletter .modal-dialog {
+		margin-top: 44px
+	}
+}
+
+#moda_popupnewsletter .block_newsletter_alert {
+	margin-bottom: 20px;
+}
+
+#moda_popupnewsletter.popup-text-color-light .form-content input {
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/**************************type 1******************************/
+
+#moda_popupnewsletter.popup-type-1 .modal-dialog {
+	max-width: 510px;
+}
+
+#moda_popupnewsletter.popup-type-1 .wrapper-popup {
+    padding: 30px 15px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 340px;
+}
+
+#moda_popupnewsletter.popup-type-1 .popup-content {
+    max-width: 400px;
+}
+
+#moda_popupnewsletter.popup-type-1 .popup_icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+    line-height: 1;
+	color: var(--color-title);
+}
+
+#moda_popupnewsletter.popup-type-1 .popup_title p{
+	font-size: 1.8rem;
+	line-height: 2.4rem;
+	font-weight: 500;
+}
+
+#moda_popupnewsletter.popup-type-1 .custom-checkbox {
+    margin-top: 10px;
+}
+
+#moda_popupnewsletter.popup-type-1 .form-content{
+	margin-bottom: 10px;
+}
+
+#moda_popupnewsletter.popup-type-1 .form-content .form-control{
+	width: 100%;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+#moda_popupnewsletter.popup-type-1 .form-content .btn{
+	margin-bottom: 10px;
+}
+
+@media (min-width: 1025px) {
+	#moda_popupnewsletter.popup-type-1 .form-content{
+		display: -webkit-box;
+		display: -webkit-flex;
+		display: -ms-flexbox;
+		display: flex;
+	}
+	#moda_popupnewsletter.popup-type-1 .form-content .form-control{
+		margin-right: 10px;
+		text-align: left;
+	}
+}
+
+/**************************type 2******************************/
+
+#moda_popupnewsletter.popup-type-2 .wrapper-popup {
+    display: flex;
+    align-items: center;
+    padding: 50px 15px;
+    text-align: center;
+    justify-content: center;
+	min-height: 437px;
+}
+
+#moda_popupnewsletter.popup-type-2 .popup-content {
+	max-width: 430px;
+	margin-bottom: -20px;
+}
+
+#moda_popupnewsletter.popup-type-2 .form-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-right: -3px;
+    margin-left: -3px;
+}
+
+#moda_popupnewsletter.popup-type-2 .popup_title {
+    font-size: 3.4rem;
+    margin-bottom: 15px;
+}
+
+#moda_popupnewsletter.popup-type-2 .popup_title p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-2 .popup_text {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+}
+
+#moda_popupnewsletter.popup-type-2 .popup_text p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-2 .form-content input {
+    flex: 1 1 200px;
+    max-width: 290px;
+    width: 100%;
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin: 0 3px 20px 3px;
+    font-size: 1.3rem;
+    box-shadow: none;
+}
+
+#moda_popupnewsletter.popup-type-2 .form-content button {
+    margin: 0 3px 20px 3px;
+    min-width: 145px;
+}
+
+#moda_popupnewsletter.popup-type-2 .newsletter_block_popup-bottom {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+}
+
+#moda_popupnewsletter.popup-type-2 .custom-checkbox input + span {
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
+}
+
+#moda_popupnewsletter.popup-type-2 .custom-checkbox input + span .checkbox-checked {
+	font-size: 12px;
+}
+
+#moda_popupnewsletter.popup-type-2 .modal-dialog{
+	background-position: center center;
+	max-width: 770px;
+}
+
+/**************************type 3******************************/
+
+#moda_popupnewsletter.popup-type-3 .wrapper-popup {
+    display: flex;
+    align-items: center;
+    padding: 30px 15px 65px 15px;
+    text-align: center;
+    justify-content: center;
+    min-height: 350px;
+}
+
+#moda_popupnewsletter.popup-type-3 .popup-content {
+	max-width: 400px;
+	margin-bottom: -20px;
+}
+
+#moda_popupnewsletter.popup-type-3 .form-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+#moda_popupnewsletter.popup-type-3 .popup_title {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+#moda_popupnewsletter.popup-type-3 .popup_title p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-3 .popup_text {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+}
+
+#moda_popupnewsletter.popup-type-3 .popup_text p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-3 .form-content input {
+    flex: 1 1 100%;
+    max-width: 100%;
+    width: 100%;
+    background-color: transparent;
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    box-shadow: none;
+	text-align: center;
+}
+
+#moda_popupnewsletter.popup-type-3 .form-content button {
+    margin: 0 0 20px 0;
+    min-width: 100%;
+}
+
+#moda_popupnewsletter.popup-type-3 .newsletter_block_popup-bottom {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+}
+
+#moda_popupnewsletter.popup-type-3 .custom-checkbox input + span {
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
+}
+
+#moda_popupnewsletter.popup-type-3 .custom-checkbox input + span .checkbox-checked {
+	font-size: 12px;
+}
+
+#moda_popupnewsletter.popup-type-3 .psgdpr_consent_message {
+	margin-bottom: 20px;
+}
+
+#moda_popupnewsletter.popup-type-3 .modal-dialog{
+	background-position: center top;
+	max-width: 520px;
+}
+
+/**************************type 4******************************/
+
+#moda_popupnewsletter.popup-type-4 .wrapper-popup {
+    display: flex;
+    align-items: center;
+    padding: 30px;
+    text-align: center;
+    justify-content: center;
+}
+
+#moda_popupnewsletter.popup-type-4 .popup-content {
+	max-width: 350px;
+}
+
+#moda_popupnewsletter.popup-type-4 .form-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+#moda_popupnewsletter.popup-type-4 .popup_title {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+#moda_popupnewsletter.popup-type-4 .popup_title p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-4 .popup_text {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+}
+
+#moda_popupnewsletter.popup-type-4 .popup_text p:last-child {
+	margin-bottom: 0;
+}
+
+#moda_popupnewsletter.popup-type-4 .form-content input {
+    flex: 1 1 100%;
+    max-width: 100%;
+    width: 100%;
+    background-color: transparent;
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    box-shadow: none;
+	text-align: center;
+}
+
+#moda_popupnewsletter.popup-type-4 .form-content button {
+    margin: 0 0 20px 0;
+    min-width: 100%;
+}
+
+#moda_popupnewsletter.popup-type-4 .newsletter_block_popup-bottom {
+
+}
+
+#moda_popupnewsletter.popup-type-4 .custom-checkbox input + span {
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
+}
+
+#moda_popupnewsletter.popup-type-4 .custom-checkbox input + span .checkbox-checked {
+	font-size: 12px;
+}
+
+#moda_popupnewsletter.popup-type-4 .psgdpr_consent_message {
+	margin-bottom: 10px;
+}
+
+#moda_popupnewsletter.popup-type-4 .modal-dialog {
+	max-width: 770px;
+}
+
+#moda_popupnewsletter.popup-type-4 .modal-dialog .modal-content {
+    display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#moda_popupnewsletter.popup-type-4 .modal-dialog .modal-content > img {
+	max-width: 50%;
+}
+
+@media (max-width: 576px) {
+	#moda_popupnewsletter.popup-type-4 .modal-dialog .modal-content {
+		flex-wrap: wrap;
+	}
+	#moda_popupnewsletter.popup-type-4 .modal-dialog .modal-content > img {
+		display: none;
+	}
+	#moda_popupnewsletter.popup-type-4 .modal-dialog {
+		max-width: 510px;
+	}
+}

@@ -1,0 +1,91 @@
+
+.block.ets_awu_rss_feed h4:after{
+    display: none!important;
+}
+.rss-children a {
+  padding: 0 0 0 15px;
+}
+.rss-box a:hover{
+    color: #00cefd;
+}
+.rss-categories .category-blog-parent{
+    display: none;
+}
+.rss-categories li {
+    clear: both;
+    list-style: none;
+}
+span.link_rss.rss_setting {
+    margin-left: 25%;
+    padding: 0 5px;
+    margin: 0 0 0 25%;
+    clear: both;
+    line-height: 39px;
+}
+.ybc-page-rss .title_blog {
+    margin-bottom: 5px;
+    margin-top: 30px;
+    width: 100%;
+    float: left;
+    margin-bottom: 10px!important;
+    padding-bottom: 0;
+}
+.ybc-page-rss .ybc_block_categories {
+    padding: 0;
+}
+.rss-box ul {
+    padding: 0;
+    clear: both;
+    list-style: none;
+}
+.rss-box a {
+    border-bottom: 1px dashed #ccc;
+    display: block;
+    line-height: 30px;
+    color: #666;
+    font-size: 14px;
+    clear: both;
+}
+.rss-box {
+    clear: both;
+        margin-bottom: 30px;
+}
+.ets_awu_rss_feed h1.head-title {
+    margin-bottom: 30px;
+}
+.w_14{
+    width: 14px;
+}
+.h_14{
+    height:14px;
+}
+.rss-list svg {
+    fill: #ffffff;
+    display: block;
+}
+.rss-box a i {
+    background: rgba(0, 0, 0, 0) linear-gradient(#fc884d, #fb702d, #fc540b) repeat scroll 0 0;
+    background: rgba(0, 0, 0, 0) -webkit-linear-gradient(#fc884d, #fb702d, #fc540b) repeat scroll 0 0;
+    color: #fff;
+    float: right;
+    line-height: 18px;
+    margin-top: 6px;
+    padding: 3px 5px;
+    margin-bottom: 4px;
+}
+.ets_awu_rss_feed .title_blog.title_block > a i{
+  background: rgba(0, 0, 0, 0) linear-gradient(#fc884d, #fb702d, #fc540b) repeat scroll 0 0;
+  background: rgba(0, 0, 0, 0) -webkit-linear-gradient(#fc884d, #fb702d, #fc540b) repeat scroll 0 0;
+  color: #fff;
+  float: right;
+  line-height: 18px;
+  margin-top: 0px;
+  padding: 0 5px;
+}
+.ets_awu_rss_feed .title_blog.title_block > a {
+  display: block;
+  margin-bottom: 0;
+}
+.ets_awu_rss_feed .title_blog.title_block > a i {
+  float: right;
+}
