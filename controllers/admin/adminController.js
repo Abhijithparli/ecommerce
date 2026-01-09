@@ -1,3 +1,6 @@
+import User from "../../models/userModel.js";
+
+// Load admin login page
 export const loadAdminLogin = async (req, res) => {
   try {
     res.render("admin/login", { error: null });
@@ -7,6 +10,7 @@ export const loadAdminLogin = async (req, res) => {
   }
 };
 
+// Admin login logic
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -15,33 +19,48 @@ export const adminLogin = async (req, res) => {
     const ADMIN_PASSWORD = "12345";
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      console.log("Redirecting to dashboard");
-      return res.redirect("/admin/dashboard");
+      // Create admin session
+      req.session.admin = {
+        email: ADMIN_EMAIL,
+        isAdmin: true,
+        loginTime: new Date()
+      };
+      
+      // Save session before redirecting
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.render("admin/login", {
+            error: "Session error. Please try again."
+          });
+        }
+        console.log("Admin logged in, session created");
+        return res.redirect("/admin/dashboard");
+      });
+    } else {
+      return res.render("admin/login", {
+        error: "Invalid email or password"
+      });
     }
-
-    return res.render("admin/login", {
-      error: "Invalid email or password",
-    });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
   }
 };
 
-// export const loadlogin = async(req,res)=>{
-//     try{
-//          res.render("login");
-
-//     }catch (error){
-//         console.log("error")
-
-//         console.log("admin page not found");
-//         res.status(500).send("server error");
-
-//     }
-
-// }
-
-// module.exports ={
-//     loadlogin
-// }
+// Admin logout
+export const adminLogout = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.redirect("/admin/dashboard");
+      }
+      res.clearCookie('connect.sid'); // Clear session cookie
+      res.redirect("/admin/login");
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+};

@@ -1,19 +1,25 @@
-const mongoose = require("mongoose");
-// const env = require("dotenv").config();
+// import mongoose from "mongoose";
+// import  dotenv from "dotenv";
 
-const connectDB = async ()=>{
-    try {
-      console.log(process.env.MONGODB_URI)
-       await  mongoose.connect(process.env.MONGO_URI);
-       console.log("DB connected");
+// dotenv.config();
 
-    }catch(error){
-       console.log("DB connection error",error.message);
-       process.exit(1);
+
+import mongoose from "mongoose";
+
+const connectDB = async () => {
+  try {
+    console.log(" connect to MongoDB...");
     
-        
+    const conn = await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/headshield");
+    
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error("DB Connection Failed!");
+    console.error("Error message:", error.message);
+    process.exit(1);
+  }
+};
 
-    }
-}
+export default connectDB;
 
-module.exports = connectDB;
+

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users - Headshield</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- sweetalert -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="bg-gray-50 font-sans">
+<div class="flex min-h-screen">
+
+   <!-- Sidebar  -->
+  <aside class="w-64 bg-white border-r border-gray-200 fixed h-full">
+    <div class="p-6">
+      <h1 class="text-2xl font-bold text-gray-900">Headshield</h1>
+    </div>
+
+    <nav class="px-4 space-y-1">
+      <a href="#" class="block px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg">Dashboard</a>
+      <a href="#" class="block px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg">Products</a>
+      <a href="#" class="block px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg">Order Lists</a>
+      <a href="#" class="block px-4 py-2.5 text-white bg-indigo-600 rounded-lg font-medium">Users</a>
+      <a href="#" class="block px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg">Sales Report</a>
+    </nav>
+  </aside>
+
+   <!-- Main  -->
+  <main class="flex-1 ml-64">
+
+     <!-- Header  -->
+
+    <!-- <header class="bg-white border-b px-8 py-4">
+      <input type="text" placeholder=" Search user"
+        class="border px-4 py-2 rounded-lg w-80 focus:ring-2 focus:ring-indigo-500">
+    </header> -->
+
+    <header class="bg-white border-b px-8 py-4">
+  <div class="relative w-80">
+
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search user"
+      class="border px-4 py-2 rounded-lg w-full pr-10
+             focus:ring-2 focus:ring-indigo-500"
+      oninput="toggleClearButton()"
+    />
+
+    <!-- Clear (X) button -->
+    <button
+      type="button"
+      id="clearBtn"
+      onclick="clearSearch()"
+      class="absolute right-3 top-1/2 -translate-y-1/2
+             text-gray-400 hover:text-gray-700 hidden">
+      ✕
+    </button>
+
+  </div>
+</header>
+
+
+   
+
+
+    
+
+   <!-- Content  -->
+    <div class="p-8">
+
+       <!-- Filter  -->
+      <form method="GET" action="/admin/users" class="mb-6">
+        <select name="status" onchange="this.form.submit()"
+          class="px-4 py-2 border rounded-lg">
+          <option value="all" <%= filterStatus === 'all' ? 'selected' : '' %>>All</option>
+          <option value="blocked" <%= filterStatus === 'blocked' ? 'selected' : '' %>>Blocked</option>
+          <option value="unblocked" <%= filterStatus === 'unblocked' ? 'selected' : '' %>>Active</option>
+        </select>
+      </form>
+
+     <!-- Table  -->
+
+     
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+
+        <div class="bg-indigo-600 text-white grid grid-cols-5 px-6 py-4 font-medium">
+          <div>S.No</div>
+          <div>Name</div>
+          <div>Email</div>
+          <!-- <div>Mobile</div> -->
+          <div>Action</div>
+          <div>Status</div>
+        </div>
+
+        
+
+        <% users.forEach((data, index) => { %>
+        <div class="grid grid-cols-5 px-6 py-5 border-t items-center">
+
+          <div><%= index + 1 %></div>
+          <div><%= data.name %></div>
+          <div><%= data.email %></div>
+      
+
+           <!-- Button  -->
+          <div>
+            <button
+  type="button"
+  class="px-3 py-1 rounded-md text-sm font-medium
+  <%= data.isBlocked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>"
+  onclick=<%= data.isBlocked
+    ? `confirmUnblock('${data._id}')`
+    : `confirmBlock('${data._id}')` %>>
+  <%= data.isBlocked ? 'Unblock' : 'Block' %>
+</button>
+
+          </div>
+
+
+
+           <!-- Status  -->
+          <div class="<%= data.isBlocked ? 'text-red-600' : 'text-green-600' %>">
+            <%= data.isBlocked ? 'Blocked' : 'Active' %>
+          </div>
+
+        </div>
+        <% }) %>
+
+      </div>
+
+    </div>
+
+    <div class="flex justify-center items-center gap-2 mt-8">
+
+  <% if (currentPage > 1) { %>
+    <a
+      href="/admin/users?page=<%= currentPage - 1 %>&limit=<%= limit %>&status=<%= filterStatus %>&search=<%= searchQuery %>"
+      class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+      Previous
+    </a>
+  <% } %>
+
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <a
+      href="/admin/users?page=<%= i %>&limit=<%= limit %>&status=<%= filterStatus %>&search=<%= searchQuery %>"
+      class="w-10 h-10 flex items-center justify-center rounded-lg
+      <%= i === currentPage ? 'bg-black text-white' : 'bg-gray-200 text-gray-700' %>">
+      <%= i %>
+    </a>
+  <% } %>
+
+  <% if (currentPage < totalPages) { %>
+    <a
+      href="/admin/users?page=<%= currentPage + 1 %>&limit=<%= limit %>&status=<%= filterStatus %>&search=<%= searchQuery %>"
+      class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+      Next
+    </a>
+  <% } %>
+
+</div>
+
+  </main>
+</div>
+
+<!-- SCRIPT (ONLY ONE SCRIPT BLOCK) -->
+<script>
+function confirmBlock(userId) {
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You want to block this user",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, block",
+  }).then(async (result) => {
+    if (!result.isConfirmed) return;
+
+    const res = await fetch(`/admin/users/block/${userId}`, {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      Swal.fire("Blocked!", "User has been blocked.", "success")
+        .then(() => location.reload());
+    } else {
+      Swal.fire("Error", data.message || "Failed", "error");
+    }
+  });
+}
+
+function confirmUnblock(userId) {
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You want to unblock this user",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, unblock",
+  }).then(async (result) => {
+    if (!result.isConfirmed) return;
+
+    const res = await fetch(`/admin/users/unblock/${userId}`, {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      Swal.fire("Unblocked!", "User has been unblocked.", "success")
+        .then(() => location.reload());
+    } else {
+      Swal.fire("Error", data.message || "Failed", "error");
+    }
+  });
+}
+</script>
+
+<script>
+function toggleClearButton() {
+  const input = document.getElementById("searchInput");
+  const clearBtn = document.getElementById("clearBtn");
+
+  if (input.value.trim() !== "") {
+    clearBtn.classList.remove("hidden");
+  } else {
+    clearBtn.classList.add("hidden");
+  }
+}
+
+function clearSearch() {
+  const input = document.getElementById("searchInput");
+  input.value = "";
+  input.focus();
+  toggleClearButton();
+}
+</script>
+
+
+</body>
+</html>

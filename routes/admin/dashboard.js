@@ -1,4 +1,4 @@
-import express  from "express";
+ import express  from "express";
 
 import { loadAdminLogin,adminLogin } from '../controllers/admin/adminController.js';
 import {loadDashboard} from "../controllers/admin/dashboardController.js";
