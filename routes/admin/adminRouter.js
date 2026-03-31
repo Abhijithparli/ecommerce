@@ -6,7 +6,7 @@ import { isAdminAuthenticated, isAdminGuest } from "../../middlewares/adminAuth.
 
 const router = express.Router();
 
-// Login routes (with guest middleware - redirect if already logged in)
+// Login routes
 router.route('/login')
   .get(isAdminGuest, loadAdminLogin)
   .post(isAdminGuest, adminLogin);
@@ -14,21 +14,12 @@ router.route('/login')
 // Logout route
 router.get('/logout', adminLogout);
 
-// Protected routes (require authentication)
+// Protected routes
 router.get("/dashboard", isAdminAuthenticated, loadDashboard);
+
+// User management routes - ✅ MOVED HERE
 router.get("/users", isAdminAuthenticated, listUsers);
-
-
-
-// router.post(
-//   "/users/block/:id",
-//   isAdminAuthenticated,
-//   blockUser
-// );
-
-router.post("/users/block/:id", isAdminAuthenticated, blockUser);//path use akkukaa...
+router.post("/users/block/:id", isAdminAuthenticated, blockUser);
 router.post("/users/unblock/:id", isAdminAuthenticated, unblockUser);
 
 export default router;
-
-

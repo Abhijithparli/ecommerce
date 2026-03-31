@@ -35,11 +35,6 @@
 
      <!-- Header  -->
 
-    <!-- <header class="bg-white border-b px-8 py-4">
-      <input type="text" placeholder=" Search user"
-        class="border px-4 py-2 rounded-lg w-80 focus:ring-2 focus:ring-indigo-500">
-    </header> -->
-
     <header class="bg-white border-b px-8 py-4">
   <div class="relative w-80">
 
@@ -65,11 +60,6 @@
   </div>
 </header>
 
-
-   
-
-
-    
 
    <!-- Content  -->
     <div class="p-8">
@@ -184,7 +174,7 @@ function confirmBlock(userId) {
       method: "POST"
     });
 
-    const data = await res.json();
+    const data = await res.json(); 
 
     if (data.success) {
       Swal.fire("Blocked!", "User has been blocked.", "success")
@@ -193,7 +183,7 @@ function confirmBlock(userId) {
       Swal.fire("Error", data.message || "Failed", "error");
     }
   });
-}
+} 
 
 function confirmUnblock(userId) {
   Swal.fire({
