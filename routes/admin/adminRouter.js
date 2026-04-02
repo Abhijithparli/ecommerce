@@ -12,14 +12,14 @@ router.route('/login')
   .post(isAdminGuest, adminLogin);
 
 // Logout route
-router.get('/logout', adminLogout);
+router.post('/logout', adminLogout);
 
 // Protected routes
 router.get("/dashboard", isAdminAuthenticated, loadDashboard);
 
-// User management routes - ✅ MOVED HERE
+// User routes 
 router.get("/users", isAdminAuthenticated, listUsers);
 router.post("/users/block/:id", isAdminAuthenticated, blockUser);
 router.post("/users/unblock/:id", isAdminAuthenticated, unblockUser);
 
-export default router;
+export default router; 

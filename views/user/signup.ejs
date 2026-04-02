@@ -42,12 +42,12 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-gray-300 text-sm mb-2">First Name *</label>
-                        <input type="text" name="firstName" id="firstName" required
+                        <input type="text" name="firstName" id="firstName" 
                                class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
                     </div>
                     <div>
                         <label class="block text-gray-300 text-sm mb-2">Last Name *</label>
-                        <input type="text" name="lastName" id="lastName" required
+                        <input type="text" name="lastName" id="lastName" 
                                class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
                     </div>
                 </div>
@@ -55,7 +55,7 @@
                 <!-- Email -->
                 <div class="mb-4">
                     <label class="block text-gray-300 text-sm mb-2">Email Address *</label>
-                    <input type="email" name="email" id="email" required
+                    <input type="email" name="email" id="email" 
                            class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
                 </div>
 
@@ -63,13 +63,13 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-gray-300 text-sm mb-2">Password *</label>
-                        <input type="password" name="password" id="password" required minlength="6"
+                        <input type="password" name="password" id="password" minlength="6"
                                class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
                         <p class="text-gray-400 text-xs mt-1">Min 6 characters</p>
                     </div>
                     <div>
                         <label class="block text-gray-300 text-sm mb-2">Confirm Password *</label>
-                        <input type="password" name="confirmPassword" id="confirmPassword" required minlength="6"
+                        <input type="password" name="confirmPassword" id="confirmPassword"  minlength="6"
                                class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
                     </div>
                 </div>
@@ -112,39 +112,75 @@
             <img src="/headshield-logo.jpg" alt="Headshield" class="w-32">
         </div>
     </div>
+<script>
+const form = document.getElementById("signupForm");
 
-    <script>
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+form.addEventListener("submit", function (e) {
+    let isValid = true;
 
-            if (!firstName || !lastName) {
-                e.preventDefault();
-                alert('First and Last name are required');
-                return;
-            }
+    clearErrors();
 
-            if (!/^\S+@\S+\.\S+$/.test(email)) {
-                e.preventDefault();
-                alert('Invalid email format');
-                return;
-            }
+    const firstName = document.getElementById("firstName");
+    const lastName = document.getElementById("lastName");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
 
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('Password must be at least 6 characters');
-                return;
-            }
+    // First Name
+    if (firstName.value.trim().length < 2) {
+        showError(firstName, "First name must be at least 2 characters");
+        isValid = false;
+    }
 
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Passwords do not match');
-                return;
-            }
-        });
-    </script>
+    // Last Name
+    if (lastName.value.trim().length < 2) {
+        showError(lastName, "Last name must be at least 2 characters");
+        isValid = false;
+    }
+
+    // Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email.value)) {
+        showError(email, "Enter a valid email address");
+        isValid = false;
+    }
+
+    // Password (Strong)
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{6,}$/;
+    if (!passwordRegex.test(password.value)) {
+        showError(password, "Password must include uppercase, lowercase, number");
+        isValid = false;
+    }
+
+    // Confirm Password
+    if (password.value !== confirmPassword.value) {
+        showError(confirmPassword, "Passwords do not match");
+        isValid = false;
+    }
+
+    if (!isValid) e.preventDefault();
+});
+
+
+// 🔹 Show error below input
+function showError(input, message) {
+    const error = document.createElement("p");
+    error.className = "text-red-400 text-xs mt-1";
+    error.innerText = message;
+
+    input.classList.add("border-red-500");
+
+    input.parentElement.appendChild(error);
+}
+
+
+// 🔹 Clear old errors
+function clearErrors() {
+    document.querySelectorAll(".text-red-400").forEach(el => el.remove());
+    document.querySelectorAll("input").forEach(input => {
+        input.classList.remove("border-red-500");
+    });
+}
+</script>
 </body>
 </html>

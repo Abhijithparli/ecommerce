@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile - Headshield</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  * { font-family: 'DM Sans', sans-serif; }
+  h1, .brand { font-family: 'Rajdhani', sans-serif; }
+
+  body { background: #0a0a0f; color: #e5e5e5; }
+
+  .sidebar {
+    background: linear-gradient(160deg, #111118, #0d0d14);
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 8px;
+    color: #9ca3af; font-size: 14px;
+    transition: all 0.2s; cursor: pointer; text-decoration: none;
+  }
+  .sidebar-link:hover, .sidebar-link.active {
+    background: rgba(249,115,22,0.12);
+    color: #f97316;
+  }
+  .sidebar-link.active { border-left: 3px solid #f97316; padding-left: 13px; }
+
+  .card {
+    background: #13131a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+  }
+  .avatar-ring {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    border: 3px solid #f97316;
+    padding: 3px;
+    background: #0a0a0f;
+  }
+  .avatar-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .avatar-initials {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; color: white;
+  }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  .detail-value { font-size: 14px; color: #e5e5e5; font-weight: 500; }
+
+  .btn-edit {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    color: white; text-decoration: none; transition: all 0.2s; display: inline-block;
+  }
+  .btn-edit:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(249,115,22,0.3); }
+  .btn-outline {
+    border: 1px solid rgba(249,115,22,0.4); padding: 8px 18px; border-radius: 8px;
+    font-size: 13px; color: #f97316; text-decoration: none; transition: all 0.2s;
+  }
+  .btn-outline:hover { background: rgba(249,115,22,0.1); }
+
+  .address-card {
+    background: #0d0d14;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 16px;
+  }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .badge-default { background: rgba(249,115,22,0.15); color: #f97316; }
+  .badge-other { background: rgba(255,255,255,0.07); color: #9ca3af; }
+
+  .topbar {
+    background: #0d0d14;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="flex items-center gap-3">
+    <span class="brand text-2xl font-bold text-orange-500">Headshield</span>
+    <span class="text-gray-600 text-sm">/ My Profile</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <a href="/" class="text-gray-400 hover:text-white text-sm transition">← Back to Store</a>
+    <form action="/logout" method="POST">
+      <button class="text-sm text-red-400 hover:text-red-300 transition">Logout</button>
+    </form>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="flex flex-1 max-w-6xl mx-auto w-full px-4 py-8 gap-6">
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-56 shrink-0 rounded-xl p-4 h-fit sticky top-8">
+    <div class="text-xs text-gray-600 uppercase tracking-widest mb-3 px-2">Account</div>
+    <a href="/profile" class="sidebar-link active">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      My Profile
+    </a>
+    <a href="/profile/addresses" class="sidebar-link">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Addresses
+    </a>
+    <a href="/profile/change-password" class="sidebar-link">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      Change Password
+    </a>
+    <div class="border-t border-white/5 mt-3 pt-3">
+      <a href="/orders" class="sidebar-link">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        My Orders
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col gap-6">
+
+    <!-- Flash messages -->
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="bg-green-500/15 border border-green-500/40 text-green-300 px-4 py-3 rounded-lg text-sm">
+        <%= success %>
+      </div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="bg-red-500/15 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg text-sm">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- Profile Card -->
+    <div class="card p-6">
+      <div class="flex items-start justify-between mb-6">
+        <h2 class="text-lg font-semibold">Personal Information</h2>
+        <a href="/profile/edit" class="btn-edit">Edit Profile</a>
+      </div>
+
+      <div class="flex items-center gap-6 mb-6 pb-6 border-b border-white/5">
+        <!-- Avatar -->
+        <div class="avatar-ring shrink-0">
+          <% if (user.profileImage) { %>
+            <img src="<%= user.profileImage %>" alt="Profile">
+          <% } else { %>
+            <div class="avatar-initials">
+              <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+            </div>
+          <% } %>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-white"><%= user.name || 'No Name' %></h3>
+          <p class="text-gray-400 text-sm mt-1"><%= user.email %></p>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="w-2 h-2 rounded-full <%= user.isVerified ? 'bg-green-400' : 'bg-yellow-400' %>"></span>
+            <span class="text-xs text-gray-500"><%= user.isVerified ? 'Verified Account' : 'Email Not Verified' %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div>
+        <div class="detail-row">
+          <span class="detail-label">Full Name</span>
+          <span class="detail-value"><%= user.name || '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email Address</span>
+          <div class="flex items-center gap-3">
+            <span class="detail-value"><%= user.email %></span>
+            <a href="/profile/edit-email" class="btn-outline">Change</a>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Phone Number</span>
+          <span class="detail-value"><%= user.phone || '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date of Birth</span>
+          <span class="detail-value"><%= user.dob ? new Date(user.dob).toLocaleDateString('en-IN', {day:'2-digit',month:'long',year:'numeric'}) : '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Gender</span>
+          <span class="detail-value"><%= user.gender || '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Member Since</span>
+          <span class="detail-value"><%= user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'long',year:'numeric'}) : '—' %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved Addresses (Preview) -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Saved Addresses</h2>
+        <a href="/profile/addresses" class="text-orange-400 text-sm hover:underline">View All</a>
+      </div>
+
+      <% if (!user.addresses || user.addresses.length === 0) { %>
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-10 h-10 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          </svg>
+          <p class="text-sm">No addresses saved yet</p>
+          <a href="/profile/addresses/add" class="btn-edit mt-4 inline-block">Add Address</a>
+        </div>
+      <% } else { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <% user.addresses.slice(0,2).forEach(addr => { %>
+            <div class="address-card">
+              <div class="flex items-start justify-between mb-2">
+                <span class="font-medium text-sm text-white"><%= addr.name %></span>
+                <span class="badge <%= addr.isDefault ? 'badge-default' : 'badge-other' %>">
+                  <%= addr.isDefault ? 'Default' : addr.type || 'Home' %>
+                </span>
+              </div>
+              <p class="text-gray-400 text-xs leading-relaxed">
+                <%= addr.street %><br>
+                <%= addr.city %>, <%= addr.state %> - <%= addr.pincode %><br>
+                <%= addr.country %>
+              </p>
+              <p class="text-gray-500 text-xs mt-2"> <%= addr.phone %></p>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

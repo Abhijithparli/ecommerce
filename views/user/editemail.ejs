@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Change Email - Headshield</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  * { font-family: 'DM Sans', sans-serif; }
+  .brand { font-family: 'Rajdhani', sans-serif; }
+  body { background: #0a0a0f; color: #e5e5e5; }
+  .card { background: #13131a; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; }
+  .topbar { background: #0d0d14; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .input-field {
+    width: 100%; padding: 11px 16px;
+    background: #0d0d14; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #e5e5e5; font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
+  .input-label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .btn-primary {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    padding: 11px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    color: white; border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(249,115,22,0.3); }
+
+  /* Step indicator */
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  }
+  .step-active .step-num { background: #f97316; color: white; }
+  .step-done .step-num { background: #22c55e; color: white; }
+  .step-pending .step-num { background: rgba(255,255,255,0.08); color: #6b7280; }
+  .step-active .step-label { color: #f97316; font-weight: 600; }
+  .step-done .step-label { color: #22c55e; }
+  .step-pending .step-label { color: #6b7280; }
+  .step-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<div class="topbar">
+  <div class="flex items-center gap-3">
+    <span class="brand text-2xl font-bold text-orange-500">Headshield</span>
+    <span class="text-gray-600 text-sm">/ Change Email</span>
+  </div>
+  <a href="/profile" class="text-gray-400 hover:text-white text-sm transition">← Back to Profile</a>
+</div>
+
+<div class="max-w-lg mx-auto w-full px-4 py-10">
+
+  <!-- Step Indicator -->
+  <div class="flex items-center gap-2 mb-8">
+    <div class="step <%= typeof step === 'undefined' || step == 1 ? 'step-active' : 'step-done' %>">
+      <div class="step-num"><%= typeof step !== 'undefined' && step > 1 ? '✓' : '1' %></div>
+      <span class="step-label text-sm">New Email</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step <%= typeof step !== 'undefined' && step == 2 ? 'step-active' : (typeof step !== 'undefined' && step > 2 ? 'step-done' : 'step-pending') %>">
+      <div class="step-num">2</div>
+      <span class="step-label text-sm">Verify OTP</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step <%= typeof step !== 'undefined' && step == 3 ? 'step-done' : 'step-pending' %>">
+      <div class="step-num">3</div>
+      <span class="step-label text-sm">Done</span>
+    </div>
+  </div>
+
+  <div class="card p-8">
+
+    <!-- Alerts -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="bg-red-500/15 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg text-sm mb-5"><%= error %></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="bg-green-500/15 border border-green-500/40 text-green-300 px-4 py-3 rounded-lg text-sm mb-5"><%= success %></div>
+    <% } %>
+
+    <!-- STEP 1: Enter new email -->
+    <% if (typeof step === 'undefined' || step == 1) { %>
+      <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
+        <svg class="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl text-center font-semibold mb-2">Enter New Email</h2>
+      <p class="text-gray-400 text-sm text-center mb-7">
+        Current: <span class="text-white"><%= user ? user.email : '' %></span>
+      </p>
+      <form method="POST" action="/profile/edit-email" id="emailForm">
+        <div class="mb-5">
+          <label class="input-label">New Email Address</label>
+          <input type="email" name="newEmail" class="input-field" placeholder="new@email.com" required>
+          <p id="emailErr" class="text-red-400 text-xs mt-1 hidden">Enter a valid email address.</p>
+        </div>
+        <button type="submit" class="btn-primary w-full">Send OTP to New Email</button>
+      </form>
+
+    <!-- STEP 2: Enter OTP -->
+    <% } else if (step == 2) { %>
+      <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
+        <svg class="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl text-center font-semibold mb-2">Verify New Email</h2>
+      <p class="text-gray-400 text-sm text-center mb-7">
+        OTP sent to <span class="text-orange-400"><%= newEmail %></span>
+      </p>
+      <form method="POST" action="/profile/verify-email-otp" id="otpForm">
+        <input type="hidden" name="newEmail" value="<%= newEmail %>">
+        <div class="mb-5">
+          <label class="input-label">Enter 6-digit OTP</label>
+          <input type="text" name="otp" maxlength="6"
+            class="input-field text-center tracking-[12px] text-2xl" placeholder="——————">
+        </div>
+        <button type="submit" class="btn-primary w-full">Verify & Update Email</button>
+        <div class="text-center mt-4">
+          <p class="text-gray-500 text-sm" id="timerText">Resend OTP in <span id="countdown" class="text-orange-400 font-semibold">60</span>s</p>
+          <button type="button" id="resendBtn" onclick="resendOtp()" disabled
+            class="text-orange-400 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed">Resend OTP</button>
+        </div>
+      </form>
+    <% } %>
+
+  </div>
+</div>
+
+<script>
+// Email validation for step 1
+document.getElementById('emailForm')?.addEventListener('submit', function(e) {
+  const email = this.querySelector('[name="newEmail"]');
+  const err = document.getElementById('emailErr');
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!regex.test(email.value.trim())) {
+    e.preventDefault(); email.classList.add('border-red-500'); err.classList.remove('hidden');
+  } else { email.classList.remove('border-red-500'); err.classList.add('hidden'); }
+});
+
+// OTP-only digits
+document.querySelector('[name="otp"]')?.addEventListener('input', function() {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+// Countdown timer (step 2)
+<% if (typeof step !== 'undefined' && step == 2) { %>
+let secs = 60;
+const countEl = document.getElementById('countdown');
+const resendBtn = document.getElementById('resendBtn');
+const timerEl = document.getElementById('timerText');
+const interval = setInterval(() => {
+  secs--;
+  if (countEl) countEl.textContent = secs;
+  if (secs <= 0) {
+    clearInterval(interval);
+    if (timerEl) timerEl.style.display = 'none';
+    if (resendBtn) resendBtn.disabled = false;
+  }
+}, 1000);
+
+async function resendOtp() {
+  try {
+    const res = await fetch('/profile/resend-email-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newEmail: '<%= newEmail %>' })
+    });
+    const data = await res.json();
+    if (data.success) { alert('New OTP sent!'); location.reload(); }
+    else alert(data.message || 'Failed to resend OTP');
+  } catch { alert('Error resending OTP'); }
+}
+<% } %>
+</script>
+</body>
+</html>

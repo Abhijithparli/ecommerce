@@ -100,39 +100,59 @@
         </div>
     </div>
 
-    <script>
-        function togglePassword() {
-            const input = document.getElementById('password');
-            const eyeOpen = document.getElementById('eyeOpen');
-            const eyeClosed = document.getElementById('eyeClosed');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            } else {
-                input.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            }
-        }
+<script>
+const form = document.getElementById("loginForm");
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+form.addEventListener("submit", function (e) {
+    let isValid = true;
 
-            if (!/^\S+@\S+\.\S+$/.test(email)) {
-                e.preventDefault();
-                alert('Please enter a valid email');
-                return;
-            }
+    clearErrors();
 
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('Password must be at least 6 characters');
-                return;
-            }
-        });
-    </script>
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!email.value.trim()) {
+        showError(email, "Email is required");
+        isValid = false;
+    } else if (!emailRegex.test(email.value)) {
+        showError(email, "Enter a valid email address");
+        isValid = false;
+    }
+
+    // Password validation
+    if (!password.value.trim()) {
+        showError(password, "Password is required");
+        isValid = false;
+    } else if (password.value.length < 6) {
+        showError(password, "Password must be at least 6 characters");
+        isValid = false;
+    }
+
+    if (!isValid) e.preventDefault();
+});
+
+
+// 🔹 Show error under input
+function showError(input, message) {
+    const error = document.createElement("p");
+    error.className = "text-red-400 text-xs mt-1";
+    error.innerText = message;
+
+    input.classList.add("border-red-500");
+
+    input.parentElement.appendChild(error);
+}
+
+
+// 🔹 Clear previous errors
+function clearErrors() {
+    document.querySelectorAll(".text-red-400").forEach(el => el.remove());
+    document.querySelectorAll("input").forEach(input => {
+        input.classList.remove("border-red-500");
+    });
+}
+</script>
 </body>
 </html>

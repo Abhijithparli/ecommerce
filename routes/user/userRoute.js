@@ -1,9 +1,12 @@
 import express from "express";
-import passport from "passport"; 
+import passport from "passport";
+
+// Controllers
 import {
   loadHomepage,
   loadSignup,
   signup,
+  loadVerifyOtp,
   verifyOtp,
   resendOtp,
   loadLogin,
@@ -13,41 +16,52 @@ import {
   forgotPassword,
   loadResetPassword,
   resetPassword,
-  loadVerifyOtp   
+  loadProfile,
+  loadEditProfile,
+  editProfile,
+  uploadProfileImage,
+  loadEditEmail,
+  requestEmailChange,
+  verifyEmailOtp,
+  resendEmailOtp,
+  loadChangePassword,
+  changePassword,
+  loadAddresses,
+  addAddress,
+  editAddress,
+  deleteAddress,
+  setDefaultAddress,
 } from "../../controllers/user/usercontroller.js";
 
-import { isUserAuthenticated, isUserGuest } from "../../middlewares/userAuth.js";
+
+import { isAuthenticated, isGuest,
+
+ } from "../../middlewares/userMiddleware.js";
 
 const router = express.Router();
 
-// Public routes
+
+// ================= PUBLIC =================
 router.get("/", loadHomepage);
 
-// Signup routes
-router.get("/signup", isUserGuest, loadSignup);
-router.post("/signup", isUserGuest, signup);
+// Signup
+router.get("/signup", isGuest, loadSignup);
+router.post("/signup", isGuest, signup);
 
-// Login routes  
-router.get("/login", isUserGuest, loadLogin);
-router.post("/login", isUserGuest, login);
-
-// Logout
-router.get("/logout", logout);
-
-// OTP verification routes
+// OTP
 router.get("/verify-otp", loadVerifyOtp);
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);
 
-// Forgot password routes
-router.get("/forgot-password", loadForgotPassword);
-router.post("/forgot-password", forgotPassword);
+// Login
+router.get("/login", isGuest, loadLogin);
+router.post("/login", isGuest, login);
 
-// Reset password routes
-router.get("/reset-password/:token", loadResetPassword);
-router.post("/reset-password/:token", resetPassword);
+// Logout (POST = secure)
+router.post("/logout", logout);
 
-// ✅ Google OAuth routes
+
+// ================= GOOGLE AUTH =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
@@ -55,7 +69,6 @@ router.get("/auth/google",
 router.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
-    // Successful authentication
     req.session.user = {
       id: req.user._id,
       name: req.user.name,
@@ -64,5 +77,47 @@ router.get("/auth/google/callback",
     res.redirect("/");
   }
 );
+
+
+// ================= FORGOT / RESET PASSWORD =================
+router.get("/forgot-password", isGuest, loadForgotPassword);
+router.post("/forgot-password", isGuest, forgotPassword);
+
+router.get("/reset-password/:token", loadResetPassword);
+router.post("/reset-password/:token", resetPassword);
+
+
+// ================= PROFILE =================
+router.get("/profile", isAuthenticated, loadProfile);
+
+router.get("/profile/edit", isAuthenticated, loadEditProfile);
+router.post(
+  "/profile/edit",
+  isAuthenticated,
+  uploadProfileImage.single("profileImage"),
+  editProfile
+);
+
+
+// ================= EMAIL CHANGE =================
+router.get("/profile/edit-email", isAuthenticated, loadEditEmail);
+router.post("/profile/edit-email", isAuthenticated, requestEmailChange);
+router.post("/profile/verify-email-otp", isAuthenticated, verifyEmailOtp);
+router.post("/profile/resend-email-otp", isAuthenticated, resendEmailOtp);
+
+
+// ================= PASSWORD CHANGE =================
+router.get("/profile/change-password", isAuthenticated, loadChangePassword);
+router.post("/profile/change-password", isAuthenticated, changePassword);
+
+
+// ================= ADDRESS =================
+router.get("/profile/addresses", isAuthenticated, loadAddresses);
+
+router.post("/profile/addresses/add", isAuthenticated, addAddress);
+router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);
+router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
+router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
+
 
 export default router;

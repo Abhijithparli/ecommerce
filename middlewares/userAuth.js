@@ -1,13 +1,13 @@
 export const isUserAuthenticated = (req,res,next)=>{
-    if(req.session.user){
+    if(req.session && req.session.user){
         return next();
     }
     res.redirect("/login");
 };
 
 export const isUserGuest = (req,res,next)=>{
-    if(req.session.user){
-        return res.redirect("/");
+    if(req.session.req.session.user){
+        return res.redirect("/login");
     }
     next();
 }

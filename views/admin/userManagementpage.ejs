@@ -36,28 +36,30 @@
      <!-- Header  -->
 
     <header class="bg-white border-b px-8 py-4">
-  <div class="relative w-80">
+ <form method="GET" action="/admin/users" class="relative w-80">
 
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Search user"
-      class="border px-4 py-2 rounded-lg w-full pr-10
-             focus:ring-2 focus:ring-indigo-500"
-      oninput="toggleClearButton()"
-    />
+  <input
+    type="text"
+    name="search"  
+    id="searchInput"
+    placeholder="Search user"
+    value="<%= searchQuery || '' %>"
+    class="border px-4 py-2 rounded-lg w-full pr-10
+           focus:ring-2 focus:ring-indigo-500"
+    oninput="toggleClearButton()"
+  />
 
-    <!-- Clear (X) button -->
-    <button
-      type="button"
-      id="clearBtn"
-      onclick="clearSearch()"
-      class="absolute right-3 top-1/2 -translate-y-1/2
-             text-gray-400 hover:text-gray-700 hidden">
-      ✕
-    </button>
 
-  </div>
+  <button
+    type="button"
+    id="clearBtn"
+    onclick="clearSearch()"
+    class="absolute right-3 top-1/2 -translate-y-1/2
+           text-gray-400 hover:text-gray-700 hidden">
+    ✕
+  </button>
+
+</form>
 </header>
 
 

@@ -1,3 +1,4 @@
+
 import User from "../../models/userModel.js";
 
 // Load admin login page
@@ -56,8 +57,9 @@ export const adminLogout = async (req, res) => {
         console.error("Logout error:", err);
         return res.redirect("/admin/dashboard");
       }
-      res.clearCookie('connect.sid'); // Clear session cookie
-      res.redirect("/admin/login");
+
+      res.clearCookie("connect.sid"); 
+      res.redirect("/admin/login");   
     });
   } catch (error) {
     console.error(error);
