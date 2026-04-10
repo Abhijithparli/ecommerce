@@ -41,7 +41,7 @@ import { isAuthenticated, isGuest,
 const router = express.Router();
 
 
-// ================= PUBLIC =================
+// PUBLIC....... 
 router.get("/", loadHomepage);
 
 // Signup
@@ -61,7 +61,7 @@ router.post("/login", isGuest, login);
 router.post("/logout", logout);
 
 
-// ================= GOOGLE AUTH =================
+//  Google auth....
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
@@ -79,7 +79,7 @@ router.get("/auth/google/callback",
 );
 
 
-// ================= FORGOT / RESET PASSWORD =================
+//  FORGOT PASSWORD ............
 router.get("/forgot-password", isGuest, loadForgotPassword);
 router.post("/forgot-password", isGuest, forgotPassword);
 
@@ -87,7 +87,7 @@ router.get("/reset-password/:token", loadResetPassword);
 router.post("/reset-password/:token", resetPassword);
 
 
-// ================= PROFILE =================
+// PROFILE........... 
 router.get("/profile", isAuthenticated, loadProfile);
 
 router.get("/profile/edit", isAuthenticated, loadEditProfile);
@@ -99,19 +99,19 @@ router.post(
 );
 
 
-// ================= EMAIL CHANGE =================
+// email change =====
 router.get("/profile/edit-email", isAuthenticated, loadEditEmail);
 router.post("/profile/edit-email", isAuthenticated, requestEmailChange);
 router.post("/profile/verify-email-otp", isAuthenticated, verifyEmailOtp);
 router.post("/profile/resend-email-otp", isAuthenticated, resendEmailOtp);
 
 
-// ================= PASSWORD CHANGE =================
+//  PASSWORD CHANGE =====
 router.get("/profile/change-password", isAuthenticated, loadChangePassword);
 router.post("/profile/change-password", isAuthenticated, changePassword);
 
 
-// ================= ADDRESS =================
+//  ADDRESS ======
 router.get("/profile/addresses", isAuthenticated, loadAddresses);
 
 router.post("/profile/addresses/add", isAuthenticated, addAddress);

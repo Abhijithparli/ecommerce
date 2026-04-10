@@ -56,7 +56,8 @@ export const unblockUser = async (req, res) => {
   }
 };
 
-//  users listing with pagination, search, and sorting
+//  users listing with pagination, search, and sorting:
+
 export const listUsers = async (req, res) => {
   try { 
     // Session already checked by middleware
@@ -69,7 +70,7 @@ export const listUsers = async (req, res) => {
     
     const skip = (page - 1) * limit;
 
-    // Build filter object
+    // Build filter object   
     let filter = {};
     
     if (searchQuery) {

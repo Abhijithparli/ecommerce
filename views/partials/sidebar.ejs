@@ -1,0 +1,68 @@
+<aside class="w-64 bg-white border-r border-gray-200 fixed h-full flex flex-col">
+
+  <div class="p-6">
+    <h1 class="text-2xl font-bold text-gray-900">Headshield</h1>
+  </div>
+
+  <nav class="px-4 space-y-1 flex-grow">
+    <a href="/admin/dashboard"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'dashboard' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Dashboard
+    </a>
+    <a href="/admin/products"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'products' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Products
+    </a>
+    <a href="/admin/orders"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'orders' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Order Lists
+    </a>
+    <a href="/admin/users"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'users' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Users
+    </a>
+    <a href="/admin/sales"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'sales' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Sales Report
+    </a>
+    <a href="/admin/coupons"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'coupons' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Coupons
+    </a>
+    <a href="/admin/category"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'category' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Category
+    </a>
+    <a href="/admin/banners"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'banners' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Banners
+    </a>
+    <a href="/admin/offers"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'offers' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Offers
+    </a>
+  </nav>
+
+  <!-- Logout fixed at bottom -->
+  <div class="p-4 border-t border-gray-200">
+    <a href="/admin/logout"
+       class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+      </svg>
+      Logout
+    </a>
+  </div>
+
+</aside>

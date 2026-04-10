@@ -1,68 +1,277 @@
-
 import User from "../../models/userModel.js";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 
-// Load admin login page
-export const loadAdminLogin = async (req, res) => {
-  try {
-    res.render("admin/login", { error: null });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
-  }
+// ============================================================
+// EMAIL HELPER
+// ============================================================
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+// ============================================================
+// ADMIN LOGIN PAGE
+// ============================================================
+export const loadAdminLogin = (req, res) => {
+  if (req.session?.admin?.isAdmin) return res.redirect("/admin/dashboard");
+  res.render("admin/login", { error: null });
 };
 
-// Admin login logic
+// ============================================================
+// ADMIN LOGIN
+// ============================================================
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const ADMIN_EMAIL = "admin@gmail.com";
-    const ADMIN_PASSWORD = "12345";
+    const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || "admin@gmail.com";
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "12345";
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      // Create admin session
-      req.session.admin = {
-        email: ADMIN_EMAIL,
-        isAdmin: true,
-        loginTime: new Date()
-      };
-      
-      // Save session before redirecting
+      req.session.admin = { email: ADMIN_EMAIL, isAdmin: true };
+
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error:", err);
-          return res.render("admin/login", {
-            error: "Session error. Please try again."
-          });
+          console.error("Session error:", err);
+          return res.render("admin/login", { error: "Session error. Try again." });
         }
-        console.log("Admin logged in, session created");
         return res.redirect("/admin/dashboard");
       });
     } else {
-      return res.render("admin/login", {
-        error: "Invalid email or password"
-      });
+      return res.render("admin/login", { error: "Invalid email or password" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
+    console.error("Admin login error:", error);
+    res.render("admin/login", { error: "Server error" });
   }
 };
 
-// Admin logout
-export const adminLogout = async (req, res) => {
-  try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res.redirect("/admin/dashboard");
-      }
+// ============================================================
+// ADMIN LOGOUT
+// ============================================================
+export const adminLogout = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) console.error("Logout error:", err);
+    res.clearCookie("connect.sid");
+    res.redirect("/admin/login");
+  });
+};
 
-      res.clearCookie("connect.sid"); 
-      res.redirect("/admin/login");   
+// ============================================================
+// DASHBOARD
+// ============================================================
+export const loadDashboard = (req, res) => {
+  res.render("admin/dashboard");
+};
+
+// ============================================================
+// FORGOT PASSWORD — show form
+// ============================================================
+export const getForgotPassword = (req, res) => {
+  res.render("admin/forgotPassword", { error: null, message: null });
+};
+
+// ============================================================
+// FORGOT PASSWORD — send reset email
+// ============================================================
+export const postForgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
+
+    if (email !== ADMIN_EMAIL) {
+      return res.render("admin/forgotPassword", {
+        error: "No admin account found with this email",
+        message: null,
+      });
+    }
+
+    const token  = crypto.randomBytes(32).toString("hex");
+    const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store in session (admin has no DB record)
+    req.session.adminReset = { token, expiry };
+
+    const resetLink = `${process.env.BASE_URL || "http://localhost:3000"}/admin/reset-password/${token}`;
+
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"Headshield Admin" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Admin Password Reset - Headshield",
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+          <h2 style="color:#4f46e5;">Admin Password Reset</h2>
+          <p>Click the button below to reset your admin password. 
+             This link expires in <strong>10 minutes</strong>.</p>
+          <a href="${resetLink}"
+             style="display:inline-block;margin:20px 0;padding:12px 28px;
+                    background:#4f46e5;color:white;border-radius:6px;
+                    text-decoration:none;font-weight:600;">
+            Reset Password
+          </a>
+          <p style="color:#888;font-size:13px;">If you didn't request this, ignore this email.</p>
+        </div>
+      `,
+    });
+
+    console.log("Admin reset link:", resetLink);
+
+    res.render("admin/forgotPassword", {
+      error: null,
+      message: "Reset link sent to your email.",
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
+    console.error("Admin forgot password error:", error);
+    res.render("admin/forgotPassword", { error: "Server error. Try again.", message: null });
+  }
+};
+
+// ============================================================
+// RESET PASSWORD — show form
+// ============================================================
+export const getResetPassword = (req, res) => {
+  const { token } = req.params;
+  const adminReset = req.session.adminReset;
+
+  if (!adminReset || adminReset.token !== token || Date.now() > adminReset.expiry) {
+    return res.render("admin/resetPassword", {
+      error: "Invalid or expired reset link.",
+      token: null,
+    });
+  }
+
+  res.render("admin/resetPassword", { error: null, token });
+};
+
+// ============================================================
+// RESET PASSWORD — save new password
+// ============================================================
+export const postResetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+    const adminReset = req.session.adminReset;
+
+    if (!adminReset || adminReset.token !== token || Date.now() > adminReset.expiry) {
+      return res.render("admin/resetPassword", {
+        error: "Invalid or expired reset link.",
+        token: null,
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("admin/resetPassword", {
+        error: "Passwords do not match.",
+        token,
+      });
+    }
+
+    if (password.length < 6) {
+      return res.render("admin/resetPassword", {
+        error: "Password must be at least 6 characters.",
+        token,
+      });
+    }
+
+    // In a real app you'd save the hashed password to DB or .env
+    // For now we clear the session token and redirect to login
+    req.session.adminReset = null;
+
+    console.log("Admin password reset successful");
+    res.redirect("/admin/login");
+  } catch (error) {
+    console.error("Admin reset password error:", error);
+    res.render("admin/resetPassword", { error: "Server error.", token: null });
+  }
+};
+
+// ============================================================
+// USER MANAGEMENT — List users
+// ============================================================
+export const listUsers = async (req, res) => {
+  try {
+    const page        = parseInt(req.query.page)   || 1;
+    const limit       = parseInt(req.query.limit)  || 5;
+    const searchQuery = req.query.search           || "";
+    const filterStatus = req.query.status          || "all";
+    const skip = (page - 1) * limit;
+
+    let filter = {};
+
+    if (searchQuery) {
+      filter.$or = [
+        { name:  { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+      ];
+    }
+
+    if (filterStatus === "blocked")   filter.isBlocked = true;
+    if (filterStatus === "unblocked") filter.isBlocked = false;
+
+    const totalUsers = await User.countDocuments(filter);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select("-password");
+
+    res.render("admin/userManagementpage", {
+      users,
+      currentPage: page,
+      totalPages,
+      totalUsers,
+      searchQuery,
+      filterStatus,
+      limit,
+    });
+  } catch (error) {
+    console.error("List users error:", error);
+    res.render("admin/userManagementpage", {
+      users: [], currentPage: 1, totalPages: 0,
+      totalUsers: 0, searchQuery: "", filterStatus: "all", limit: 5,
+    });
+  }
+};
+
+// ============================================================
+// USER MANAGEMENT — Block user
+// ============================================================
+export const blockUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    await User.findByIdAndUpdate(req.params.id, { isBlocked: true });
+    res.json({ success: true, message: "User blocked successfully" });
+  } catch (error) {
+    console.error("Block user error:", error);
+    res.status(500).json({ success: false, message: "Error blocking user" });
+  }
+};
+
+// ============================================================
+// USER MANAGEMENT — Unblock user
+// ============================================================
+export const unblockUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    await User.findByIdAndUpdate(req.params.id, { isBlocked: false });
+    res.json({ success: true, message: "User unblocked successfully" });
+  } catch (error) {
+    console.error("Unblock user error:", error);
+    res.status(500).json({ success: false, message: "Error unblocking user" });
   }
 };

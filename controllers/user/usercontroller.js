@@ -6,9 +6,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// ============================================================
-// EMAIL
-// ============================================================
+
+// EMAIL:
+// ==================================
 function createTransporter() {
   return nodemailer.createTransport({
     service: "gmail",
@@ -53,16 +53,16 @@ function otpTemplate(otp) {
   `;
 }
 
-// ============================================================
+
 // OTP GENERATOR
-// ============================================================
+// ================================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ============================================================
+
 // MULTER — profile image upload
-// ============================================================
+// =================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = "public/uploads/profiles";
@@ -87,16 +87,16 @@ export const uploadProfileImage = multer({
   },
 });
 
-// ============================================================
+
 // HOME
-// ============================================================
+// =====================================
 export const loadHomepage = (req, res) => {
   res.render("user/home", { user: req.session.user || null });
 };
 
-// ============================================================
+
 // SIGNUP
-// ============================================================
+// =====================================
 export const loadSignup = (req, res) => {
   res.render("user/signup", { error: null, success: null });
 };
@@ -138,9 +138,9 @@ export const signup = async (req, res) => {
   }
 };
 
-// ============================================================
+
 // OTP VERIFY
-// ============================================================
+// ==========================================
 export const loadVerifyOtp = (req, res) => {
   const email = req.session.tempUser?.email || req.session.forgotEmail;
   if (!email) return res.redirect("/signup");
@@ -223,9 +223,9 @@ export const resendOtp = async (req, res) => {
   }
 };
 
-// ============================================================
+
 // LOGIN
-// ============================================================
+// =======================================
 export const loadLogin = (req, res) => {
   res.render("user/login", { error: null });
 };
@@ -233,18 +233,39 @@ export const loadLogin = (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.render("user/login", { error: "Email and password required" });
+
+    if (!email || !password) {
+      return res.render("user/login", { error: "Email and password required" });
+    }
 
     const user = await User.findOne({ email });
-    if (!user) return res.render("user/login", { error: "Invalid credentials" });
+
+    if (!user) {
+      return res.render("user/login", { error: "Invalid credentials" });
+    }
+
+    if (user.isBlocked) {
+      return res.render("user/login", { 
+        error: "Your account has been blocked by admin" 
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.render("user/login", { error: "Invalid credentials" });
 
-    if (user.isBlocked) return res.render("user/login", { error: "Your account has been blocked" });
+    if (!isMatch) {
+      return res.render("user/login", { error: "Invalid credentials" });
+    }
 
-    req.session.user = { id: user._id, name: user.name, email: user.email };
-    res.redirect("/");
+    req.session.user = {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    };
+
+    req.session.save(() => {
+      res.redirect("/");
+    });
+
   } catch (error) {
     console.error("Login error:", error);
     res.render("user/login", { error: "Server error" });
@@ -255,11 +276,14 @@ export const logout = (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 };
 
-// ============================================================
+
 // FORGOT PASSWORD
-// ============================================================
+// =============================================
 export const loadForgotPassword = (req, res) => {
-  res.render("user/forgotPassword", { error: null, success: null });
+  res.render("user/forgotPassword", { 
+    error: null, 
+    message: null   
+  });
 };
 
 export const forgotPassword = async (req, res) => {
@@ -287,9 +311,9 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// ============================================================
+
 // RESET PASSWORD
-// ============================================================
+// ====================================================
 export const loadResetPassword = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -332,9 +356,9 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// ============================================================
-// PROFILE — View
-// ============================================================
+
+// Profile— view
+// ===============================================
 export const loadProfile = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
@@ -345,9 +369,9 @@ export const loadProfile = async (req, res) => {
   }
 };
 
-// ============================================================
-// PROFILE — Edit (display form)
-// ============================================================
+
+// Profile — Edit (display form)
+// ==================================================
 export const loadEditProfile = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
@@ -358,9 +382,9 @@ export const loadEditProfile = async (req, res) => {
   }
 };
 
-// ============================================================
-// PROFILE — Edit (save)
-// ============================================================
+
+// P — Edit (save)
+// ================================================
 export const editProfile = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
@@ -398,9 +422,9 @@ export const editProfile = async (req, res) => {
   }
 };
 
-// ============================================================
-// EMAIL CHANGE — Step 1: show form
-// ============================================================
+
+// EMAIL CHANGE
+// =================================================
 export const loadEditEmail = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
@@ -410,8 +434,8 @@ export const loadEditEmail = async (req, res) => {
   }
 };
 
-// ============================================================
-// EMAIL CHANGE — Step 2: send OTP to new email
+// ============================================
+// EMAIL CHANGE — send OTP to new email
 // ============================================================
 export const requestEmailChange = async (req, res) => {
   try {
@@ -449,8 +473,8 @@ export const requestEmailChange = async (req, res) => {
   }
 };
 
-// ============================================================
-// EMAIL CHANGE — Step 3: verify OTP and save new email
+// ====================================================
+// EMAIL CHANGE —  verify OTP and save new email
 // ============================================================
 export const verifyEmailOtp = async (req, res) => {
   try {
@@ -480,7 +504,7 @@ export const verifyEmailOtp = async (req, res) => {
   }
 };
 
-// ============================================================
+// ===========================
 // EMAIL CHANGE — Resend OTP
 // ============================================================
 export const resendEmailOtp = async (req, res) => {
@@ -501,7 +525,7 @@ export const resendEmailOtp = async (req, res) => {
   }
 };
 
-// ============================================================
+// =====================
 // CHANGE PASSWORD
 // ============================================================
 export const loadChangePassword = async (req, res) => {
@@ -550,7 +574,7 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// ============================================================
+// =======================
 // ADDRESSES — View all
 // ============================================================
 export const loadAddresses = async (req, res) => {
@@ -565,7 +589,7 @@ export const loadAddresses = async (req, res) => {
   }
 };
 
-// ============================================================
+// ===================
 // ADDRESSES — Add
 // ============================================================
 export const addAddress = async (req, res) => {
@@ -609,7 +633,7 @@ export const addAddress = async (req, res) => {
   }
 };
 
-// ============================================================
+// ==================
 // ADDRESSES — Edit
 // ============================================================
 export const editAddress = async (req, res) => {
@@ -644,7 +668,7 @@ export const editAddress = async (req, res) => {
   }
 };
 
-// ============================================================
+// ======================
 // ADDRESSES — Delete
 // ============================================================
 export const deleteAddress = async (req, res) => {
@@ -669,7 +693,7 @@ export const deleteAddress = async (req, res) => {
   }
 };
 
-// ============================================================
+// ==============================
 // ADDRESSES — Set Default
 // ============================================================
 export const setDefaultAddress = async (req, res) => {

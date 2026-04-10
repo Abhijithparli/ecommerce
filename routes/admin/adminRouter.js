@@ -1,25 +1,44 @@
+// routes/admin/adminRouter.js
 import express from "express";
-import { loadAdminLogin, adminLogin, adminLogout } from "../../controllers/admin/adminController.js";
-import { loadDashboard } from "../../controllers/admin/dashboardController.js";  
-import { listUsers, blockUser, unblockUser } from "../../controllers/admin/userManagementController.js"; 
-import { isAdminAuthenticated, isAdminGuest } from "../../middlewares/adminAuth.js";
+import {
+  loadAdminLogin,
+  adminLogin,
+  adminLogout,
+  loadDashboard,
+  getForgotPassword,
+  postForgotPassword,
+  getResetPassword,
+  postResetPassword,
+  listUsers,
+  blockUser,
+  unblockUser,
+} from "../../controllers/admin/adminController.js";
 
 const router = express.Router();
 
-// Login routes
-router.route('/login')
-  .get(isAdminGuest, loadAdminLogin)
-  .post(isAdminGuest, adminLogin);
+// ── Auth middleware ────────────────────────────────────────
+const isAdminAuth = (req, res, next) => {
+  if (req.session?.admin?.isAdmin) return next();
+  return res.redirect("/admin/login");
+};
 
-// Logout route
-router.post('/logout', adminLogout);
+// ── Public routes ──────────────────────────────────────────
+router.get("/login",  loadAdminLogin);
+router.post("/login", adminLogin);
 
-// Protected routes
-router.get("/dashboard", isAdminAuthenticated, loadDashboard);
+router.get("/forgot-password",        getForgotPassword);
+router.post("/forgot-password",       postForgotPassword);
+router.get("/reset-password/:token",  getResetPassword);
+router.post("/reset-password/:token", postResetPassword);
 
-// User routes 
-router.get("/users", isAdminAuthenticated, listUsers);
-router.post("/users/block/:id", isAdminAuthenticated, blockUser);
-router.post("/users/unblock/:id", isAdminAuthenticated, unblockUser);
+// Logout — no auth check needed, works from any page
+router.get("/logout", adminLogout);
 
-export default router; 
+// ── Protected routes ───────────────────────────────────────
+router.get("/dashboard", isAdminAuth, loadDashboard);
+
+router.get("/users",              isAdminAuth, listUsers);
+router.post("/users/block/:id",   isAdminAuth, blockUser);
+router.post("/users/unblock/:id", isAdminAuth, unblockUser);
+
+export default router;

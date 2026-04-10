@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Headshield</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="relative min-h-screen">
     <!-- Background -->
@@ -60,19 +61,38 @@
                 </div>
 
                 <!-- Password -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label class="block text-gray-300 text-sm mb-2">Password *</label>
-                        <input type="password" name="password" id="password" minlength="6"
-                               class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-                        <p class="text-gray-400 text-xs mt-1">Min 6 characters</p>
-                    </div>
-                    <div>
-                        <label class="block text-gray-300 text-sm mb-2">Confirm Password *</label>
-                        <input type="password" name="confirmPassword" id="confirmPassword"  minlength="6"
-                               class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-                    </div>
-                </div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+    
+    <!-- Password -->
+    <div class="relative">
+        <label class="block text-gray-300 text-sm mb-2">Password *</label>
+
+        <input type="password" name="password" id="password" minlength="6"
+               class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+
+        <!-- 👁 Eye Icon -->
+      <span onclick="togglePassword('password', this)" 
+      class="absolute right-3 top-11 cursor-pointer text-gray-400">
+  <i class="fa-solid fa-eye"></i>
+</span>
+
+        <p class="text-gray-400 text-xs mt-1">Min 6 characters</p>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="relative">
+        <label class="block text-gray-300 text-sm mb-2">Confirm Password *</label>
+
+        <input type="password" name="confirmPassword" id="confirmPassword" minlength="6"
+               class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+
+      <span onclick="togglePassword('confirmPassword', this)" 
+      class="absolute right-3 top-11 cursor-pointer text-gray-400">
+  <i class="fa-solid fa-eye"></i>
+</span>
+    </div>
+
+</div>
 
                 <!-- Submit -->
                 <button type="submit"
@@ -180,6 +200,17 @@ function clearErrors() {
     document.querySelectorAll("input").forEach(input => {
         input.classList.remove("border-red-500");
     });
+}
+</script>
+<script>
+function togglePassword(inputId, icon) {
+    const input = document.getElementById(inputId);
+
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
 }
 </script>
 </body>
