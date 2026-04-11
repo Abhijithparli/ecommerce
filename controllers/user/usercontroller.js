@@ -361,14 +361,19 @@ export const resetPassword = async (req, res) => {
 // ===============================================
 export const loadProfile = async (req, res) => {
   try {
+    if (!req.session.user) {
+      return res.redirect("/login");
+    }
+
     const user = await User.findById(req.session.user.id);
+
     res.render("user/profile", { user });
+
   } catch (error) {
     console.error(error);
     res.redirect("/login");
   }
 };
-
 
 // Profile — Edit (display form)
 // ==================================================

@@ -53,6 +53,37 @@ export const adminLogin = async (req, res) => {
   }
 };
 
+
+//forgotpassword
+
+export const verifyAdminOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // TEMP LOGIC (you will replace later with real OTP check)
+    if (otp === "123456") {
+      return res.send("OTP Verified (Temporary)");
+    }
+
+    return res.render("admin/enterOtp", {
+      email,
+      error: "Invalid OTP",
+      success: null
+    });
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const resendAdminOtp = async (req, res) => {
+  try {
+    // send OTP logic here
+    return res.json({ success: true });
+  } catch (error) {
+    res.json({ success: false });
+  }
+};
 // ============================================================
 // ADMIN LOGOUT
 // ============================================================
@@ -75,7 +106,11 @@ export const loadDashboard = (req, res) => {
 // FORGOT PASSWORD — show form
 // ============================================================
 export const getForgotPassword = (req, res) => {
-  res.render("admin/forgotPassword", { error: null, message: null });
+  res.render("admin/forgotPassword", {
+    message: null,
+    error: null,
+    formAction: "/admin/forgot-password"   
+  });
 };
 
 // ============================================================

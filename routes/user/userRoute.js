@@ -57,8 +57,10 @@ router.post("/resend-otp", resendOtp);
 router.get("/login", isGuest, loadLogin);
 router.post("/login", isGuest, login);
 
+
 // Logout (POST = secure)
 router.post("/logout", logout);
+
 
 
 //  Google auth....
@@ -97,6 +99,8 @@ router.post(
   uploadProfileImage.single("profileImage"),
   editProfile
 );
+
+
 
 
 // email change =====
