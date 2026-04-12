@@ -587,7 +587,12 @@ export const loadAddresses = async (req, res) => {
     const user = await User.findById(req.session.user.id);
     const success = req.session.addressSuccess || null;
     req.session.addressSuccess = null;
-    res.render("user/addresses", { user, error: null, success });
+    res.render("user/addresses", {
+  user,
+  addresses: user.addresses || [],
+  error: null,
+  success
+});
   } catch (error) {
     console.error(error);
     res.redirect("/profile");
@@ -638,15 +643,38 @@ export const addAddress = async (req, res) => {
   }
 };
 
+// ADD ADDRESS
+
+// EDIT ADDRESS (PUT HERE 👇)
+export const loadEditAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.user.id);
+    const address = user.addresses.id(req.params.id);
+
+    if (!address) return res.redirect("/profile/addresses");
+
+    res.render("user/editAddress", { address });
+
+  } catch (error) {
+    res.redirect("/profile/addresses");
+  }
+};
+
+
+
 // ==================
 // ADDRESSES — Edit
 // ============================================================
 export const editAddress = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
-    const addr = user.addresses.id(req.params.id);
+    if (!user) return res.redirect("/login");
 
-    if (!addr) return res.redirect("/profile/addresses");
+    const addr = user.addresses.id(req.params.id);
+    if (!addr) {
+      req.session.addressError = "Address not found";
+      return res.redirect("/profile/addresses");
+    }
 
     const { name, phone, street, city, state, pincode, country, type, isDefault } = req.body;
 
@@ -660,15 +688,18 @@ export const editAddress = async (req, res) => {
     addr.type = type || "Home";
 
     if (isDefault === "on") {
-      user.addresses.forEach((a) => (a.isDefault = false));
+      user.addresses.forEach(a => a.isDefault = false);
       addr.isDefault = true;
     }
 
     await user.save();
-    req.session.addressSuccess = "Address updated successfully";
+
+    req.session.addressSuccess = "Address updated";
     res.redirect("/profile/addresses");
-  } catch (error) {
-    console.error("Edit address error:", error);
+
+  } catch (err) {
+    console.error(err);
+    req.session.addressError = "Update failed";
     res.redirect("/profile/addresses");
   }
 };

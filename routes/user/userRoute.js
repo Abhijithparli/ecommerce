@@ -31,6 +31,7 @@ import {
   editAddress,
   deleteAddress,
   setDefaultAddress,
+  loadEditAddress
 } from "../../controllers/user/usercontroller.js";
 
 
@@ -116,12 +117,29 @@ router.post("/profile/change-password", isAuthenticated, changePassword);
 
 
 //  ADDRESS ======
+//  ADDRESS ======
 router.get("/profile/addresses", isAuthenticated, loadAddresses);
 
 router.post("/profile/addresses/add", isAuthenticated, addAddress);
+
+// ✅ MUST COME BEFORE POST
+router.get("/profile/addresses/:id/edit", isAuthenticated, loadEditAddress);
+
+// ✅ UPDATE
 router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);
+
+// DELETE
 router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
+
+// DEFAULT
 router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
+// router.get("/profile/addresses", isAuthenticated, loadAddresses);
+
+// router.post("/profile/addresses/add", isAuthenticated, addAddress);
+// router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);
+// router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
+// router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
+// router.get("/profile/addresses/:id/edit", isAuthenticated, loadEditAddress);
 
 
 export default router;
