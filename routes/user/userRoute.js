@@ -34,15 +34,12 @@ import {
   loadEditAddress
 } from "../../controllers/user/usercontroller.js";
 
-
-import { isAuthenticated, isGuest,
-
- } from "../../middlewares/userMiddleware.js";
+import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
 
 const router = express.Router();
 
 
-// PUBLIC....... 
+// ================= PUBLIC =================
 router.get("/", loadHomepage);
 
 // Signup
@@ -58,13 +55,11 @@ router.post("/resend-otp", resendOtp);
 router.get("/login", isGuest, loadLogin);
 router.post("/login", isGuest, login);
 
-
-// Logout (POST = secure)
+// Logout
 router.post("/logout", logout);
 
 
-
-//  Google auth....
+// ================= GOOGLE AUTH =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
@@ -82,7 +77,7 @@ router.get("/auth/google/callback",
 );
 
 
-//  FORGOT PASSWORD ............
+// ================= FORGOT PASSWORD =================
 router.get("/forgot-password", isGuest, loadForgotPassword);
 router.post("/forgot-password", isGuest, forgotPassword);
 
@@ -90,10 +85,12 @@ router.get("/reset-password/:token", loadResetPassword);
 router.post("/reset-password/:token", resetPassword);
 
 
-// PROFILE........... 
+// ================= PROFILE =================
 router.get("/profile", isAuthenticated, loadProfile);
 
+// 👉 (you accidentally removed this before — needed)
 router.get("/profile/edit", isAuthenticated, loadEditProfile);
+
 router.post(
   "/profile/edit",
   isAuthenticated,
@@ -102,44 +99,37 @@ router.post(
 );
 
 
-
-
-// email change =====
+// ================= EMAIL CHANGE =================
 router.get("/profile/edit-email", isAuthenticated, loadEditEmail);
 router.post("/profile/edit-email", isAuthenticated, requestEmailChange);
 router.post("/profile/verify-email-otp", isAuthenticated, verifyEmailOtp);
 router.post("/profile/resend-email-otp", isAuthenticated, resendEmailOtp);
 
 
-//  PASSWORD CHANGE =====
+// ================= PASSWORD CHANGE =================
 router.get("/profile/change-password", isAuthenticated, loadChangePassword);
 router.post("/profile/change-password", isAuthenticated, changePassword);
 
 
-//  ADDRESS ======
-//  ADDRESS ======
+// ================= ADDRESS =================
+
+// View all addresses
 router.get("/profile/addresses", isAuthenticated, loadAddresses);
 
+// Add address
 router.post("/profile/addresses/add", isAuthenticated, addAddress);
 
-// ✅ MUST COME BEFORE POST
+// Load edit page
 router.get("/profile/addresses/:id/edit", isAuthenticated, loadEditAddress);
 
-// ✅ UPDATE
+// Update address
 router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);
 
-// DELETE
+// Delete address
 router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
 
-// DEFAULT
+// Set default address
 router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
-// router.get("/profile/addresses", isAuthenticated, loadAddresses);
-
-// router.post("/profile/addresses/add", isAuthenticated, addAddress);
-// router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);
-// router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
-// router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
-// router.get("/profile/addresses/:id/edit", isAuthenticated, loadEditAddress);
 
 
 export default router;
