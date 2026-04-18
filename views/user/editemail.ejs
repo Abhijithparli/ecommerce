@@ -54,22 +54,31 @@
 <div class="max-w-lg mx-auto w-full px-4 py-10">
 
   <!-- Step Indicator -->
-  <div class="flex items-center gap-2 mb-8">
-    <div class="step <%= typeof step === 'undefined' || step == 1 ? 'step-active' : 'step-done' %>">
-      <div class="step-num"><%= typeof step !== 'undefined' && step > 1 ? '✓' : '1' %></div>
-      <span class="step-label text-sm">New Email</span>
-    </div>
-    <div class="step-line"></div>
-    <div class="step <%= typeof step !== 'undefined' && step == 2 ? 'step-active' : (typeof step !== 'undefined' && step > 2 ? 'step-done' : 'step-pending') %>">
-      <div class="step-num">2</div>
-      <span class="step-label text-sm">Verify OTP</span>
-    </div>
-    <div class="step-line"></div>
-    <div class="step <%= typeof step !== 'undefined' && step == 3 ? 'step-done' : 'step-pending' %>">
-      <div class="step-num">3</div>
-      <span class="step-label text-sm">Done</span>
-    </div>
+<div class="flex items-center gap-2 mb-8">
+
+  <!-- STEP 1 -->
+  <div class="step <%= step == 1 ? 'step-active' : (step > 1 ? 'step-done' : 'step-pending') %>">
+    <div class="step-num"><%= step > 1 ? '✓' : '1' %></div>
+    <span class="step-label text-sm">New Email</span>
   </div>
+
+  <div class="step-line"></div>
+
+  <!-- STEP 2 -->
+  <div class="step <%= step == 2 ? 'step-active' : (step > 2 ? 'step-done' : 'step-pending') %>">
+    <div class="step-num">2</div>
+    <span class="step-label text-sm">Verify OTP</span>
+  </div>
+
+  <div class="step-line"></div>
+
+  <!-- STEP 3 -->
+  <div class="step <%= step == 3 ? 'step-done' : 'step-pending' %>">
+    <div class="step-num">3</div>
+    <span class="step-label text-sm">Done</span>
+  </div>
+
+</div>
 
   <div class="card p-8">
 
@@ -82,7 +91,7 @@
     <% } %>
 
     <!-- STEP 1: Enter new email -->
-    <% if (typeof step === 'undefined' || step == 1) { %>
+    <% if (step == 1) { %>
       <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10">
         <svg class="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -132,50 +141,93 @@
 </div>
 
 <script>
-// Email validation for step 1
+
+// Pass backend values to JS
+const step = <%= step || 1 %>;
+const newEmail = "<%= newEmail || '' %>";
+
+
+// ================
+// email validation
+// =========================
 document.getElementById('emailForm')?.addEventListener('submit', function(e) {
   const email = this.querySelector('[name="newEmail"]');
   const err = document.getElementById('emailErr');
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   if (!regex.test(email.value.trim())) {
-    e.preventDefault(); email.classList.add('border-red-500'); err.classList.remove('hidden');
-  } else { email.classList.remove('border-red-500'); err.classList.add('hidden'); }
-});
-
-// OTP-only digits
-document.querySelector('[name="otp"]')?.addEventListener('input', function() {
-  this.value = this.value.replace(/[^0-9]/g, '');
-});
-
-// Countdown timer (step 2)
-<% if (typeof step !== 'undefined' && step == 2) { %>
-let secs = 60;
-const countEl = document.getElementById('countdown');
-const resendBtn = document.getElementById('resendBtn');
-const timerEl = document.getElementById('timerText');
-const interval = setInterval(() => {
-  secs--;
-  if (countEl) countEl.textContent = secs;
-  if (secs <= 0) {
-    clearInterval(interval);
-    if (timerEl) timerEl.style.display = 'none';
-    if (resendBtn) resendBtn.disabled = false;
+    e.preventDefault();
+    email.classList.add('border-red-500');
+    err.classList.remove('hidden');
+  } else {
+    email.classList.remove('border-red-500');
+    err.classList.add('hidden');
   }
-}, 1000);
+});
 
-async function resendOtp() {
-  try {
-    const res = await fetch('/profile/resend-email-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newEmail: '<%= newEmail %>' })
-    });
-    const data = await res.json();
-    if (data.success) { alert('New OTP sent!'); location.reload(); }
-    else alert(data.message || 'Failed to resend OTP');
-  } catch { alert('Error resending OTP'); }
+
+// ===================
+// OTP input validation
+// =========================
+const otpInput = document.querySelector('[name="otp"]');
+
+if (otpInput) {
+  otpInput.addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
 }
-<% } %>
+
+
+// =====================
+// otp timer
+// =========================
+if (step === 2) {
+
+  let secs = 60;
+
+  const countEl = document.getElementById('countdown');
+  const resendBtn = document.getElementById('resendBtn');
+  const timerEl = document.getElementById('timerText');
+
+  const interval = setInterval(() => {
+    secs--;
+
+    if (countEl) countEl.textContent = secs;
+
+    if (secs <= 0) {
+      clearInterval(interval);
+
+      if (timerEl) timerEl.style.display = 'none';
+      if (resendBtn) resendBtn.disabled = false;
+    }
+  }, 1000);
+
+
+  // Resend OTP
+  window.resendOtp = async function () {
+    try {
+      const res = await fetch('/profile/resend-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newEmail })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('New OTP sent!');
+        location.reload();
+      } else {
+        alert(data.message || 'Failed to resend OTP');
+      }
+
+    } catch {
+      alert('Error resending OTP');
+    }
+  };
+
+}
+
 </script>
 </body>
 </html>

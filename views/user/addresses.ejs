@@ -56,7 +56,7 @@
       <label class="text-sm">
         <input type="checkbox" name="isDefault"> Set as default
       </label>
-      
+
  <button class="bg-orange-500 px-4 py-2 rounded mt-3">
         Save Address
       </button> 
@@ -84,19 +84,19 @@
 
       <div class="mt-3 flex gap-4 text-sm">
 
-  <!-- EDIT -->
+  <!-- edit -->
   <a href="/profile/addresses/<%= addr._id %>/edit"
      class="text-yellow-400 hover:text-yellow-300">
      Edit
   </a>
 
-  <!-- DELETE -->
+   <!-- delete -->
   <form action="/profile/addresses/<%= addr._id %>/delete"
         method="POST" class="inline">
     <button class="text-red-400">Delete</button>
   </form>
 
-  <!-- SET DEFAULT -->
+  <!--   set default  -->
   <% if (!addr.isDefault) { %>
     <form action="/profile/addresses/<%= addr._id %>/default"
           method="POST" class="inline">

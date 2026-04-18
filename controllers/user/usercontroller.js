@@ -397,7 +397,7 @@ export const editProfile = async (req, res) => {
 
     const { firstName, lastName, phone, dob, gender } = req.body;
 
-    // ✅ NAME VALIDATION
+    // name validation
     if (!/^[A-Za-z\s]{3,50}$/.test(firstName)) {
       return res.render("user/editProfile", {
         user,
@@ -405,7 +405,7 @@ export const editProfile = async (req, res) => {
       });
     }
 
-    // ✅ PHONE VALIDATION
+    // phone validation
     if (phone && !/^[6-9]\d{9}$/.test(phone)) {
       return res.render("user/editProfile", {
         user,
@@ -413,13 +413,13 @@ export const editProfile = async (req, res) => {
       });
     }
 
-    // ✅ SAVE DATA
+    // data save
     user.name = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
     if (phone) user.phone = phone.trim();
     if (dob) user.dob = new Date(dob);
     if (gender) user.gender = gender;
 
-    // ✅ IMAGE UPLOAD
+    //  image upload
     if (req.file) {
       if (user.profileImage && user.profileImage.startsWith("/uploads/")) {
         const oldPath = `public${user.profileImage}`;
@@ -446,7 +446,7 @@ export const editProfile = async (req, res) => {
 };
 
 
-// EMAIL CHANGE
+// email change
 // =================================================
 export const loadEditEmail = async (req, res) => {
   try {
@@ -458,7 +458,7 @@ export const loadEditEmail = async (req, res) => {
 };
 
 // ============================================
-// EMAIL CHANGE — send OTP to new email
+// email change — send OTP to new email
 // ============================================================
 export const requestEmailChange = async (req, res) => {
   try {
