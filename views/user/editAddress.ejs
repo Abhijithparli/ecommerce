@@ -15,27 +15,27 @@
 <form method="POST" action="/profile/addresses/<%= address._id %>/edit" novalidate>
 
     
-   <input 
+<input 
   name="name" 
   value="<%= address.name %>"
   placeholder="Full Name"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  pattern="^[A-Za-z ]+$"
-  title="Name should contain only letters and spaces"
-/>
+  pattern="^[A-Za-z][A-Za-z\s]{2,49}$"
+  title="Name must be 3–50 characters, letters only, no symbols"
+>
 
     
-  <input 
+<input 
   name="phone" 
   value="<%= address.phone %>"
   placeholder="Phone"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  pattern="[0-9]{10}"
+  pattern="^[6-9]\d{9}$"
   maxlength="10"
-  title="Enter a valid 10-digit phone number"
-/>
+  title="Enter valid Indian number (starts with 6-9)"
+>
 
 <input 
   name="street" 
@@ -43,7 +43,9 @@
   placeholder="Street"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-/>
+  minlength="5"
+  maxlength="100"
+>
 
   <input 
   name="city" 
@@ -101,6 +103,37 @@
       </button>
 
     </div>
+    <script>
+document.querySelector("form").addEventListener("submit", function(e) {
+
+  const name = document.querySelector("[name='name']").value.trim();
+  const phone = document.querySelector("[name='phone']").value.trim();
+  const city = document.querySelector("[name='city']").value.trim();
+  const state = document.querySelector("[name='state']").value.trim();
+
+  // Name check
+  if (!/^[A-Za-z\s]{3,50}$/.test(name)) {
+    alert("Invalid name (only letters, min 3 chars)");
+    e.preventDefault();
+    return;
+  }
+
+  // Phone check
+  if (!/^[6-9]\d{9}$/.test(phone)) {
+    alert("Invalid phone number");
+    e.preventDefault();
+    return;
+  }
+
+  // City / State
+  if (!/^[A-Za-z\s]{3,50}$/.test(city) || !/^[A-Za-z\s]{3,50}$/.test(state)) {
+    alert("City/State must be valid letters only");
+    e.preventDefault();
+    return;
+  }
+
+});
+</script>
 
   </form>
 

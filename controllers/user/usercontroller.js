@@ -397,18 +397,30 @@ export const editProfile = async (req, res) => {
 
     const { firstName, lastName, phone, dob, gender } = req.body;
 
-    if (!firstName || firstName.trim().length < 2) {
-      return res.render("user/editProfile", { user, error: "First name must be at least 2 characters" });
+    // ✅ NAME VALIDATION
+    if (!/^[A-Za-z\s]{3,50}$/.test(firstName)) {
+      return res.render("user/editProfile", {
+        user,
+        error: "Name must be 3–50 letters only"
+      });
     }
 
+    // ✅ PHONE VALIDATION
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+      return res.render("user/editProfile", {
+        user,
+        error: "Invalid phone number"
+      });
+    }
+
+    // ✅ SAVE DATA
     user.name = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
     if (phone) user.phone = phone.trim();
     if (dob) user.dob = new Date(dob);
     if (gender) user.gender = gender;
 
-    // Save uploaded profile image
+    // ✅ IMAGE UPLOAD
     if (req.file) {
-      // Delete old image if it exists
       if (user.profileImage && user.profileImage.startsWith("/uploads/")) {
         const oldPath = `public${user.profileImage}`;
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -417,13 +429,19 @@ export const editProfile = async (req, res) => {
     }
 
     await user.save();
+
     req.session.user.name = user.name;
     req.session.profileSuccess = "Profile updated successfully";
+
     res.redirect("/profile");
+
   } catch (error) {
     console.error("Edit profile error:", error);
     const user = await User.findById(req.session.user.id);
-    res.render("user/editProfile", { user, error: "Server error. Please try again." });
+    res.render("user/editProfile", {
+      user,
+      error: "Server error"
+    });
   }
 };
 
@@ -643,9 +661,8 @@ export const addAddress = async (req, res) => {
   }
 };
 
-// ADD ADDRESS
 
-// EDIT ADDRESS (PUT HERE 👇)
+// EDIT ADDRESS 
 export const loadEditAddress = async (req, res) => {
   try {
     const user = await User.findById(req.session.user.id);
