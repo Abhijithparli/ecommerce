@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 
-// ============================================================
-// EMAIL HELPER
+// ===============
+// email helper
 // ============================================================
 function createTransporter() {
   return nodemailer.createTransport({
@@ -16,8 +16,8 @@ function createTransporter() {
   });
 }
 
-// ============================================================
-// ADMIN LOGIN PAGE
+// ====================
+// admin login page
 // ============================================================
 export const loadAdminLogin = (req, res) => {
   if (req.session?.admin?.isAdmin) return res.redirect("/admin/dashboard");
@@ -25,7 +25,7 @@ export const loadAdminLogin = (req, res) => {
 };
 
 // ============================================================
-// ADMIN LOGIN
+//admin login
 // ============================================================
 export const adminLogin = async (req, res) => {
   try {
@@ -84,8 +84,8 @@ export const resendAdminOtp = async (req, res) => {
     res.json({ success: false });
   }
 };
-// ============================================================
-// ADMIN LOGOUT
+// ===============
+// admin logout
 // ============================================================
 export const adminLogout = (req, res) => {
   req.session.destroy((err) => {
@@ -96,14 +96,14 @@ export const adminLogout = (req, res) => {
 };
 
 // ============================================================
-// DASHBOARD
+//dashboard
 // ============================================================
 export const loadDashboard = (req, res) => {
   res.render("admin/dashboard");
 };
 
 // ============================================================
-// FORGOT PASSWORD — show form
+// forgot password 
 // ============================================================
 export const getForgotPassword = (req, res) => {
   res.render("admin/forgotPassword", {
@@ -113,8 +113,8 @@ export const getForgotPassword = (req, res) => {
   });
 };
 
-// ============================================================
-// FORGOT PASSWORD — send reset email
+// ==========================================
+// forgot password — send reset email
 // ============================================================
 export const postForgotPassword = async (req, res) => {
   try {
@@ -171,7 +171,7 @@ export const postForgotPassword = async (req, res) => {
 };
 
 // ============================================================
-// RESET PASSWORD — show form
+// reset password — show form
 // ============================================================
 export const getResetPassword = (req, res) => {
   const { token } = req.params;
@@ -188,7 +188,7 @@ export const getResetPassword = (req, res) => {
 };
 
 // ============================================================
-// RESET PASSWORD — save new password
+// reset password — save new password
 // ============================================================
 export const postResetPassword = async (req, res) => {
   try {
@@ -230,7 +230,7 @@ export const postResetPassword = async (req, res) => {
 };
 
 // ============================================================
-// USER MANAGEMENT — List users
+// user mangement — List users
 // ============================================================
 export const listUsers = async (req, res) => {
   try {
@@ -280,7 +280,7 @@ export const listUsers = async (req, res) => {
 };
 
 // ============================================================
-// USER MANAGEMENT — Block user
+// user management — Block user
 // ============================================================
 export const blockUser = async (req, res) => {
   try {
@@ -296,7 +296,7 @@ export const blockUser = async (req, res) => {
 };
 
 // ============================================================
-// USER MANAGEMENT — Unblock user
+// usermanagement — Unblock user
 // ============================================================
 export const unblockUser = async (req, res) => {
   try {

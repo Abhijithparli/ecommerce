@@ -35,11 +35,12 @@ import {
 } from "../../controllers/user/usercontroller.js";
 
 import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
+import User from "../../models/userModel.js";
 
 const router = express.Router();
 
 
-// ================= PUBLIC =================
+// ================= public =================
 router.get("/", loadHomepage);
 
 // Signup
@@ -59,7 +60,7 @@ router.post("/login", isGuest, login);
 router.post("/logout", logout);
 
 
-// ================= GOOGLE AUTH =================
+// ================= google auth =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
@@ -77,7 +78,7 @@ router.get("/auth/google/callback",
 );
 
 
-// ================= FORGOT PASSWORD =================
+// ================= forgot password =================
 router.get("/forgot-password", isGuest, loadForgotPassword);
 router.post("/forgot-password", isGuest, forgotPassword);
 
@@ -85,10 +86,10 @@ router.get("/reset-password/:token", loadResetPassword);
 router.post("/reset-password/:token", resetPassword);
 
 
-// ================= PROFILE =================
+// ================= profile =================
 router.get("/profile", isAuthenticated, loadProfile);
 
-// 👉 (you accidentally removed this before — needed)
+
 router.get("/profile/edit", isAuthenticated, loadEditProfile);
 
 router.post(
@@ -99,19 +100,19 @@ router.post(
 );
 
 
-// ================= EMAIL CHANGE =================
+// ================= email change=================
 router.get("/profile/edit-email", isAuthenticated, loadEditEmail);
 router.post("/profile/edit-email", isAuthenticated, requestEmailChange);
 router.post("/profile/verify-email-otp", isAuthenticated, verifyEmailOtp);
 router.post("/profile/resend-email-otp", isAuthenticated, resendEmailOtp);
 
 
-// ================= PASSWORD CHANGE =================
+// ================= password changes =================
 router.get("/profile/change-password", isAuthenticated, loadChangePassword);
 router.post("/profile/change-password", isAuthenticated, changePassword);
 
 
-// ================= ADDRESS =================
+// ================= address =================
 
 // View all addresses
 router.get("/profile/addresses", isAuthenticated, loadAddresses);

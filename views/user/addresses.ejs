@@ -31,39 +31,85 @@
   <% } %>
 
   <!-- ADD FORM (HIDDEN) -->
-  <div id="addressForm" class="hidden bg-gray-800 p-5 rounded mb-6">
+<div id="addressForm" class="<%= error ? '' : 'hidden' %>">
 
-    <form method="POST" action="/profile/addresses/add">
+<form method="POST" action="/profile/addresses/add" novalidate>
 
-      <input name="name" placeholder="Full Name"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- NAME -->
+ <div class="mb-3">
+  <label class="text-sm">Full Name</label>
+  <input name="name"
+    required
+    pattern="^[A-Za-z\s]{3,50}$"
+    title="Name must be 3–50 letters only"
+    class="w-full p-2 bg-gray-700 rounded">
+  
+  <p class="text-red-400 text-sm hidden"></p>
+</div>
+   
 
-      <input name="phone" placeholder="Phone"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- PHONE -->
+ <div class="mb-3">
+  <label class="text-sm">Phone</label>
+  <input name="phone"
+    required
+    pattern="^[6-9]\d{9}$"
+    class="w-full p-2 bg-gray-700 rounded">
 
-      <input name="street" placeholder="Street"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <p class="text-red-400 text-sm hidden"></p>
+</div>
 
-      <input name="city" placeholder="City"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- STREET -->
+  <label class="text-sm">Street</label>
+  <input name="street"
+    required
+    minlength="5"
+    maxlength="100"
+    title="Minimum 5 characters"
+    class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <p class="text-red-400 text-sm hidden"></p>
 
-      <input name="state" placeholder="State"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- CITY -->
+  <label class="text-sm">City</label>
+  <input name="city"
+    required
+    pattern="^[A-Za-z\s]{3,50}$"
+    title="City must contain only letters"
+    class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <p class="text-red-400 text-sm hidden"></p>
 
-      <input name="pincode" placeholder="Pincode"
-        class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- STATE -->
+  <label class="text-sm">State</label>
+  <input name="state"
+    required
+    pattern="^[A-Za-z\s]{3,50}$"
+    title="State must contain only letters"
+    class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <p class="text-red-400 text-sm hidden"></p>
 
-      <label class="text-sm">
-        <input type="checkbox" name="isDefault"> Set as default
-      </label>
 
- <button class="bg-orange-500 px-4 py-2 rounded mt-3">
-        Save Address
-      </button> 
+  <!-- PINCODE -->
+  <label class="text-sm">Pincode</label>
+  <input name="pincode"
+    required
+    pattern="^[1-9][0-9]{5}$"
+    maxlength="6"
+    title="Enter valid 6-digit pincode"
+    class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <p class="text-red-400 text-sm hidden"></p>
 
-    </form>
+  <!-- DEFAULT -->
+  <label class="text-sm">
+    <input type="checkbox" name="isDefault"> Set as default
+  </label>
+
+  <!-- BUTTON -->
+  <button class="bg-orange-500 px-4 py-2 rounded mt-3 w-full">
+    Save Address
+  </button>
+
+</form>
   </div>
-
   <!-- ADDRESS LIST -->
   <div class="space-y-4">
 <% if (addresses && addresses.length > 0) { %>
@@ -95,6 +141,7 @@
         method="POST" class="inline">
     <button class="text-red-400">Delete</button>
   </form>
+      </div>
 
   <!--   set default  -->
   <% if (!addr.isDefault) { %>
@@ -102,6 +149,7 @@
           method="POST" class="inline">
       <button class="text-blue-400">Set Default</button>
     </form>
+        </div>
   <% } %>
 
 </div>
@@ -127,9 +175,96 @@
 </div>
 
 <script>
+ 
+const form = document.querySelector("#addressForm form");
+
+if (form) {
+  form.addEventListener("submit", function(e) {
+
+    let valid = true;
+
+    const inputs = {
+      name: form.querySelector("[name='name']"),
+      phone: form.querySelector("[name='phone']"),
+      street: form.querySelector("[name='street']"),
+      city: form.querySelector("[name='city']"),
+      state: form.querySelector("[name='state']"),
+      pincode: form.querySelector("[name='pincode']")
+    };
+
+    // EMPTY CHECK
+    for (let key in inputs) {
+      if (!inputs[key].value.trim()) {
+        showError(inputs[key], "This field is required");
+        valid = false;
+      } else {
+        clearError(inputs[key]);
+      }
+    }
+
+    // PATTERN VALIDATION
+    if (!/^[A-Za-z\s]{3,50}$/.test(inputs.name.value.trim())) {
+      console.log("waht is thei s")
+      showError(inputs.name, "Invalid name");
+      valid = false;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(inputs.phone.value.trim())) {
+      showError(inputs.phone, "Invalid phone");
+      valid = false;
+    }
+
+    if (inputs.street.value.trim().length < 5) {
+      showError(inputs.street, "Street too short");
+      valid = false;
+    }
+
+    if (!/^[A-Za-z\s]{3,50}$/.test(inputs.city.value.trim())) {
+      showError(inputs.city, "Invalid city");
+      valid = false;
+    }
+
+    if (!/^[A-Za-z\s]{3,50}$/.test(inputs.state.value.trim())) {
+      showError(inputs.state, "Invalid state");
+      valid = false;
+    }
+
+    if (!/^[1-9][0-9]{5}$/.test(inputs.pincode.value.trim())) {
+      showError(inputs.pincode, "Invalid pincode");
+      valid = false;
+    }
+
+    if (!valid) {
+      e.preventDefault();   
+    }
+  });
+}
+
+// ERROR UI
+function showError(input, message) {
+  input.classList.add("border-red-500");
+
+  const container = input.closest(".mb-3");
+  if(!container) return; //now
+  const err = container.querySelector("p");
+
+  err.textContent = message;
+  err.classList.remove("hidden");
+}
+
+function clearError(input) {
+  input.classList.remove("border-red-500");
+
+  const container = input.closest(".mb-3");
+  const err = container.querySelector("p");
+
+  err.classList.add("hidden");
+}
+</script>
+<script>
 function toggleForm() {
-  const form = document.getElementById("addressForm");
-  form.classList.toggle("hidden");
+  const formDiv = document.getElementById("addressForm");
+  if (formDiv) formDiv.classList.toggle("hidden");
 }
 </script>
 

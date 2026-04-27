@@ -13,22 +13,28 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if user exists
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
-          // User exists
+          if (user.isBlocked) {
+            return done(null, false, { message: "User is blocked" });
+          }
           return done(null, user);
         }
 
-        // Check if email already exists
+        // Check email match
         user = await User.findOne({ email: profile.emails[0].value });
 
         if (user) {
-          // Link Google account to existing user
+          
+          if (user.isBlocked) {
+            return done(null, false, { message: "User is blocked" });
+          }
+
           user.googleId = profile.id;
           user.isVerified = true;
           await user.save();
+
           return done(null, user);
         }
 
@@ -38,11 +44,13 @@ passport.use(
           name: profile.displayName,
           email: profile.emails[0].value,
           isVerified: true,
-          password: null, // Google users don't need password
+          password: null,
         });
 
         await user.save();
-        done(null, user);
+
+        return done(null, user);
+
       } catch (error) {
         console.error("Google OAuth error:", error);
         done(error, null);

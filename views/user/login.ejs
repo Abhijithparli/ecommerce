@@ -24,11 +24,18 @@
             <h2 class="text-white text-3xl font-semibold text-center mb-8">Welcome Back</h2>
 
             <!-- Error Message -->
-            <% if (error) { %>
-                <div class="bg-red-500/30 border border-red-500 text-white p-3 rounded mb-6 text-center">
-                    <%= error %>
-                </div>
-            <% } %>
+  <% if (error) { %>
+    <div class="bg-red-500/30 border border-red-500 text-white p-3 rounded mb-6 text-center">
+        <%= error %>
+    </div>
+<% } %>
+
+<% if (typeof req !== 'undefined' && req.query && req.query.error === "blocked") { %>
+    <div class="bg-red-500/30 border border-red-500 text-white p-3 rounded mb-6 text-center">
+        Your account has been blocked by admin
+    </div>
+<% } %>
+
 
           <form method="POST" action="/login" id="loginForm" novalidate>
                 <!-- Email -->
@@ -139,7 +146,8 @@ form.addEventListener("submit", function (e) {
 // 🔹 Show error under input
 function showError(input, message) {
     const error = document.createElement("p");
-    error.className = "text-red-400 text-xs mt-1";
+    error.className = "input-error text-red-400 text-xs mt-1";
+
     error.innerText = message;
 
     input.classList.add("border-red-500");
@@ -150,7 +158,7 @@ function showError(input, message) {
 
 // 🔹 Clear previous errors
 function clearErrors() {
-    document.querySelectorAll(".text-red-400").forEach(el => el.remove());
+   document.querySelectorAll(".input-error").forEach(el => el.remove());
     document.querySelectorAll("input").forEach(input => {
         input.classList.remove("border-red-500");
     });

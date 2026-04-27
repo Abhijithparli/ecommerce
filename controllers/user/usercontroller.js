@@ -54,14 +54,14 @@ function otpTemplate(otp) {
 }
 
 
-// OTP GENERATOR
+// otp generator
 // ================================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 
-// MULTER — profile image upload
+// multer — profile image upload
 // =================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -88,14 +88,14 @@ export const uploadProfileImage = multer({
 });
 
 
-// HOME
+// home
 // =====================================
 export const loadHomepage = (req, res) => {
   res.render("user/home", { user: req.session.user || null });
 };
 
 
-// SIGNUP
+// signup
 // =====================================
 export const loadSignup = (req, res) => {
   res.render("user/signup", { error: null, success: null });
@@ -139,7 +139,7 @@ export const signup = async (req, res) => {
 };
 
 
-// OTP VERIFY
+// otp verify
 // ==========================================
 export const loadVerifyOtp = (req, res) => {
   const email = req.session.tempUser?.email || req.session.forgotEmail;
@@ -172,8 +172,8 @@ export const verifyOtp = async (req, res) => {
     }
 
     // FORGOT PASSWORD FLOW
-    if (forgotEmail === email) {
-      const user = await User.findOne({ email });
+   if (user && user.isBlocked) {
+  return done(null, false, { message: "User is blocked" });
       if (!user) return res.render("user/otp", { email, error: "User not found", success: null });
       if (user.otp !== otp) return res.render("user/otp", { email, error: "Invalid OTP", success: null });
       if (new Date() > user.otpExpiry) return res.render("user/otp", { email, error: "OTP expired", success: null });
@@ -224,15 +224,19 @@ export const resendOtp = async (req, res) => {
 };
 
 
-// LOGIN
+// login
 // =======================================
 export const loadLogin = (req, res) => {
+  
   res.render("user/login", { error: null });
 };
 
+
 export const login = async (req, res) => {
+  
   try {
     const { email, password } = req.body;
+
 
     if (!email || !password) {
       return res.render("user/login", { error: "Email and password required" });
@@ -251,7 +255,7 @@ export const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
+  
     if (!isMatch) {
       return res.render("user/login", { error: "Invalid credentials" });
     }
@@ -277,7 +281,9 @@ export const logout = (req, res) => {
 };
 
 
-// FORGOT PASSWORD
+
+
+// forgotpassword
 // =============================================
 export const loadForgotPassword = (req, res) => {
   res.render("user/forgotPassword", { 
@@ -312,7 +318,7 @@ export const forgotPassword = async (req, res) => {
 };
 
 
-// RESET PASSWORD
+// reset password
 // ====================================================
 export const loadResetPassword = async (req, res) => {
   try {
@@ -344,10 +350,14 @@ export const resetPassword = async (req, res) => {
 
     if (!user) return res.render("user/resetPassword", { error: "Invalid or expired token", token: null });
 
-    user.password = await bcrypt.hash(password, 10);
-    user.resetPasswordToken = null;
-    user.resetPasswordExpiry = null;
-    await user.save();
+const hashedPassword = await bcrypt.hash(password, 10);
+user.password = hashedPassword;
+
+await user.save();
+
+// console.log(" Password updated correctly");
+
+// console.log(" Password updated in DB");
 
     res.redirect("/login");
   } catch (error) {
@@ -375,7 +385,7 @@ export const loadProfile = async (req, res) => {
   }
 };
 
-// Profile — Edit (display form)
+// Profile — Edit 
 // ==================================================
 export const loadEditProfile = async (req, res) => {
   try {
@@ -388,7 +398,7 @@ export const loadEditProfile = async (req, res) => {
 };
 
 
-// P — Edit (save)
+// P — Edit 
 // ================================================
 export const editProfile = async (req, res) => {
   try {
@@ -565,40 +575,39 @@ export const changePassword = async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
     const user = await User.findById(req.session.user.id);
 
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.render("user/changePassword", {
+        user,
+        error: "Current password is incorrect",
+        success: null
+      });
+    }
+
     if (newPassword !== confirmPassword) {
-      return res.render("user/changePassword", { user, error: "Passwords do not match", success: null });
-    }
-    if (newPassword.length < 6) {
-      return res.render("user/changePassword", { user, error: "Password must be at least 6 characters", success: null });
-    }
-    if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{6,}$/.test(newPassword)) {
-      return res.render("user/changePassword", { user, error: "Must include uppercase, lowercase and a number", success: null });
+      return res.render("user/changePassword", {
+        user,
+        error: "Passwords do not match",
+        success: null
+      });
     }
 
-    // Verify current password
-    if (user.password) {
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.render("user/changePassword", { user, error: "Current password is incorrect", success: null });
-      }
-      if (currentPassword === newPassword) {
-        return res.render("user/changePassword", { user, error: "New password must differ from current password", success: null });
-      }
-    }
+    const newHash = await bcrypt.hash(newPassword, 10);
+    user.password = newHash;
 
-    user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    res.render("user/changePassword", { user, error: null, success: "Password changed successfully!" });
+    req.session.destroy(() => {
+      res.redirect("/login");
+    });
+
   } catch (error) {
-    console.error("Change password error:", error);
-    const user = await User.findById(req.session.user.id);
-    res.render("user/changePassword", { user, error: "Server error", success: null });
+    res.redirect("/profile");
   }
 };
-
 // =======================
-// ADDRESSES — View all
+// address — view all
 // ============================================================
 export const loadAddresses = async (req, res) => {
   try {
@@ -608,7 +617,7 @@ export const loadAddresses = async (req, res) => {
     res.render("user/addresses", {
   user,
   addresses: user.addresses || [],
-  error: null,
+  error : null,
   success
 });
   } catch (error) {
@@ -620,47 +629,79 @@ export const loadAddresses = async (req, res) => {
 // ===================
 // ADDRESSES — Add
 // ============================================================
-export const addAddress = async (req, res) => {
-  try {
-    const user = await User.findById(req.session.user.id);
-    const { name, phone, street, city, state, pincode, country, type, isDefault } = req.body;
+export const addAddress = async (req,res)=>{
+  try{
 
-    if (!name || !phone || !street || !city || !state || !pincode) {
-      req.session.addressSuccess = null;
+    const {name,phone, street,city,state,pincode,country,type,isDefault} = req.body;
+    
+     const user = await User.findById(req.session.user.id); 
+
+    //check is empty or not
+    if (!name || !phone || !street || !city||!state||!pincode){
+      req.session.error = "All fields are required";
       return res.redirect("/profile/addresses");
     }
 
+    //name validation 
+    if(!/^[A-Za-z\s]{3,50}$/.test(name.trim())) {
+      req.session.error = "Name must contain only letters (3-50 chars)";
+      return res.redirect("/profile/addresses");
+    }
+    //phone validtion
+    if(!/^[6-9]\d{9}$/.test(phone.trim())) {
+      req.session.error = "invalid phone number";
+      return res.redirect("/profile/addresses");
+    }
+
+    //street validation
+    if(street.trim().length < 5){
+      req.session.error = "street must be at least 5 characters";
+      return res.redirect("/profile/addresses");
+    }
+    //city validation
+    if(!/^[A-Za-z\s]{3,50}$/.test(city.trim())) {
+      req.session.error = "invalid city";
+      return res.redirect("/profile/addresses") 
+    }
+    
+    // state validation
+    if (!/^[A-Za-z\s]{3,50}$/.test(state.trim())) {
+      req.session.error = "Invalid state";
+      return res .redirect("/profile/addresses");
+    }
+
     const newAddr = {
-      name,
-      phone,
-      street,
-      city,
-      state,
-      pincode,
-      country: country || "India",
-      type: type || "Home",
+      name: name.trim(),
+      phone: phone.trim(),
+      street:street.trim(),
+      city: city.trim(),
+      state :state.trim(),
+      pincode:pincode.trim(),
+      country:country || "India",
+      type : type||"Home",
       isDefault: isDefault === "on",
     };
 
-    // If set as default, unset all others
-    if (newAddr.isDefault) {
-      user.addresses.forEach((a) => (a.isDefault = false));
+    //default logic
+    if(newAddr.isDefault){
+      user.addresses.forEach(a=> a.isDefault = false);
     }
-
-    // First address is always default
-    if (user.addresses.length === 0) newAddr.isDefault = true;
+    if(user.addresses.length === 0){
+      newAddr.isDefault = true;
+    }
 
     user.addresses.push(newAddr);
     await user.save();
 
-    req.session.addressSuccess = "Address added successfully";
+    req.session.success = "Address added successfully";
     res.redirect("/profile/addresses");
-  } catch (error) {
-    console.error("Add address error:", error);
+  
+  }catch(error){
+    console.error("Add address error:",error);
+    req.session.error = "something went wrong";
     res.redirect("/profile/addresses");
   }
 };
-
 
 // EDIT ADDRESS 
 export const loadEditAddress = async (req, res) => {
@@ -676,8 +717,6 @@ export const loadEditAddress = async (req, res) => {
     res.redirect("/profile/addresses");
   }
 };
-
-
 
 // ==================
 // ADDRESSES — Edit
@@ -747,7 +786,7 @@ export const deleteAddress = async (req, res) => {
 };
 
 // ==============================
-// ADDRESSES — Set Default
+// addressess — Set Default
 // ============================================================
 export const setDefaultAddress = async (req, res) => {
   try {

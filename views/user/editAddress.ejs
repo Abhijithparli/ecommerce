@@ -15,67 +15,54 @@
 <form method="POST" action="/profile/addresses/<%= address._id %>/edit" novalidate>
 
     
+<label class="block mb-1 text-sm font-medium">Full Name</label>
 <input 
-  name="name" 
+  name="name"
   value="<%= address.name %>"
-  placeholder="Full Name"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
   pattern="^[A-Za-z][A-Za-z\s]{2,49}$"
-  title="Name must be 3–50 characters, letters only, no symbols"
->
+/>
 
     
+<label class="block mb-1 text-sm font-medium">Phone Number</label>
 <input 
-  name="phone" 
+  name="phone"
   value="<%= address.phone %>"
-  placeholder="Phone"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
   pattern="^[6-9]\d{9}$"
-  maxlength="10"
-  title="Enter valid Indian number (starts with 6-9)"
->
+/>
 
+<label class="block mb-1 text-sm font-medium">Street Address</label>
 <input 
-  name="street" 
+  name="street"
   value="<%= address.street %>"
-  placeholder="Street"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  minlength="5"
-  maxlength="100"
->
-
-  <input 
-  name="city" 
+/>
+<label class="block mb-1 text-sm font-medium">City</label>
+<input 
+  name="city"
   value="<%= address.city %>"
-  placeholder="City"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  pattern="^[A-Za-z ]+$"
-  title="City should contain only letters"
 />
 
-   <input 
-  name="state" 
+<label class="block mb-1 text-sm font-medium">State</label>
+<input 
+  name="state"
   value="<%= address.state %>"
-  placeholder="State"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  pattern="^[A-Za-z ]+$"
-  title="State should contain only letters"
 />
 
-  <input 
-  name="pincode" 
+  <label class="block mb-1 text-sm font-medium">Pincode</label>
+<input 
+  name="pincode"
   value="<%= address.pincode %>"
-  placeholder="Pincode"
   class="w-full p-3 mb-3 bg-gray-700 rounded"
   required
-  pattern="[0-9]{6}"
-  maxlength="6"
-  title="Enter a valid 6-digit pincode"
 />
 
     <!-- default -->
