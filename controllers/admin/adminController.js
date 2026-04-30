@@ -42,7 +42,7 @@ export const adminLogin = async (req, res) => {
           console.error("Session error:", err);
           return res.render("admin/login", { error: "Session error. Try again." });
         }
-        return res.redirect("/admin/dashboard");
+        return res.redirect("/admin/dashboard");  
       });
     } else {
       return res.render("admin/login", { error: "Invalid email or password" });

@@ -153,7 +153,8 @@ export const verifyOtp = async (req, res) => {
     const tempUser = req.session.tempUser;
     const forgotEmail = req.session.forgotEmail;
 
-    // SIGNUP FLOW
+    // SIGNUP FLOW============
+
     if (tempUser && tempUser.email === email) {
       if (tempUser.otp !== otp) {
         return res.render("user/otp", { email, error: "Invalid OTP", success: null });
@@ -171,7 +172,8 @@ export const verifyOtp = async (req, res) => {
       return res.redirect("/login");
     }
 
-    // FORGOT PASSWORD FLOW
+    // FORGOT PASSWORD FLOW==========
+
    if (user && user.isBlocked) {
   return done(null, false, { message: "User is blocked" });
       if (!user) return res.render("user/otp", { email, error: "User not found", success: null });
@@ -279,8 +281,6 @@ export const login = async (req, res) => {
 export const logout = (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 };
-
-
 
 
 // forgotpassword

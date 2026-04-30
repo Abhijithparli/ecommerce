@@ -8,17 +8,20 @@ import passport from "./config/passport.js";
 import adminRouter from "./routes/admin/adminRouter.js";
 import userRouter from "./routes/user/userRoute.js";
 import connectDB from "./config/db.js";
+import morgan from "morgan";
+import nocache from "nocache";
 
 dotenv.config();
 connectDB();
 console.log('jo');
 
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
+app.use(morgan("dev"))
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -38,6 +41,7 @@ app.use(
   })
 );
 
+app.use(nocache());
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
   res.setHeader("Pragma", "no-cache");
