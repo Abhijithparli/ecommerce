@@ -39,6 +39,7 @@ passport.use(
           return done(null, user);
         }
 
+          
         // Create new user
         user = new User({
           googleId: profile.id,
