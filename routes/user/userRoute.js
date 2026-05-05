@@ -31,7 +31,9 @@ import {
   editAddress,
   deleteAddress,
   setDefaultAddress,
-  loadEditAddress
+  loadEditAddress,
+  loadSetPassword,
+  savePassword
 } from "../../controllers/user/usercontroller.js";
 
 import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
@@ -67,16 +69,23 @@ router.get("/auth/google",
 
 router.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
+  async (req, res) => {
+    console.log("Google user:", req.user);
+
+    // store session
     req.session.user = {
       id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
+      email: req.user.email
     };
+
+    //  check password
+    if (!req.user.password) {
+      return res.redirect("/set-password");
+    }
+
     res.redirect("/");
   }
 );
-
 
 // ================= forgot password =================
 router.get("/forgot-password", isGuest, loadForgotPassword);
@@ -131,6 +140,9 @@ router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
 
 // Set default address
 router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
+
+router.get("/set-password", isAuthenticated, loadSetPassword);
+router.post("/set-password", isAuthenticated, savePassword);
 
 
 export default router;

@@ -802,3 +802,51 @@ export const setDefaultAddress = async (req, res) => {
     res.redirect("/profile/addresses");
   }
 };
+
+// ============================================================
+// SET PASSWORD
+// ============================================================
+export const loadSetPassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.user.id);
+    if (user.password) {
+      return res.redirect("/");
+    }
+    res.render("user/setPassword", { error: null });
+  } catch (error) {
+    console.error("Load set password error:", error);
+    res.redirect("/");
+  }
+};
+
+export const savePassword = async (req, res) => {
+  try {
+    const { password, confirmPassword } = req.body;
+    const user = await User.findById(req.session.user.id);
+
+    if (user.password) {
+      return res.redirect("/");
+    }
+
+    if (!password || !confirmPassword) {
+      return res.render("user/setPassword", { error: "All fields are required" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("user/setPassword", { error: "Passwords do not match" });
+    }
+
+    if (password.length < 6) {
+      return res.render("user/setPassword", { error: "Password must be at least 6 characters" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.redirect("/");
+  } catch (error) {
+    console.error("Save password error:", error);
+    res.render("user/setPassword", { error: "Server error" });
+  }
+};

@@ -20,7 +20,11 @@ passport.use(
           if (user.isBlocked) {
             return done(null, false, { message: "User is blocked" });
           }
-          return done(null, user);
+          if (!user.password) {
+  user.isFirstLogin = true;   // optional flag for use set passport
+}
+
+return done(null, user);
         }
 
         // Check email match
