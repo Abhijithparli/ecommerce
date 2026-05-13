@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Category</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+
+<div class="bg-gray-800 p-8 rounded-xl w-full max-w-lg shadow-lg">
+
+  <h1 class="text-3xl font-bold mb-6">
+    Edit Category
+  </h1>
+
+  <% if (error) { %>
+    <div class="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded mb-4">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <form
+    action="/admin/categories/<%= category._id %>/edit"
+    method="POST"
+  >
+
+    <!-- NAME -->
+    <div class="mb-4">
+
+      <label class="block mb-2">
+        Category Name
+      </label>
+
+      <input
+        type="text"
+        name="name"
+        value="<%= category.name %>"
+        class="w-full px-4 py-3 rounded bg-gray-700 border border-gray-600"
+        required
+      >
+
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="mb-6">
+
+      <label class="block mb-2">
+        Description
+      </label>
+
+      <textarea
+        name="description"
+        rows="4"
+        class="w-full px-4 py-3 rounded bg-gray-700 border border-gray-600"
+      ><%= category.description %></textarea>
+
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="flex gap-4">
+
+      <button
+        class="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg"
+      >
+        Update Category
+      </button>
+
+      <a
+        href="/admin/categories"
+        class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg"
+      >
+        Cancel
+      </a>
+
+    </div>
+
+  </form>
+
+</div>
+
+</body>
+</html>

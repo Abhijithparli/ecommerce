@@ -39,6 +39,11 @@ import {
 import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
 import User from "../../models/userModel.js";
 
+import {
+  loadProducts,
+  loadProductDetails
+} from "../../controllers/user/productController.js";
+
 const router = express.Router();
 
 
@@ -60,6 +65,14 @@ router.post("/login", isGuest, login);
 
 // Logout
 router.post("/logout", logout);
+
+// PRODUCT LISTING
+router.get("/products", loadProducts);
+// PRODUCT DETAILS
+router.get(
+  "/products/:id",
+  loadProductDetails
+);
 
 
 // ================= google auth =================

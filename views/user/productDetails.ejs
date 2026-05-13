@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= product.name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+
+    .zoom-container {
+      overflow: hidden;
+    }
+
+    .zoom-image {
+      transition: transform 0.3s ease;
+    }
+
+    .zoom-container:hover .zoom-image {
+      transform: scale(1.5);
+    }
+
+  </style>
+
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+  <!-- BREADCRUMB -->
+  <div class="text-sm text-gray-500 mb-6">
+
+    <a href="/" class="hover:text-orange-500">
+      Home
+    </a>
+
+    /
+
+    <a href="/products" class="hover:text-orange-500">
+      Products
+    </a>
+
+    /
+
+    <span class="text-gray-700">
+      <%= product.name %>
+    </span>
+
+  </div>
+
+
+  <!-- PRODUCT SECTION -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-white rounded-2xl shadow p-8">
+
+    <!-- IMAGES -->
+    <div>
+
+      <!-- MAIN IMAGE -->
+      <div class="zoom-container rounded-xl overflow-hidden border">
+
+        <img
+          id="mainImage"
+          src="<%= product.images[0] %>"
+          class="zoom-image w-full h-[500px] object-cover"
+        >
+
+      </div>
+
+      <!-- THUMBNAILS -->
+      <div class="flex gap-4 mt-4">
+
+        <% product.images.forEach(image => { %>
+
+          <img
+            src="<%= image %>"
+            onclick="changeImage('<%= image %>')"
+            class="w-24 h-24 object-cover rounded-lg border cursor-pointer hover:border-orange-500"
+          >
+
+        <% }) %>
+
+      </div>
+
+    </div>
+
+
+    <!-- PRODUCT INFO -->
+    <div>
+
+      <!-- NAME -->
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">
+
+        <%= product.name %>
+
+      </h1>
+
+      <!-- BRAND -->
+      <p class="text-lg text-gray-500 mb-4">
+
+        Brand:
+        <span class="font-medium text-gray-700">
+          <%= product.brand %>
+        </span>
+
+      </p>
+
+
+      <!-- PRICE -->
+      <div class="flex items-center gap-4 mb-6">
+
+        <span class="text-4xl font-bold text-orange-600">
+
+          ₹<%= product.salePrice %>
+
+        </span>
+
+        <span class="text-xl line-through text-gray-400">
+
+          ₹<%= product.regularPrice %>
+
+        </span>
+
+      </div>
+
+
+      <!-- DISCOUNT -->
+      <div class="mb-6">
+
+        <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+
+          <%= Math.round(
+            ((product.regularPrice - product.salePrice)
+            / product.regularPrice) * 100
+          ) %>% OFF
+
+        </span>
+
+      </div>
+
+
+      <!-- STOCK -->
+      <div class="mb-6">
+
+        <% if (product.quantity > 0) { %>
+
+          <span class="text-green-600 font-semibold">
+
+            In Stock
+
+          </span>
+
+        <% } else { %>
+
+          <span class="text-red-500 font-semibold">
+
+            Out Of Stock
+
+          </span>
+
+        <% } %>
+
+      </div>
+
+
+      <!-- DESCRIPTION -->
+      <div class="mb-8">
+
+        <h2 class="text-xl font-semibold mb-3">
+          Description
+        </h2>
+
+        <p class="text-gray-600 leading-7">
+
+          <%= product.description %>
+
+        </p>
+
+      </div>
+
+
+      <!-- BUTTONS -->
+      <div class="flex gap-4">
+
+        <% if (product.quantity > 0) { %>
+
+          <button
+            class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold"
+          >
+            Add To Cart
+          </button>
+
+        <% } else { %>
+
+          <button
+            disabled
+            class="bg-gray-400 text-white px-8 py-4 rounded-xl cursor-not-allowed"
+          >
+            Out Of Stock
+          </button>
+
+        <% } %>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- RELATED PRODUCTS -->
+  <div class="mt-16">
+
+    <h2 class="text-3xl font-bold text-gray-800 mb-8">
+
+      Related Products
+
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+      <% relatedProducts.forEach(item => { %>
+
+        <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+          <img
+            src="<%= item.images[0] %>"
+            class="w-full h-56 object-cover"
+          >
+
+          <div class="p-5">
+
+            <h3 class="text-lg font-semibold mb-2">
+
+              <%= item.name %>
+
+            </h3>
+
+            <p class="text-orange-600 font-bold mb-4">
+
+              ₹<%= item.salePrice %>
+
+            </p>
+
+            <a
+              href="/products/<%= item._id %>"
+              class="block text-center bg-gray-900 hover:bg-black text-white py-3 rounded-lg"
+            >
+              View Product
+            </a>
+
+          </div>
+
+        </div>
+
+      <% }) %>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+function changeImage(image) {
+
+  document.getElementById("mainImage").src = image;
+}
+
+</script>
+
+</body>
+</html>

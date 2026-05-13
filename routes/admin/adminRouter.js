@@ -16,7 +16,28 @@ import {
   resendAdminOtp
 } from "../../controllers/admin/adminController.js";
 
+// CATEGORY CONTROLLER IMPORT
+import {
+  loadCategories,
+  addCategory,
+  editCategory,
+  deleteCategory,
+  loadEditCategory
+} from "../../controllers/admin/categoryController.js";
+
+import upload from "../../config/multer.js";
+
+import {
+  loadProducts,
+  addProduct,
+  loadEditProduct,
+  editProduct,
+  deleteProduct
+} from "../../controllers/admin/productController.js";
+
+
 const router = express.Router();
+
 
 // ── Auth middleware ────────────────────────────────────────
 const isAdminAuth = (req, res, next) => {
@@ -50,6 +71,51 @@ router.get("/users",              isAdminAuth, listUsers);
 router.post("/users/block/:id",   isAdminAuth, blockUser);
 router.post("/users/unblock/:id", isAdminAuth, unblockUser);
 
+// routes/admin/adminRoute.js
 
+router.get("/categories", isAdminAuth, loadCategories);
+router.post("/categories/add", isAdminAuth, addCategory);
+router.get("/categories/:id/edit", isAdminAuth, loadEditCategory);
 
+router.post("/categories/:id/edit", isAdminAuth, editCategory);
+router.post("/categories/:id/delete", isAdminAuth, deleteCategory);
+
+// ================= PRODUCT MANAGEMENT =================
+
+// Load products page
+router.get(
+  "/products",
+  isAdminAuth,
+  loadProducts
+);
+
+// Add product
+router.post(
+  "/products/add",
+  isAdminAuth,
+  upload.array("images", 10),
+  addProduct
+);
+
+// laod edit product page
+router.get(
+  "/products/:id/edit",
+  isAdminAuth,
+  loadEditProduct
+);
+
+// DELETE PRODUCT
+router.post(
+  "/products/:id/delete",
+  isAdminAuth,
+  deleteProduct
+);
+
+// update product
+router.post(
+  "/products/:id/edit",
+  isAdminAuth,
+  upload.array("images", 10),
+  editProduct
+);
 export default router;
