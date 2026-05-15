@@ -42,6 +42,12 @@ const productSchema = new mongoose.Schema({
   images: [{
     type: String
   }],
+  
+  highlights: [
+  {
+    type: String
+  }
+],
 
   isBlocked: {
     type: Boolean,

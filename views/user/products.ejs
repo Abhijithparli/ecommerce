@@ -65,6 +65,80 @@
 
       </select>
 
+      <!-- PRICE FILTER -->
+<div>
+
+  <label class="block mb-2 text-sm font-medium text-gray-700">
+    Price Range
+  </label>
+
+  <select
+    name="price"
+    class="border rounded-lg px-4 py-2 w-full"
+  >
+
+    <option value="">
+      All Prices
+    </option>
+
+    <option
+      value="0-1000"
+      <%= price === "0-1000" ? "selected" : "" %>
+    >
+      Under ₹1000
+    </option>
+
+    <option
+      value="1000-3000"
+      <%= price === "1000-3000" ? "selected" : "" %>
+    >
+      ₹1000 - ₹3000
+    </option>
+
+    <option
+      value="3000-above"
+      <%= price === "3000-above" ? "selected" : "" %>
+    >
+      Above ₹3000
+    </option>
+
+  </select>
+
+</div>
+
+<!-- BRAND FILTER -->
+<div>
+
+  <label class="block mb-2 text-sm font-medium text-gray-700">
+    Brand
+  </label>
+
+  <select
+    name="brand"
+    class="border rounded-lg px-4 py-2 w-full"
+  >
+
+    <option value="">
+      All Brands
+    </option>
+
+    <% brands.forEach(item => { %>
+
+      <option
+        value="<%= item %>"
+        <%= brand === item ? "selected" : "" %>
+      >
+
+        <%= item %>
+
+      </option>
+
+    <% }) %>
+
+  </select>
+
+</div>
+
 
       <!-- SORT -->
       <select
@@ -167,7 +241,36 @@
 
               <span class="text-xl font-bold text-orange-600">
 
-                ₹<%= product.salePrice %>
+              <div class="mt-3">
+
+  <!-- SALE PRICE -->
+  <span class="text-xl font-bold text-orange-500">
+
+    ₹<%= product.salePrice %>
+
+  </span>
+
+  <!-- REGULAR PRICE -->
+  <span class="text-gray-400 line-through ml-2">
+
+    ₹<%= product.regularPrice %>
+
+  </span>
+
+  <!-- DISCOUNT -->
+  <span class="ml-2 text-green-600 font-semibold text-sm">
+
+    <%= Math.round(
+
+      ((product.regularPrice - product.salePrice)
+
+      / product.regularPrice) * 100
+
+    ) %>% OFF
+
+  </span>
+
+</div>
 
               </span>
 

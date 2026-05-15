@@ -41,8 +41,16 @@ import User from "../../models/userModel.js";
 
 import {
   loadProducts,
-  loadProductDetails
+  loadProductDetails,
+  addReview
 } from "../../controllers/user/productController.js";
+
+import {
+  addToCart,
+  loadCart,
+  updateCartQuantity,
+  removeCartItem
+} from "../../controllers/user/cartController.js";
 
 const router = express.Router();
 
@@ -68,12 +76,50 @@ router.post("/logout", logout);
 
 // PRODUCT LISTING
 router.get("/products", loadProducts);
+
 // PRODUCT DETAILS
 router.get(
   "/products/:id",
   loadProductDetails
 );
 
+// ADD REVIEW
+router.post(
+
+  "/products/:productId/review",
+
+  isAuthenticated,
+
+  addReview
+);
+
+// ADD TO CART
+router.post(
+  "/cart/add/:productId",
+  isAuthenticated,
+  addToCart
+);
+
+//load cart page
+router.get(
+  "/cart",
+  isAuthenticated,
+  loadCart
+);
+
+// UPDATE CART QUANTITY
+router.post(
+  "/cart/update-quantity",
+  isAuthenticated,
+  updateCartQuantity
+);
+
+//remove cart item
+router.delete(
+  "/cart/remove/:productId",
+  isAuthenticated,
+  removeCartItem
+);
 
 // ================= google auth =================
 router.get("/auth/google",

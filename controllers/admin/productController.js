@@ -76,6 +76,15 @@ export const addProduct = async (req, res) => {
       return res.redirect("/admin/products");
     }
 
+    // convert highlights to  array 
+const highlightsArray = highlights
+
+  ? highlights.split(",")
+
+      .map(item => item.trim())
+
+  : [];
+
     // image path
 
    const imagePaths = [];
@@ -116,7 +125,8 @@ for (let i = 0; i < req.files.length; i++) {
       salePrice,
       quantity,
 
-      images: imagePaths
+      images: imagePaths,
+      highlights: highlightsArray
     });
 
     await newProduct.save();
@@ -177,15 +187,16 @@ export const editProduct = async (req, res) => {
 
     const { id } = req.params;
 
-    const {
-      name,
-      description,
-      brand,
-      category,
-      regularPrice,
-      salePrice,
-      quantity
-    } = req.body;
+  const {
+  name,
+  description,
+  brand,
+  category,
+  regularPrice,
+  salePrice,
+  quantity,
+  highlights
+} = req.body;
 
     const product = await Product.findById(id);
 
