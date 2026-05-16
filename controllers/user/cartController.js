@@ -2,7 +2,7 @@ import Cart from "../../models/cartModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
 
-// ADD TO CART
+//add to cart
 export const addToCart = async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -16,7 +16,7 @@ export const addToCart = async (req, res) => {
       isDeleted: false,
     });
 
-    // PRODUCT NOT FOUND
+    //productnotfound
     if (!product) {
       return res.status(404).json({
         success: false,

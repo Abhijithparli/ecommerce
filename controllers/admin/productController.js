@@ -5,31 +5,27 @@ import fs from "fs";
 import path from "path";
 
 export const loadProducts = async (req, res) => {
-
   try {
-
     const products = await Product.find({
-      isDeleted: false
+      isDeleted: false,
     })
-    .populate("category")
-    .sort({ createdAt: -1 });
+      .populate("category")
+      .sort({ createdAt: -1 });
 
     const categories = await Category.find({
-      isDeleted: false
+      isDeleted: false,
     });
 
     res.render("admin/products", {
       products,
       categories,
       success: req.session.success,
-      error: req.session.error
+      error: req.session.error,
     });
 
     req.session.success = null;
     req.session.error = null;
-
   } catch (error) {
-
     console.log(error);
 
     res.redirect("/admin/dashboard");
@@ -37,9 +33,8 @@ export const loadProducts = async (req, res) => {
 };
 
 export const addProduct = async (req, res) => {
-
   try {
-
+    console.log(req.body)
     const {
       name,
       description,
@@ -47,7 +42,8 @@ export const addProduct = async (req, res) => {
       category,
       regularPrice,
       salePrice,
-      quantity
+      quantity,
+      highlights
     } = req.body;
 
     // VALIDATION
@@ -61,7 +57,6 @@ export const addProduct = async (req, res) => {
       !salePrice ||
       !quantity
     ) {
-
       req.session.error = "All fields are required";
 
       return res.redirect("/admin/products");
@@ -70,52 +65,43 @@ export const addProduct = async (req, res) => {
     // MINIMUM 3 IMAGES
 
     if (!req.files || req.files.length < 3) {
-
       req.session.error = "Minimum 3 product images required";
 
       return res.redirect("/admin/products");
     }
 
-    // convert highlights to  array 
-const highlightsArray = highlights
+    // convert highlights to  array
+    const highlightsArray = highlights
+      ? highlights
+          .split(",")
 
-  ? highlights.split(",")
-
-      .map(item => item.trim())
-
-  : [];
-
+          .map((item) => item.trim())
+      : [];
     // image path
 
-   const imagePaths = [];
+    const imagePaths = [];
 
-for (let i = 0; i < req.files.length; i++) {
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
 
-  const file = req.files[i];
+      const fileName = Date.now() + "-" + i + ".webp";
 
-  const fileName = Date.now() + "-" + i + ".webp";
+      const uploadPath = path.join("public/uploads/products", fileName);
 
-  const uploadPath = path.join(
-    "public/uploads/products",
-    fileName
-  );
+      // RESIZE + COMPRESS
+      await sharp(file.buffer)
+        .resize(800, 800)
 
-  // RESIZE + COMPRESS
-  await sharp(file.buffer)
+        .webp({ quality: 80 })
 
-    .resize(800, 800)
+        .toFile(uploadPath);
 
-    .webp({ quality: 80 })
-
-    .toFile(uploadPath);
-
-  imagePaths.push("/uploads/products/" + fileName);
-}
+      imagePaths.push("/uploads/products/" + fileName);
+    }
 
     // CREATE PRODUCT
 
     const newProduct = new Product({
-
       name,
       description,
       brand,
@@ -126,7 +112,7 @@ for (let i = 0; i < req.files.length; i++) {
       quantity,
 
       images: imagePaths,
-      highlights: highlightsArray
+      highlights: highlightsArray,
     });
 
     await newProduct.save();
@@ -134,74 +120,62 @@ for (let i = 0; i < req.files.length; i++) {
     req.session.success = "Product added successfully";
 
     res.redirect("/admin/products");
-
   } catch (error) {
-
     console.log(error);
 
     req.session.error = "Something went wrong";
 
     res.redirect("/admin/products");
   }
-}; 
-
+};
 
 export const loadEditProduct = async (req, res) => {
-
   try {
-
     const product = await Product.findById(req.params.id);
 
     const categories = await Category.find({
-      isDeleted: false
+      isDeleted: false,
     });
 
     if (!product) {
-
       req.session.error = "Product not found";
 
       return res.redirect("/admin/products");
     }
 
     res.render("admin/editProduct", {
-
       product,
       categories,
 
-      error: req.session.error
+      error: req.session.error,
     });
 
     req.session.error = null;
-
   } catch (error) {
-
     console.log(error);
 
     res.redirect("/admin/products");
   }
 };
-   
+
 export const editProduct = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
-  const {
-  name,
-  description,
-  brand,
-  category,
-  regularPrice,
-  salePrice,
-  quantity,
-  highlights
-} = req.body;
+    const {
+      name,
+      description,
+      brand,
+      category,
+      regularPrice,
+      salePrice,
+      quantity,
+      highlights,
+    } = req.body;
 
     const product = await Product.findById(id);
 
     if (!product) {
-
       req.session.error = "Product not found";
 
       return res.redirect("/admin/products");
@@ -217,45 +191,37 @@ export const editProduct = async (req, res) => {
       !salePrice ||
       !quantity
     ) {
-
       req.session.error = "All fields are required";
 
       return res.redirect(`/admin/products/${id}/edit`);
     }
 
-    // keep old images 
+    // keep old images
     let images = product.images;
 
     if (req.files && req.files.length > 0) {
+      images = [];
 
-     images = [];
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
 
-for (let i = 0; i < req.files.length; i++) {
+        const fileName = Date.now() + "-" + i + ".webp";
 
-  const file = req.files[i];
+        const uploadPath = path.join("public/uploads/products", fileName);
 
-  const fileName = Date.now() + "-" + i + ".webp";
+        await sharp(file.buffer)
+          .resize(800, 800)
 
-  const uploadPath = path.join(
-    "public/uploads/products",
-    fileName
-  );
+          .webp({ quality: 80 })
 
-  await sharp(file.buffer)
+          .toFile(uploadPath);
 
-    .resize(800, 800)
-
-    .webp({ quality: 80 })
-
-    .toFile(uploadPath);
-
-  images.push("/uploads/products/" + fileName);
-}
+        images.push("/uploads/products/" + fileName);
+      }
     }
-    
-    // update product 
-    await Product.findByIdAndUpdate(id, {
 
+    // update product
+    await Product.findByIdAndUpdate(id, {
       name,
       description,
       brand,
@@ -265,35 +231,29 @@ for (let i = 0; i < req.files.length; i++) {
       salePrice,
       quantity,
 
-      images
+      images,
     });
 
     req.session.success = "Product updated successfully";
 
     res.redirect("/admin/products");
-
   } catch (error) {
-
     console.log(error);
 
     req.session.error = "Something went wrong";
 
     res.redirect("/admin/products");
   }
-};  
-
+};
 
 // delete product (soft delete)
 export const deleteProduct = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
     const product = await Product.findById(id);
 
     if (!product) {
-
       req.session.error = "Product not found";
 
       return res.redirect("/admin/products");
@@ -307,9 +267,7 @@ export const deleteProduct = async (req, res) => {
     req.session.success = "Product deleted successfully";
 
     res.redirect("/admin/products");
-
   } catch (error) {
-
     console.log(error);
 
     req.session.error = "Something went wrong";
@@ -317,4 +275,3 @@ export const deleteProduct = async (req, res) => {
     res.redirect("/admin/products");
   }
 };
-
