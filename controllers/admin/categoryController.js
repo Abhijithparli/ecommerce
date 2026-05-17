@@ -12,7 +12,7 @@ export const loadCategories = async (req, res) => {
     // PAGINATION
     const page = parseInt(req.query.page) || 1;
 
-    const limit = 5;
+    const limit = 10;
 
     const skip = (page - 1) * limit;
 

@@ -56,22 +56,32 @@
     >
 
       <!-- PRODUCT NAME -->
-      <div>
+   <!-- PRODUCT NAME -->
+<div>
 
-        <label class="block mb-2 text-sm">
-          Product Name
-        </label>
+  <label class="block mb-2 text-sm">
+    Product Name
+  </label>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Enter product name"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
+  <input
+    type="text"
+    name="name"
+    placeholder="Enter product name"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
 
-      </div>
+  <% if (errors?.name) { %>
 
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.name %>
+
+    </p>
+
+  <% } %>
+
+</div>
 
       <!-- BRAND -->
       <div>
@@ -79,6 +89,7 @@
         <label class="block mb-2 text-sm">
           Brand
         </label>
+        
 
         <input
           type="text"
