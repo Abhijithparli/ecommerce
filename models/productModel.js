@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema({
     ref: "Category",
     required: true
   },
-
+   
   regularPrice: {
     type: Number,
     required: true
@@ -38,6 +38,24 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+
+variants: [
+
+  {
+
+    size: {
+
+      type: String
+    },
+
+    quantity: {
+
+      type: Number,
+
+      default: 0
+    }
+  }
+],
 
   images: [{
     type: String

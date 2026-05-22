@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Add Product</title>
+
+  <!-- TAILWIND -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900 min-h-screen"></body>
+<div class="flex w-full min-h-screen bg-gray-100 text-gray-900">
+
+  <!-- SIDEBAR -->
+<%- include("../partials/sidebar", {
+  currentPage: "products"
+}) %>
+
+  <!-- MAIN CONTENT -->
+<div class="flex-1 ml-56 p-6">
+<h1 class="text-3xl font-bold mb-8">
+
+  Add Product
+
+</h1>
+
+     <!-- ADD PRODUCT FORM -->
+ <div class="
+  bg-white
+  rounded-2xl
+  p-8
+  mb-10
+  shadow-lg
+  border
+  border-gray-200
+">
+
+    <h2 class="text-2xl font-semibold mb-6">
+      Add Product
+    </h2>
+  
+<form
+      action="/admin/products/add"
+      method="POST"
+      enctype="multipart/form-data"
+      class="grid grid-cols-1 md:grid-cols-2 gap-6"
+    >
+
+   <!-- PRODUCT NAME -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Product Name
+  </label>
+
+  <input
+    type="text"
+    name="name"
+    placeholder="Enter product name"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.name) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.name %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+    <!-- BRAND -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Brand
+  </label>
+
+  <input
+    type="text"
+    name="brand"
+    placeholder="Enter brand"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.brand) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.brand %>
+
+    </p>
+
+  <% } %>
+
+</div>
+      
+      
+
+
+      <!-- CATEGORY -->
+      <div>
+
+        <label class="block mb-2 text-sm">
+          Category
+        </label>
+
+        <select
+          name="category"
+          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+          required
+        >
+
+          <option value="">
+            Select Category
+          </option>
+
+          <% categories.forEach(category => { %>
+
+            <option value="<%= category._id %>">
+              <%= category.name %>
+            </option>
+
+          <% }) %>
+
+        </select>
+ <% if (errors?.category) { %>
+
+  <p class="text-red-500 text-sm mt-1">
+
+    <%= errors.category %>
+
+  </p>
+
+<% } %>
+
+      </div>
+
+
+     <!-- REGULAR PRICE -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Regular Price
+  </label>
+
+  <input
+    type="number"
+    name="regularPrice"
+    placeholder="Enter regular price"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.regularPrice) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.regularPrice %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+
+     <!-- SALE PRICE -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Sale Price
+  </label>
+
+  <input
+    type="number"
+    name="salePrice"
+    placeholder="Enter sale price"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.salePrice) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.salePrice %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+
+    <!-- QUANTITY -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Quantity
+  </label>
+
+  <input
+    type="number"
+    name="quantity"
+    placeholder="Enter quantity"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.quantity) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.quantity %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+ 
+<!-- SIZE VARIANT -->
+<div>
+
+  <label class="block mb-2 text-sm">
+
+    Size Variant
+
+  </label>
+
+  <input
+    type="text"
+    name="variantSize"
+    placeholder="Example: M / L / XL"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  >
+
+</div>
+
+<!-- VARIANT QUANTITY -->
+<div>
+
+  <label class="block mb-2 text-sm">
+
+    Variant Quantity
+
+  </label>
+
+  <input
+    type="number"
+    name="variantQuantity"
+    placeholder="Enter quantity"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  >
+
+</div>
+
+<!-- DESCRIPTION -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Description
+  </label>
+
+  <textarea
+    name="description"
+    rows="4"
+    placeholder="Enter product description"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  ></textarea>
+
+  <% if (errors?.description) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.description %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+        <!-- HIGHLIGHTS -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Product Highlights
+  </label>
+
+  <textarea
+    name="highlights"
+    rows="4"
+    placeholder="Enter highlights separated by comma"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  ></textarea>
+
+  <p class="text-xs text-gray-500 mt-2">
+    Example:
+    Lightweight, DOT Certified, Scratch Resistant
+  </p>
+
+</div>
+
+<!-- IMAGES -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Product Images (Minimum 3)
+  </label>
+
+  <input
+    type="file"
+    name="images"
+    multiple
+    accept="image/*"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.images) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.images %>
+
+    </p>
+
+  <% } %>
+
+
+  <!-- IMAGE PREVIEW -->
+  <div
+    id="imagePreviewContainer"
+    class="flex flex-wrap gap-4 mt-4"
+  ></div>
+
+</div>
+
+
+
+      <!-- BUTTON -->
+      <div class="md:col-span-2">
+
+        <button
+          class="bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded-lg font-semibold"
+        >
+          Add Product
+        </button>
+
+      </div>
+
+    </form>
+       </div>
+
+       <script>
+
+const imageInput = document.querySelector(
+
+  'input[name="images"]'
+);
+
+const previewContainer = document.getElementById(
+
+  "imagePreviewContainer"
+);
+
+
+imageInput.addEventListener(
+
+  "change",
+
+  function () {
+
+    previewContainer.innerHTML = "";
+
+    const files = this.files;
+
+
+    Array.from(files).forEach(file => {
+
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+
+        // IMAGE
+        const image = document.createElement("img");
+
+        image.src = e.target.result;
+
+
+        // WRAPPER
+        const wrapper = document.createElement("div");
+
+        wrapper.className = "relative";
+
+
+        // IMAGE STYLE
+        image.className = `
+          w-24
+          h-24
+          object-cover
+          rounded-lg
+          border
+        `;
+
+
+        // REMOVE BUTTON
+        const removeBtn = document.createElement(
+
+          "button"
+        );
+
+        removeBtn.innerHTML = "✕";
+
+        removeBtn.type = "button";
+
+        removeBtn.className = `
+          absolute
+          -top-2
+          -right-2
+          bg-red-500
+          hover:bg-red-600
+          text-white
+          w-6
+          h-6
+          rounded-full
+          text-sm
+        `;
+
+
+        // REMOVE PREVIEW
+        removeBtn.onclick = () => {
+
+          wrapper.remove();
+        };
+
+
+        // APPEND
+        wrapper.appendChild(image);
+
+        wrapper.appendChild(removeBtn);
+
+        previewContainer.appendChild(wrapper);
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
+);
+
+</script>
+    
+  </div>
+
+</div>
+</body>
+</htm

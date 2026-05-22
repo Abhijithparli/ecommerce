@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Session (MUST be before passport)
 app.use(
   session({
-    secret: "your-secret-key-here",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {

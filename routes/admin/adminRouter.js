@@ -13,7 +13,7 @@ import {
   blockUser,
   unblockUser,
   verifyAdminOtp,
-  resendAdminOtp
+  resendAdminOtp,
 } from "../../controllers/admin/adminController.js";
 
 // CATEGORY CONTROLLER IMPORT
@@ -29,6 +29,7 @@ import upload from "../../config/multer.js";
 
 import {
   loadProducts,
+  loadAddProduct,
   addProduct,
   loadEditProduct,
   editProduct,
@@ -89,11 +90,47 @@ router.get(
   loadProducts
 );
 
+// load add product router
+router.get(
+
+  "/products/add",
+
+  isAdminAuth,
+
+  loadAddProduct
+);
+
 // Add product
 router.post(
+
   "/products/add",
+
   isAdminAuth,
-  upload.array("images", 10),
+
+  (req, res, next) => {
+
+    upload.array("images", 10)(
+
+      req,
+      res,
+
+      function (err) {
+
+        if (err) {
+
+          req.session.error = err.message;
+
+          return res.redirect(
+
+            "/admin/products"
+          );
+        }
+
+        next();
+      }
+    );
+  },
+
   addProduct
 );
 

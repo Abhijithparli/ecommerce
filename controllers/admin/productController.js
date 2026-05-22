@@ -21,6 +21,7 @@ export const loadProducts = async (req, res) => {
       categories,
       success: req.session.success,
       error: req.session.error,
+      errors:{}
     });
 
     req.session.success = null;
@@ -43,24 +44,75 @@ export const addProduct = async (req, res) => {
       regularPrice,
       salePrice,
       quantity,
-      highlights
+      highlights,
+        variantSize,
+  variantQuantity
+
     } = req.body;
 
     // VALIDATION
 
-    if (
-      !name ||
-      !description ||
-      !brand ||
-      !category ||
-      !regularPrice ||
-      !salePrice ||
-      !quantity
-    ) {
-      req.session.error = "All fields are required";
+    const errors = {};
 
-      return res.redirect("/admin/products");
+    //name
+    if(!name || name.trim() === ""){
+      errors.name = "products name is required";
     }
+
+    //brand
+    if(!brand || brand.trim() === ""){
+      errors.brand = "brand is required";
+    }
+
+    //category
+    if(!Category){
+      errors.Category = "category is required";
+    }
+
+    //regular price
+    if(!regularPrice || regularPrice <=0){
+      errors.regularPrice = "Regular price must be grater than 0";
+    }
+
+    //sale price
+    if(!salePrice || salePrice <=0){
+      errors.salePrice = "sale price must be greater than 0";
+    }
+
+    //quantity
+    if(!quantity || quantity < 0){
+      errors.quantity = "quantity must be valid"
+    }
+
+    // DESCRIPTION
+if (!description || description.trim() === "") {
+
+  errors.description =
+    "Description is required";
+}
+
+
+// IMAGES
+if (!req.files || req.files.length < 3) {
+
+  errors.images =
+    "Minimum 3 product images required";
+}
+
+    
+if(Object.keys(errors).length > 0){
+  const products = await product.find({
+    isDeleted: false 
+  });
+
+  return res.render("admin/products",{
+    products,
+    categories,
+    success:null,
+    error:null,
+    errors
+  });
+}
 
     // MINIMUM 3 IMAGES
 
@@ -99,6 +151,17 @@ export const addProduct = async (req, res) => {
       imagePaths.push("/uploads/products/" + fileName);
     }
 
+const variants = [];
+
+if (variantSize && variantQuantity) {
+
+  variants.push({
+
+    size: variantSize,
+
+    quantity: variantQuantity
+  });
+}
     // CREATE PRODUCT
 
     const newProduct = new Product({
@@ -110,7 +173,7 @@ export const addProduct = async (req, res) => {
       regularPrice,
       salePrice,
       quantity,
-
+        variants,
       images: imagePaths,
       highlights: highlightsArray,
     });
@@ -271,6 +334,44 @@ export const deleteProduct = async (req, res) => {
     console.log(error);
 
     req.session.error = "Something went wrong";
+
+    res.redirect("/admin/products");
+  }
+};
+
+export const loadAddProduct = async (
+
+  req,
+  res
+
+) => {
+
+  try {
+
+    const categories = await Category.find({
+
+      isDeleted: false
+    });
+
+    res.render(
+
+      "admin/addProduct",
+
+      {
+
+        categories,
+
+        errors: {},
+
+        success: null,
+
+        error: null
+      }
+    );
+
+  } catch (error) {
+
+    console.log(error);
 
     res.redirect("/admin/products");
   }
