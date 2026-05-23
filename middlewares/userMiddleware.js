@@ -8,8 +8,8 @@
 //   next();
 // };
 
+
 import User from "../models/userModel.js";
-import user from "../models/userModel.js";
 
 // check logg in and block status 
 
@@ -26,6 +26,11 @@ export const isAuthenticated = async(req,res,next)=>{
       req.session.destroy();
       return res.redirect("/login?error=blocked");
     }
+
+ //  force to set password
+    if (!user.password && req.path !== "/set-password") {
+      return res.redirect("/set-password");
+    }
     next();
 
   }catch(err){
@@ -39,5 +44,5 @@ export const isGuest = (req,res,next)=>{
   if(req.session && req.session.user){
     return res.redirect("/");
   }
-  next();
+  next();  
 }

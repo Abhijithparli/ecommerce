@@ -31,11 +31,26 @@ import {
   editAddress,
   deleteAddress,
   setDefaultAddress,
-  loadEditAddress
+  loadEditAddress,
+  loadSetPassword,
+  savePassword
 } from "../../controllers/user/usercontroller.js";
 
 import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
 import User from "../../models/userModel.js";
+
+import {
+  loadProducts,
+  loadProductDetails,
+  addReview
+} from "../../controllers/user/productController.js";
+
+import {
+  addToCart,
+  loadCart,
+  updateCartQuantity,
+  removeCartItem
+} from "../../controllers/user/cartController.js";
 
 const router = express.Router();
 
@@ -59,6 +74,52 @@ router.post("/login", isGuest, login);
 // Logout
 router.post("/logout", logout);
 
+// PRODUCT LISTING
+router.get("/products", loadProducts);
+
+// PRODUCT DETAILS
+router.get(
+  "/products/:id",
+  loadProductDetails
+);
+
+// ADD REVIEW
+router.post(
+
+  "/products/:productId/review",
+
+  isAuthenticated,
+
+  addReview
+);
+
+// ADD TO CART
+router.post(
+  "/cart/add/:productId",
+  isAuthenticated,
+  addToCart
+);
+
+//load cart page
+router.get(
+  "/cart",
+  isAuthenticated,
+  loadCart
+);
+
+// UPDATE CART QUANTITY
+router.post(
+  "/cart/update-quantity",
+  isAuthenticated,
+  updateCartQuantity
+);
+
+//remove cart item
+router.delete(
+  "/cart/remove/:productId",
+  isAuthenticated,
+  removeCartItem
+);
 
 // ================= google auth =================
 router.get("/auth/google",
@@ -67,16 +128,23 @@ router.get("/auth/google",
 
 router.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
+  async (req, res) => {
+    console.log("Google user:", req.user);
+
+    // store session
     req.session.user = {
       id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
+      email: req.user.email
     };
+
+    //  check password
+    if (!req.user.password) {
+      return res.redirect("/set-password");
+    }
+
     res.redirect("/");
   }
 );
-
 
 // ================= forgot password =================
 router.get("/forgot-password", isGuest, loadForgotPassword);
@@ -131,6 +199,9 @@ router.post("/profile/addresses/:id/delete", isAuthenticated, deleteAddress);
 
 // Set default address
 router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress);
+
+router.get("/set-password", isAuthenticated, loadSetPassword);
+router.post("/set-password", isAuthenticated, savePassword);
 
 
 export default router;

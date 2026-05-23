@@ -561,48 +561,152 @@ export const resendEmailOtp = async (req, res) => {
 // =====================
 // CHANGE PASSWORD
 // ============================================================
-export const loadChangePassword = async (req, res) => {
+export const loadChangePassword = async (
+
+  req,
+  res
+
+) => {
+
   try {
-    const user = await User.findById(req.session.user.id);
-    res.render("user/changePassword", { user, error: null, success: null });
+
+    const user = await User.findById(
+
+      req.session.user.id
+    );
+
+
+    // CHECK GOOGLE USER
+    const isGoogleUser =
+
+      user.googleId && !user.password;
+
+
+    res.render(
+
+      "user/changePassword",
+
+      {
+
+        user,
+
+        isGoogleUser,
+
+        error: null,
+
+        success: null
+      }
+    );
+
   } catch (error) {
+
     res.redirect("/profile");
   }
 };
 
 export const changePassword = async (req, res) => {
+
   try {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
-    const user = await User.findById(req.session.user.id);
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const {
+      currentPassword,
+      newPassword,
+      confirmPassword
 
-    if (!isMatch) {
-      return res.render("user/changePassword", {
-        user,
-        error: "Current password is incorrect",
-        success: null
-      });
+    } = req.body;
+
+
+    const user = await User.findById(
+
+      req.session.user.id
+    );
+
+
+    // CHECK GOOGLE USER
+    const isGoogleUser =
+
+      user.googleId && !user.password;
+
+
+    // NORMAL USER PASSWORD CHECK
+    if (!isGoogleUser) {
+
+      const isMatch = await bcrypt.compare(
+
+        currentPassword,
+
+        user.password
+      );
+
+
+      if (!isMatch) {
+
+        return res.render(
+
+          "user/changePassword",
+
+          {
+
+            user,
+
+            isGoogleUser,
+
+            error:
+              "Current password is incorrect",
+
+            success: null
+          }
+        );
+      }
     }
 
+
+    // CONFIRM PASSWORD CHECK
     if (newPassword !== confirmPassword) {
-      return res.render("user/changePassword", {
-        user,
-        error: "Passwords do not match",
-        success: null
-      });
+
+      return res.render(
+
+        "user/changePassword",
+
+        {
+
+          user,
+
+          isGoogleUser,
+
+          error:
+            "Passwords do not match",
+
+          success: null
+        }
+      );
     }
 
-    const newHash = await bcrypt.hash(newPassword, 10);
+
+    // HASH PASSWORD
+    const newHash = await bcrypt.hash(
+
+      newPassword,
+
+      10
+    );
+
+
     user.password = newHash;
 
     await user.save();
 
+
+    // LOGOUT AFTER CHANGE
     req.session.destroy(() => {
+
       res.redirect("/login");
     });
 
   } catch (error) {
+
+    console.log(error);
+
     res.redirect("/profile");
   }
 };
@@ -800,5 +904,53 @@ export const setDefaultAddress = async (req, res) => {
   } catch (error) {
     console.error("Set default error:", error);
     res.redirect("/profile/addresses");
+  }
+};
+
+// ============================================================
+// SET PASSWORD
+// ============================================================
+export const loadSetPassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.user.id);
+    if (user.password) {
+      return res.redirect("/");
+    }
+    res.render("user/setPassword", { error: null });
+  } catch (error) {
+    console.error("Load set password error:", error);
+    res.redirect("/");
+  }
+};
+
+export const savePassword = async (req, res) => {
+  try {
+    const { password, confirmPassword } = req.body;
+    const user = await User.findById(req.session.user.id);
+
+    if (user.password) {
+      return res.redirect("/");
+    }
+
+    if (!password || !confirmPassword) {
+      return res.render("user/setPassword", { error: "All fields are required" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("user/setPassword", { error: "Passwords do not match" });
+    }
+
+    if (password.length < 6) {
+      return res.render("user/setPassword", { error: "Password must be at least 6 characters" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.redirect("/");
+  } catch (error) {
+    console.error("Save password error:", error);
+    res.render("user/setPassword", { error: "Server error" });
   }
 };

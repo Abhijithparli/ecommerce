@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Add Product</title>
+
+  <!-- TAILWIND -->
+  <script src="https://cdn.tailwindcss.com"></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen">
+<div class="flex w-full min-h-screen bg-gray-100 text-gray-900">
+
+  <!-- SIDEBAR -->
+<%- include("../partials/sidebar", {
+  currentPage: "products"
+}) %>
+
+  <!-- MAIN CONTENT -->
+<div class="flex-1 ml-56 p-6">
+<h1 class="text-3xl font-bold mb-8">
+
+  Add Product
+
+</h1>
+
+     <!-- ADD PRODUCT FORM -->
+ <div class="
+  bg-white
+  rounded-2xl
+  p-8
+  mb-10
+  shadow-lg
+  border
+  border-gray-200
+">
+
+    <h2 class="text-2xl font-semibold mb-6">
+      Add Product
+    </h2>
+  
+<form
+  action="/admin/products/add"
+  method="POST"
+  novalidate
+>
+
+   <!-- PRODUCT NAME -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Product Name
+  </label>
+
+  <input
+ <input
+  type="text"
+  id="productName"
+  name="productName"
+    placeholder="Enter product name"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.name) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.name %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+    <!-- BRAND -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Brand
+  </label>
+
+  <input
+    type="text"
+    name="brand"
+    placeholder="Enter brand"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.brand) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.brand %>
+
+    </p>
+
+  <% } %>
+
+</div>
+      
+      
+
+
+      <!-- CATEGORY -->
+      <div>
+
+        <label class="block mb-2 text-sm">
+          Category
+        </label>
+
+        <select
+          name="category"
+          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+          required
+        >
+
+          <option value="">
+            Select Category
+          </option>
+
+          <% categories.forEach(category => { %>
+
+            <option value="<%= category._id %>">
+              <%= category.name %>
+            </option>
+
+          <% }) %>
+
+        </select>
+ <% if (errors?.category) { %>
+
+  <p class="text-red-500 text-sm mt-1">
+
+    <%= errors.category %>
+
+  </p>
+
+<% } %>
+
+      </div>
+
+
+     <!-- REGULAR PRICE -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Regular Price
+  </label>
+
+  <input
+    type="number"
+    name="regularPrice"
+    placeholder="Enter regular price"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.regularPrice) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.regularPrice %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+
+     <!-- SALE PRICE -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Sale Price
+  </label>
+
+  <input
+    type="number"
+    name="salePrice"
+    placeholder="Enter sale price"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.salePrice) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.salePrice %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+
+    <!-- QUANTITY -->
+<div>
+
+  <label class="block mb-2 text-sm">
+    Quantity
+  </label>
+
+  <input
+    type="number"
+    name="quantity"
+    placeholder="Enter quantity"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.quantity) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.quantity %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+ 
+<!-- SIZE VARIANT -->
+<div>
+
+  <label class="block mb-2 text-sm">
+
+    Size Variant
+
+  </label>
+
+  <input
+    type="text"
+    name="variantSize"
+    placeholder="Example: M / L / XL"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  >
+
+</div>
+
+<!-- VARIANT QUANTITY -->
+<div>
+
+  <label class="block mb-2 text-sm">
+
+    Variant Quantity
+
+  </label>
+
+  <input
+    type="number"
+    name="variantQuantity"
+    placeholder="Enter quantity"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  >
+
+</div>
+
+<!-- DESCRIPTION -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Description
+  </label>
+
+  <textarea
+    name="description"
+    rows="4"
+    placeholder="Enter product description"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  ></textarea>
+
+  <% if (errors?.description) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.description %>
+
+    </p>
+
+  <% } %>
+
+</div>
+
+        <!-- HIGHLIGHTS -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Product Highlights
+  </label>
+
+  <textarea
+    name="highlights"
+    rows="4"
+    placeholder="Enter highlights separated by comma"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+  ></textarea>
+
+  <p class="text-xs text-gray-500 mt-2">
+    Example:
+    Lightweight, DOT Certified, Scratch Resistant
+  </p>
+
+</div>
+
+<!-- IMAGES -->
+<div class="md:col-span-2">
+
+  <label class="block mb-2 text-sm">
+    Product Images (Minimum 3)
+  </label>
+
+  <input
+    type="file"
+    name="images"
+    multiple
+    accept="image/*"
+    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    required
+  >
+
+  <% if (errors?.images) { %>
+
+    <p class="text-red-500 text-sm mt-1">
+
+      <%= errors.images %>
+
+    </p>
+
+  <% } %>
+
+
+  <!-- IMAGE PREVIEW -->
+  <div
+    id="imagePreviewContainer"
+    class="flex flex-wrap gap-4 mt-4"
+  ></div>
+  <!-- CROP MODAL -->
+<div
+  id="cropModal"
+  class="
+    fixed
+    inset-0
+    bg-black/70
+    hidden
+    items-center
+    justify-center
+    z-50
+  "
+>
+
+  <div class="
+    bg-white
+    p-6
+    rounded-2xl
+    w-[500px]
+  ">
+
+    <h2 class="text-xl font-bold mb-4">
+      Crop Image
+    </h2>
+<div class="w-full h-[300px]">
+    <img
+  id="cropImage"
+  class="block max-w-full max-h-[300px]"
+>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-5">
+
+      <button
+        type="button"
+        id="cropCancelBtn"
+        class="
+          bg-gray-300
+          px-5
+          py-2
+          rounded-lg
+        "
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        id="cropSaveBtn"
+        class="
+          bg-orange-500
+          text-white
+          px-5
+          py-2
+          rounded-lg
+        "
+      >
+        Crop
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+
+
+      <!-- BUTTON -->
+      <div class="md:col-span-2">
+
+        <button
+          class="bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded-lg font-semibold"
+        >
+          Add Product
+        </button>
+
+      </div>
+
+    </form>
+       </div>
+<script>
+
+let cropper;
+
+const imageInput =
+  document.querySelector('input[name="images"]');
+
+const previewContainer =
+  document.getElementById("imagePreviewContainer");
+
+const cropModal =
+  document.getElementById("cropModal");
+
+const cropImage =
+  document.getElementById("cropImage");
+
+const cropSaveBtn =
+  document.getElementById("cropSaveBtn");
+
+const cropCancelBtn =
+  document.getElementById("cropCancelBtn");
+
+let files = [];
+
+let currentIndex = 0;
+
+imageInput.addEventListener("change", function (e) {
+
+  previewContainer.innerHTML = "";
+
+  files = Array.from(e.target.files);
+
+  currentIndex = 0;
+
+  if (files.length > 0) {
+
+    showCropper(files[currentIndex]);
+
+  }
+
+});
+
+function showCropper(file) {
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+
+    cropImage.src = event.target.result;
+
+    cropModal.classList.remove("hidden");
+
+    cropModal.classList.add("flex");
+
+    if (cropper) {
+
+      cropper.destroy();
+
+    }
+
+    cropper = new Cropper(cropImage, {
+
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
+
+    });
+
+  };
+
+  reader.readAsDataURL(file);
+
+}
+
+cropSaveBtn.addEventListener("click", function () {
+
+  if (!cropper) return;
+
+  const canvas = cropper.getCroppedCanvas({
+
+    width: 300,
+    height: 300
+
+  });
+
+  const croppedImage =
+    canvas.toDataURL("image/png");
+
+  const wrapper =
+    document.createElement("div");
+
+  wrapper.className = "relative";
+
+  const img =
+    document.createElement("img");
+
+  img.src = croppedImage;
+
+  img.className = `
+    w-28
+    h-28
+    object-cover
+    rounded-lg
+    border
+    border-gray-300
+  `;
+
+  const removeBtn =
+    document.createElement("button");
+
+  removeBtn.innerHTML = "✕";
+
+  removeBtn.type = "button";
+
+  removeBtn.className = `
+    absolute
+    -top-2
+    -right-2
+    bg-red-500
+    hover:bg-red-600
+    text-white
+    w-6
+    h-6
+    rounded-full
+    text-sm
+  `;
+
+  removeBtn.onclick = () => {
+
+    wrapper.remove();
+
+  };
+
+  wrapper.appendChild(img);
+
+  wrapper.appendChild(removeBtn);
+
+  previewContainer.appendChild(wrapper);
+
+  cropper.destroy();
+
+  currentIndex++;
+
+  if (currentIndex < files.length) {
+
+    showCropper(files[currentIndex]);
+
+  } else {
+
+    cropModal.classList.add("hidden");
+
+    cropModal.classList.remove("flex");
+
+  }
+
+});
+
+cropCancelBtn.addEventListener("click", function () {
+
+  cropModal.classList.add("hidden");
+
+  cropModal.classList.remove("flex");
+
+  if (cropper) {
+
+    cropper.destroy();
+
+  }
+
+});
+
+</script>
+    
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +9,18 @@
  
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen p-8">
+<body class="bg-gray-100 text-gray-900 min-h-screen">
+
+  
+<div class="flex bg-gray-100 text-gray-900 min-h-screen">
+
+  <!-- SIDEBAR -->
+<%- include("../partials/sidebar", {
+  currentPage: "products"
+}) %>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 ml-56 p-10">
 
 <div class="max-w-7xl mx-auto">
 
@@ -17,6 +30,21 @@
     <h1 class="text-3xl font-bold">
       Product Management
     </h1>
+
+    <a
+  href="/admin/products/add"
+  class="
+    bg-orange-500
+    hover:bg-orange-600
+   text-gray-900
+    px-6 py-3
+    rounded-lg
+  "
+>
+
+  Add Product
+
+</a>
 
   </div>
 
@@ -41,240 +69,21 @@
   <% } %>
 
 
-  <!-- ADD PRODUCT FORM -->
-  <div class="bg-gray-800 rounded-2xl p-8 mb-10 shadow-lg">
-
-    <h2 class="text-2xl font-semibold mb-6">
-      Add Product
-    </h2>
-
-    <form
-      action="/admin/products/add"
-      method="POST"
-      enctype="multipart/form-data"
-      class="grid grid-cols-1 md:grid-cols-2 gap-6"
-    >
-
-      <!-- PRODUCT NAME -->
-   <!-- PRODUCT NAME -->
-<div>
-
-  <label class="block mb-2 text-sm">
-    Product Name
-  </label>
-  
-
-  <input
-    type="text"
-    name="name"
-    placeholder="Enter product name"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-    required
-  >
-
-  <% if (errors?.name) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.name %>
-
-    </p>
-
-  <% } %>
-
-</div>
-
-      <!-- BRAND -->
-      <div>
-
-        <label class="block mb-2 text-sm">
-          Brand
-        </label>
-        
-
-        <input
-          type="text"
-          name="brand"
-          placeholder="Enter brand"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-
-      </div>
-
-
-      <!-- CATEGORY -->
-      <div>
-
-        <label class="block mb-2 text-sm">
-          Category
-        </label>
-
-        <select
-          name="category"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-
-          <option value="">
-            Select Category
-          </option>
-
-          <% categories.forEach(category => { %>
-
-            <option value="<%= category._id %>">
-              <%= category.name %>
-            </option>
-
-          <% }) %>
-
-        </select>
-
-      </div>
-
-
-      <!-- REGULAR PRICE -->
-      <div>
-
-        <label class="block mb-2 text-sm">
-          Regular Price
-        </label>
-
-        <input
-          type="number"
-          name="regularPrice"
-          placeholder="Enter regular price"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-
-      </div>
-
-
-      <!-- SALE PRICE -->
-      <div>
-
-        <label class="block mb-2 text-sm">
-          Sale Price
-        </label>
-
-        <input
-          type="number"
-          name="salePrice"
-          placeholder="Enter sale price"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-
-      </div>
-
-
-      <!-- QUANTITY -->
-      <div>
-
-        <label class="block mb-2 text-sm">
-          Quantity
-        </label>
-
-        <input
-          type="number"
-          name="quantity"
-          placeholder="Enter quantity"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-
-      </div>
-
-
-      <!-- DESCRIPTION -->
-      <div class="md:col-span-2">
-
-        <label class="block mb-2 text-sm">
-          Description
-        </label>
-
-        <textarea
-          name="description"
-          rows="4"
-          placeholder="Enter product description"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        ></textarea>
-
-        <!-- HIGHLIGHTS -->
-<div class="md:col-span-2">
-
-  <label class="block mb-2 text-sm">
-    Product Highlights
-  </label>
-
-  <textarea
-    name="highlights"
-    rows="4"
-    placeholder="Enter highlights separated by comma"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-  ></textarea>
-
-  <p class="text-xs text-gray-400 mt-2">
-    Example:
-    Lightweight, DOT Certified, Scratch Resistant
-  </p>
-
-</div>
-
-      </div>
-
-
-      <!-- IMAGES -->
-      <div class="md:col-span-2">
-
-        <label class="block mb-2 text-sm">
-          Product Images (Minimum 3)
-        </label>
-
-        <input
-          type="file"
-          name="images"
-          multiple
-          accept="image/*"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
-          required
-        >
-        <!-- IMAGE PREVIEW -->
-<div
-  id="imagePreviewContainer"
-  class="flex flex-wrap gap-4 mt-4"
-></div>
-
-      </div>
-
-
-      <!-- BUTTON -->
-      <div class="md:col-span-2">
-
-        <button
-          class="bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded-lg font-semibold"
-        >
-          Add Product
-        </button>
-
-      </div>
-
-    </form>
-
-  </div>
-
-
   <!-- PRODUCT TABLE -->
-  <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+<div class="
+ bg-white
+  rounded-2xl
+  shadow-2xl
+  overflow-hidden
+  border border-gray-200
+">
 
-    <table class="w-full">
+    <table class="w-full table-fixed">
 
       <!-- HEAD -->
-      <thead class="bg-gray-700">
+    <thead class="bg-gray-800 text-gray-300 uppercase text-sm">
 
-        <tr>
+     <tr>
 
           <th class="px-6 py-4 text-left">
             Product
@@ -292,11 +101,11 @@
             Quantity
           </th>
 
-          <th class="px-6 py-4 text-left">
-            Images
-          </th>
+         <th class="px-6 py-4 text-left w-72">
+  Images
+</th>
 
-          <th class="px-6 py-4 text-left">
+<th class="px-6 py-4 text-left w-52">
   Actions
 </th>
 
@@ -312,16 +121,22 @@
 
         <% products.forEach(product => { %>
 
-          <tr class="border-t border-gray-700">
+       <tr class="
+  border-b
+  border-gray-200
+  hover:bg-gray-50
+  transition
+  align-top
+">
 
             <!-- NAME -->
             <td class="px-6 py-4">
 
-              <div class="font-semibold">
+              <div class="font-semibold text-lg text-gray-900">
                 <%= product.name %>
               </div>
 
-              <div class="text-sm text-gray-400">
+              <div class="text-sm text-gray-500 mt-1">
                 <%= product.brand %>
               </div>
 
@@ -355,13 +170,21 @@
             <!-- IMAGES -->
             <td class="px-6 py-4">
 
-              <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2 max-w-xs">
 
                 <% product.images.forEach(image => { %>
 
                   <img
                     src="<%= image %>"
-                    class="w-14 h-14 object-cover rounded"
+                   class="
+  w-16
+  h-16
+  object-cover
+  rounded-lg
+  border
+  border-gray-200
+  shadow-sm
+"
                   >
 
                 <% }) %>
@@ -372,13 +195,20 @@
               <!-- ACTIONS -->
 
 <td class="px-6 py-4">
-
-  <div class="flex gap-3">
+<div class="flex items-center gap-3">
 
     <!-- EDIT -->
     <a
       href="/admin/products/<%= product._id %>/edit"
-      class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded"
+      class="
+  bg-yellow-500
+  hover:bg-yellow-600
+  px-4 py-2
+  rounded-lg
+  text-sm
+  font-medium
+  transition
+"
     >
       Edit
     </a>
@@ -391,7 +221,15 @@
 
       <button
         onclick="return confirm('Delete this product?')"
-        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
+      class="
+  bg-red-500
+  hover:bg-red-600
+  px-4 py-2
+  rounded-lg
+  text-sm
+  font-medium
+  transition
+"
       >
         Delete
       </button>
@@ -567,5 +405,8 @@ cancelCrop.addEventListener("click", function () {
 });
 
 </script>
+  </div>
+
+</div>
 </body>
 </html>

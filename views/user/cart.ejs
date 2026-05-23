@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+  <!-- TITLE -->
+  <h1 class="text-4xl font-bold text-gray-800 mb-10">
+    Shopping Cart
+  </h1>
+
+
+  <% if (cart && cart.items.length > 0) { %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+      <!-- CART ITEMS -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <% cart.items.forEach(item => { %>
+
+          <div class="bg-white rounded-2xl shadow p-6 flex gap-6">
+
+            <!-- IMAGE -->
+            <img
+              src="<%= item.product.images[0] %>"
+              class="w-36 h-36 object-cover rounded-xl"
+            >
+
+            <!-- CONTENT -->
+            <div class="flex-1">
+
+              <!-- NAME -->
+              <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+
+                <%= item.product.name %>
+
+              </h2>
+
+              <!-- BRAND -->
+              <p class="text-gray-500 mb-3">
+
+                <%= item.product.brand %>
+
+              </p>
+
+              <!-- PRICE -->
+              <p class="text-xl font-bold text-orange-600 mb-4">
+
+                ₹<%= item.product.salePrice %>
+
+              </p>
+
+              <!-- QUANTITY -->
+              <div class="flex items-center gap-4">
+
+                <span class="font-medium">
+                  Quantity:
+                </span>
+
+            <button
+  onclick="updateQuantity(
+    '<%= item.product._id %>',
+    'decrease'
+  )"
+  class="px-4 py-2 bg-gray-200"
+>
+  -
+</button>
+
+<span
+  id="qty-<%= item.product._id %>"
+  class="px-5 py-2"
+>
+  <%= item.quantity %>
+</span>
+
+<button
+  onclick="updateQuantity(
+    '<%= item.product._id %>',
+    'increase'
+  )"
+  class="px-4 py-2 bg-gray-200"
+>
+  +
+</button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- SUBTOTAL -->
+            <div class="text-right flex flex-col justify-between">
+
+              <div>
+
+                <p class="text-gray-500 mb-2">
+                  Subtotal
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-800">
+
+                  ₹<%= item.product.salePrice * item.quantity %>
+
+                </h3>
+
+              </div>
+
+              <!-- REMOVE -->
+             <button
+  onclick="removeCartItem('<%= item.product._id %>')"
+  class="text-red-500 hover:text-red-700 font-medium"
+>
+  Remove
+</button>
+
+            </div>
+
+          </div>
+
+        <% }) %>
+
+      </div>
+
+
+      <!-- SUMMARY -->
+      <div>
+
+        <div class="bg-white rounded-2xl shadow p-8 sticky top-10">
+
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">
+
+            Order Summary
+
+          </h2>
+
+          <!-- TOTAL -->
+          <div class="flex justify-between items-center mb-6">
+
+            <span class="text-lg text-gray-600">
+              Total
+            </span>
+
+            <span class="text-3xl font-bold text-orange-600">
+
+              ₹<%= total %>
+
+            </span>
+
+          </div>
+
+          <!-- CHECKOUT -->
+          <button
+            class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg"
+          >
+            Proceed To Checkout
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  <% } else { %>
+
+    <!-- EMPTY CART -->
+    <div class="bg-white rounded-2xl shadow p-16 text-center">
+
+      <h2 class="text-3xl font-bold text-gray-700 mb-4">
+
+        Your Cart Is Empty
+
+      </h2>
+
+      <p class="text-gray-500 mb-8">
+
+        Add products to continue shopping
+
+      </p>
+
+      <a
+        href="/products"
+        class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl"
+      >
+        Continue Shopping
+      </a>
+
+    </div>
+
+  <% } %>
+
+</div>
+
+async function removeCartItem(productId) {
+
+  try {
+    
+
+    const confirmDelete = confirm(
+
+      "Remove this product from cart?"
+    );
+
+    if (!confirmDelete) return;
+
+
+    const response = await fetch(
+
+      `/cart/remove/${productId}`,
+
+      {
+        method: "DELETE"
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+
+      location.reload();
+
+    } else {
+
+      alert(data.message);
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Something went wrong");
+  }
+}
+
+<script>
+
+async function updateQuantity(productId, action) {
+
+  try {
+
+    const response = await fetch(
+
+      "/cart/update-quantity",
+
+      {
+        method: "POST",
+
+        headers: {
+
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          productId,
+          action
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+
+      // UPDATE UI
+      document.getElementById(
+
+        `qty-${productId}`
+
+      ).innerText = data.quantity;
+
+      // RELOAD TOTAL
+      location.reload();
+
+    } else {
+
+      alert(data.message);
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Something went wrong");
+  }
+}
+
+</script>
+</body>
+</html>
