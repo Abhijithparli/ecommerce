@@ -468,7 +468,7 @@
 
             <h3 class="font-semibold text-lg text-gray-800">
 
-              <%= review.user.name %>
+            <%= review.user ? review.user.name : 'Unknown User' %>
 
             </h3>
 

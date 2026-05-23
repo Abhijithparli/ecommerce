@@ -65,10 +65,9 @@ export const addProduct = async (req, res) => {
     }
 
     //category
-    if(!Category){
-      errors.Category = "category is required";
-    }
-
+   if(!category || category.trim() === ""){
+  errors.category = "Category is required";
+}
     //regular price
     if(!regularPrice || regularPrice <=0){
       errors.regularPrice = "Regular price must be grater than 0";
@@ -101,11 +100,15 @@ if (!req.files || req.files.length < 3) {
 
     
 if(Object.keys(errors).length > 0){
-  const products = await product.find({
+ const products = await Product.find({
     isDeleted: false 
   });
 
-  return res.render("admin/products",{
+  const categories = await Category.find({
+  isDeleted: false
+});
+
+  return res.render("admin/addProduct", {
     products,
     categories,
     success:null,

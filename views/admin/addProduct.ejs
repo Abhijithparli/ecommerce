@@ -9,9 +9,14 @@
 
   <!-- TAILWIND -->
   <script src="https://cdn.tailwindcss.com"></script>
-</head>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+/>
 
-<body class="bg-gray-100 text-gray-900 min-h-screen"></body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen">
 <div class="flex w-full min-h-screen bg-gray-100 text-gray-900">
 
   <!-- SIDEBAR -->
@@ -43,11 +48,10 @@
     </h2>
   
 <form
-      action="/admin/products/add"
-      method="POST"
-      enctype="multipart/form-data"
-      class="grid grid-cols-1 md:grid-cols-2 gap-6"
-    >
+  action="/admin/products/add"
+  method="POST"
+  novalidate
+>
 
    <!-- PRODUCT NAME -->
 <div>
@@ -57,8 +61,10 @@
   </label>
 
   <input
-    type="text"
-    name="name"
+ <input
+  type="text"
+  id="productName"
+  name="productName"
     placeholder="Enter product name"
     class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
     required
@@ -345,6 +351,71 @@
     id="imagePreviewContainer"
     class="flex flex-wrap gap-4 mt-4"
   ></div>
+  <!-- CROP MODAL -->
+<div
+  id="cropModal"
+  class="
+    fixed
+    inset-0
+    bg-black/70
+    hidden
+    items-center
+    justify-center
+    z-50
+  "
+>
+
+  <div class="
+    bg-white
+    p-6
+    rounded-2xl
+    w-[500px]
+  ">
+
+    <h2 class="text-xl font-bold mb-4">
+      Crop Image
+    </h2>
+<div class="w-full h-[300px]">
+    <img
+  id="cropImage"
+  class="block max-w-full max-h-[300px]"
+>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-5">
+
+      <button
+        type="button"
+        id="cropCancelBtn"
+        class="
+          bg-gray-300
+          px-5
+          py-2
+          rounded-lg
+        "
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        id="cropSaveBtn"
+        class="
+          bg-orange-500
+          text-white
+          px-5
+          py-2
+          rounded-lg
+        "
+      >
+        Crop
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 </div>
 
@@ -363,102 +434,176 @@
 
     </form>
        </div>
+<script>
 
-       <script>
+let cropper;
 
-const imageInput = document.querySelector(
+const imageInput =
+  document.querySelector('input[name="images"]');
 
-  'input[name="images"]'
-);
+const previewContainer =
+  document.getElementById("imagePreviewContainer");
 
-const previewContainer = document.getElementById(
+const cropModal =
+  document.getElementById("cropModal");
 
-  "imagePreviewContainer"
-);
+const cropImage =
+  document.getElementById("cropImage");
 
+const cropSaveBtn =
+  document.getElementById("cropSaveBtn");
 
-imageInput.addEventListener(
+const cropCancelBtn =
+  document.getElementById("cropCancelBtn");
 
-  "change",
+let files = [];
 
-  function () {
+let currentIndex = 0;
 
-    previewContainer.innerHTML = "";
+imageInput.addEventListener("change", function (e) {
 
-    const files = this.files;
+  previewContainer.innerHTML = "";
 
+  files = Array.from(e.target.files);
 
-    Array.from(files).forEach(file => {
+  currentIndex = 0;
 
-      const reader = new FileReader();
+  if (files.length > 0) {
 
-      reader.onload = function (e) {
+    showCropper(files[currentIndex]);
 
-        // IMAGE
-        const image = document.createElement("img");
-
-        image.src = e.target.result;
-
-
-        // WRAPPER
-        const wrapper = document.createElement("div");
-
-        wrapper.className = "relative";
-
-
-        // IMAGE STYLE
-        image.className = `
-          w-24
-          h-24
-          object-cover
-          rounded-lg
-          border
-        `;
-
-
-        // REMOVE BUTTON
-        const removeBtn = document.createElement(
-
-          "button"
-        );
-
-        removeBtn.innerHTML = "✕";
-
-        removeBtn.type = "button";
-
-        removeBtn.className = `
-          absolute
-          -top-2
-          -right-2
-          bg-red-500
-          hover:bg-red-600
-          text-white
-          w-6
-          h-6
-          rounded-full
-          text-sm
-        `;
-
-
-        // REMOVE PREVIEW
-        removeBtn.onclick = () => {
-
-          wrapper.remove();
-        };
-
-
-        // APPEND
-        wrapper.appendChild(image);
-
-        wrapper.appendChild(removeBtn);
-
-        previewContainer.appendChild(wrapper);
-      };
-
-      reader.readAsDataURL(file);
-    });
   }
-);
+
+});
+
+function showCropper(file) {
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+
+    cropImage.src = event.target.result;
+
+    cropModal.classList.remove("hidden");
+
+    cropModal.classList.add("flex");
+
+    if (cropper) {
+
+      cropper.destroy();
+
+    }
+
+    cropper = new Cropper(cropImage, {
+
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
+
+    });
+
+  };
+
+  reader.readAsDataURL(file);
+
+}
+
+cropSaveBtn.addEventListener("click", function () {
+
+  if (!cropper) return;
+
+  const canvas = cropper.getCroppedCanvas({
+
+    width: 300,
+    height: 300
+
+  });
+
+  const croppedImage =
+    canvas.toDataURL("image/png");
+
+  const wrapper =
+    document.createElement("div");
+
+  wrapper.className = "relative";
+
+  const img =
+    document.createElement("img");
+
+  img.src = croppedImage;
+
+  img.className = `
+    w-28
+    h-28
+    object-cover
+    rounded-lg
+    border
+    border-gray-300
+  `;
+
+  const removeBtn =
+    document.createElement("button");
+
+  removeBtn.innerHTML = "✕";
+
+  removeBtn.type = "button";
+
+  removeBtn.className = `
+    absolute
+    -top-2
+    -right-2
+    bg-red-500
+    hover:bg-red-600
+    text-white
+    w-6
+    h-6
+    rounded-full
+    text-sm
+  `;
+
+  removeBtn.onclick = () => {
+
+    wrapper.remove();
+
+  };
+
+  wrapper.appendChild(img);
+
+  wrapper.appendChild(removeBtn);
+
+  previewContainer.appendChild(wrapper);
+
+  cropper.destroy();
+
+  currentIndex++;
+
+  if (currentIndex < files.length) {
+
+    showCropper(files[currentIndex]);
+
+  } else {
+
+    cropModal.classList.add("hidden");
+
+    cropModal.classList.remove("flex");
+
+  }
+
+});
+
+cropCancelBtn.addEventListener("click", function () {
+
+  cropModal.classList.add("hidden");
+
+  cropModal.classList.remove("flex");
+
+  if (cropper) {
+
+    cropper.destroy();
+
+  }
+
+});
 
 </script>
     
@@ -466,4 +611,4 @@ imageInput.addEventListener(
 
 </div>
 </body>
-</htm
+</html>
