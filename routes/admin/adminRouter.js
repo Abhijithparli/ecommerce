@@ -22,7 +22,8 @@ import {
   addCategory,
   editCategory,
   deleteCategory,
-  loadEditCategory
+  loadEditCategory,
+  loadAddCategory
 } from "../../controllers/admin/categoryController.js";
 
 import upload from "../../config/multer.js";
@@ -33,7 +34,9 @@ import {
   addProduct,
   loadEditProduct,
   editProduct,
-  deleteProduct
+  deleteProduct,
+  blockProduct,
+  unblockProduct
 } from "../../controllers/admin/productController.js";
 
 
@@ -75,6 +78,7 @@ router.post("/users/unblock/:id", isAdminAuth, unblockUser);
 // routes/admin/adminRoute.js
 
 router.get("/categories", isAdminAuth, loadCategories);
+router.get("/categories/add", isAdminAuth, loadAddCategory);
 router.post("/categories/add", isAdminAuth, addCategory);
 router.get("/categories/:id/edit", isAdminAuth, loadEditCategory);
 
@@ -155,4 +159,8 @@ router.post(
   upload.array("images", 10),
   editProduct
 );
+
+// block/unblock product
+router.post("/products/block/:id", isAdminAuth, blockProduct);
+router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
 export default router;

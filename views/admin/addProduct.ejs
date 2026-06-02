@@ -50,23 +50,23 @@
 <form
   action="/admin/products/add"
   method="POST"
+  enctype="multipart/form-data"
   novalidate
 >
 
-   <!-- PRODUCT NAME -->
+    <!-- PRODUCT NAME -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Product Name
   </label>
 
   <input
- <input
-  type="text"
-  id="productName"
-  name="productName"
+    type="text"
+    id="productName"
+    name="name"
     placeholder="Enter product name"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -85,7 +85,7 @@
     <!-- BRAND -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Brand
   </label>
 
@@ -93,7 +93,7 @@
     type="text"
     name="brand"
     placeholder="Enter brand"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -115,13 +115,13 @@
       <!-- CATEGORY -->
       <div>
 
-        <label class="block mb-2 text-sm">
+        <label class="block mb-2 text-sm font-semibold text-gray-700">
           Category
         </label>
 
         <select
           name="category"
-          class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+          class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
           required
         >
 
@@ -154,7 +154,7 @@
      <!-- REGULAR PRICE -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Regular Price
   </label>
 
@@ -162,7 +162,7 @@
     type="number"
     name="regularPrice"
     placeholder="Enter regular price"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -182,7 +182,7 @@
      <!-- SALE PRICE -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Sale Price
   </label>
 
@@ -190,7 +190,7 @@
     type="number"
     name="salePrice"
     placeholder="Enter sale price"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -210,7 +210,7 @@
     <!-- QUANTITY -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Quantity
   </label>
 
@@ -218,7 +218,7 @@
     type="number"
     name="quantity"
     placeholder="Enter quantity"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -238,7 +238,7 @@
 <!-- SIZE VARIANT -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
 
     Size Variant
 
@@ -248,7 +248,7 @@
     type="text"
     name="variantSize"
     placeholder="Example: M / L / XL"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
   >
 
 </div>
@@ -256,7 +256,7 @@
 <!-- VARIANT QUANTITY -->
 <div>
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
 
     Variant Quantity
 
@@ -266,7 +266,7 @@
     type="number"
     name="variantQuantity"
     placeholder="Enter quantity"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
   >
 
 </div>
@@ -274,7 +274,7 @@
 <!-- DESCRIPTION -->
 <div class="md:col-span-2">
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Description
   </label>
 
@@ -282,7 +282,7 @@
     name="description"
     rows="4"
     placeholder="Enter product description"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   ></textarea>
 
@@ -301,7 +301,7 @@
         <!-- HIGHLIGHTS -->
 <div class="md:col-span-2">
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Product Highlights
   </label>
 
@@ -309,7 +309,7 @@
     name="highlights"
     rows="4"
     placeholder="Enter highlights separated by comma"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
   ></textarea>
 
   <p class="text-xs text-gray-500 mt-2">
@@ -322,7 +322,7 @@
 <!-- IMAGES -->
 <div class="md:col-span-2">
 
-  <label class="block mb-2 text-sm">
+  <label class="block mb-2 text-sm font-semibold text-gray-700">
     Product Images (Minimum 3)
   </label>
 
@@ -331,7 +331,7 @@
     name="images"
     multiple
     accept="image/*"
-    class="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600"
+    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
     required
   >
 
@@ -457,152 +457,109 @@ const cropCancelBtn =
   document.getElementById("cropCancelBtn");
 
 let files = [];
-
+let croppedFiles = []; // Keeps track of cropped File objects
 let currentIndex = 0;
 
 imageInput.addEventListener("change", function (e) {
-
   previewContainer.innerHTML = "";
-
   files = Array.from(e.target.files);
-
+  croppedFiles = [];
   currentIndex = 0;
 
   if (files.length > 0) {
-
     showCropper(files[currentIndex]);
-
   }
-
 });
 
 function showCropper(file) {
-
   const reader = new FileReader();
-
   reader.onload = function (event) {
-
     cropImage.src = event.target.result;
-
     cropModal.classList.remove("hidden");
-
     cropModal.classList.add("flex");
 
     if (cropper) {
-
       cropper.destroy();
-
     }
 
     cropper = new Cropper(cropImage, {
-
       aspectRatio: 1,
       viewMode: 1,
       autoCropArea: 1,
-
     });
-
   };
-
   reader.readAsDataURL(file);
-
 }
 
 cropSaveBtn.addEventListener("click", function () {
-
   if (!cropper) return;
 
   const canvas = cropper.getCroppedCanvas({
-
-    width: 300,
-    height: 300
-
+    width: 800,
+    height: 800
   });
 
-  const croppedImage =
-    canvas.toDataURL("image/png");
+  canvas.toBlob((blob) => {
+    const fileName = `cropped-${Date.now()}-${croppedFiles.length}.png`;
+    const file = new File([blob], fileName, { type: "image/png" });
+    croppedFiles.push(file);
 
-  const wrapper =
-    document.createElement("div");
+    const wrapper = document.createElement("div");
+    wrapper.className = "relative";
+    wrapper.dataset.index = croppedFiles.length - 1;
 
-  wrapper.className = "relative";
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(blob);
+    img.className = "w-24 h-24 object-cover rounded-lg border border-gray-300";
 
-  const img =
-    document.createElement("img");
+    const removeBtn = document.createElement("button");
+    removeBtn.innerHTML = "✕";
+    removeBtn.type = "button";
+    removeBtn.className = "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm";
+    
+    removeBtn.onclick = () => {
+      const idx = parseInt(wrapper.dataset.index);
+      croppedFiles[idx] = null;
+      wrapper.remove();
+    };
 
-  img.src = croppedImage;
-
-  img.className = `
-    w-28
-    h-28
-    object-cover
-    rounded-lg
-    border
-    border-gray-300
-  `;
-
-  const removeBtn =
-    document.createElement("button");
-
-  removeBtn.innerHTML = "✕";
-
-  removeBtn.type = "button";
-
-  removeBtn.className = `
-    absolute
-    -top-2
-    -right-2
-    bg-red-500
-    hover:bg-red-600
-    text-white
-    w-6
-    h-6
-    rounded-full
-    text-sm
-  `;
-
-  removeBtn.onclick = () => {
-
-    wrapper.remove();
-
-  };
-
-  wrapper.appendChild(img);
-
-  wrapper.appendChild(removeBtn);
-
-  previewContainer.appendChild(wrapper);
+    wrapper.appendChild(img);
+    wrapper.appendChild(removeBtn);
+    previewContainer.appendChild(wrapper);
+  }, "image/png");
 
   cropper.destroy();
-
   currentIndex++;
 
   if (currentIndex < files.length) {
-
     showCropper(files[currentIndex]);
-
   } else {
-
     cropModal.classList.add("hidden");
-
     cropModal.classList.remove("flex");
-
   }
-
 });
 
 cropCancelBtn.addEventListener("click", function () {
-
   cropModal.classList.add("hidden");
-
   cropModal.classList.remove("flex");
-
   if (cropper) {
-
     cropper.destroy();
+  }
+});
 
+// Intercept form submit to assign the cropped files to the input element
+const form = document.querySelector("form");
+form.addEventListener("submit", function (e) {
+  const activeFiles = croppedFiles.filter(f => f !== null);
+  if (activeFiles.length < 3) {
+    e.preventDefault();
+    alert("Minimum 3 product images required");
+    return;
   }
 
+  const dt = new DataTransfer();
+  activeFiles.forEach(file => dt.items.add(file));
+  imageInput.files = dt.files;
 });
 
 </script>

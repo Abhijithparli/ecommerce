@@ -23,7 +23,7 @@ export const isAuthenticated = async(req,res,next)=>{
     // check block
 
     if(!user || user.isBlocked){
-      req.session.destroy();
+      delete req.session.user;
       return res.redirect("/login?error=blocked");
     }
 
