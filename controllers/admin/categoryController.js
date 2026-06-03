@@ -4,8 +4,11 @@ import * as categoryService from "../../services/categoryService.js";
 export const loadCategories = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    let page = parseInt(req.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 1;
+    }
+    const limit = 5;
 
     const data = await categoryService.getCategories(search, page, limit);
 
@@ -14,6 +17,7 @@ export const loadCategories = async (req, res) => {
       search: data.search,
       currentPage: data.currentPage,
       totalPages: data.totalPages,
+      totalCategories: data.totalCategories,
       success: req.session.success,
       error: req.session.error
     });

@@ -10,7 +10,7 @@ import path from "path";
 
 // ================= ADMIN OPERATIONS =================
 
-export const getAdminProducts = async (search = "") => {
+export const getAdminProducts = async (search = "", page = 1, limit = 10) => {
   const query = { isDeleted: false };
 
   if (search.trim() !== "") {
@@ -20,13 +20,26 @@ export const getAdminProducts = async (search = "") => {
     ];
   }
 
+  const totalProducts = await Product.countDocuments(query);
+  const totalPages = Math.ceil(totalProducts / limit);
+  const skip = (page - 1) * limit;
+
   const products = await Product.find(query)
-    .populate("category")
-    .sort({ createdAt: -1 });
+     .populate("category")
+     .sort({ createdAt: -1 })
+     .skip(skip)
+     .limit(limit);
 
   const categories = await Category.find({ isDeleted: false });
 
-  return { products, categories, search };
+  return {
+    products,
+    categories,
+    search,
+    totalPages,
+    currentPage: page,
+    totalProducts
+  };
 };
 
 export const getActiveCategories = async () => {
@@ -249,7 +262,7 @@ export const getPublicProducts = async (queryParams) => {
   const price = queryParams.price || "";
   const brand = queryParams.brand || "";
   const page = parseInt(queryParams.page) || 1;
-  const limit = 8;
+  const limit = 5;
   const skip = (page - 1) * limit;
 
   // Filter

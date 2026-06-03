@@ -4,9 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-/**
- * Multer Profile Image configuration
- */
+// Multer Profile Image configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = "public/uploads/profiles";

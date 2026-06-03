@@ -6,7 +6,46 @@
   <meta charset="UTF-8">
   <title>Product Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
- 
+  <style>
+    /* Custom Bootstrap pagination styling for light theme container */
+    .pagination {
+      display: flex;
+      padding-left: 0;
+      list-style: none;
+    }
+    .page-item {
+      margin: 0 2px;
+    }
+    .page-link {
+      position: relative;
+      display: block;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: #374151; /* text-gray-700 */
+      background-color: #ffffff;
+      border: 1px solid #d1d5db; /* border-gray-300 */
+      border-radius: 0.375rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .page-link:hover {
+      color: #111827; /* text-gray-900 */
+      background-color: #f3f4f6; /* bg-gray-100 */
+      border-color: #d1d5db;
+    }
+    .page-item.active .page-link {
+      color: #ffffff;
+      background-color: #f97316; /* bg-orange-500 */
+      border-color: #f97316;
+    }
+    .page-item.disabled .page-link {
+      color: #9ca3af; /* text-gray-400 */
+      pointer-events: none;
+      background-color: #f9fafb; /* bg-gray-50 */
+      border-color: #e5e7eb;
+      opacity: 0.6;
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 text-gray-900 min-h-screen">
@@ -28,7 +67,7 @@
   <div class="flex justify-between items-center mb-8">
 
     <h1 class="text-3xl font-bold">
-      Product Management
+      Product Management <span class="text-lg font-normal text-gray-500">(Total: <%= totalProducts %>)</span>
     </h1>
 
     <a
@@ -308,6 +347,47 @@
     </table>
 
   </div>
+
+  <!-- PAGINATION -->
+  <% if (totalPages > 1) { %>
+  <div class="flex justify-center items-center py-6">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <!-- PREVIOUS -->
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+          <a
+            class="page-link"
+            href="/admin/products?page=<%= currentPage - 1 %>&search=<%= search %>"
+          >
+            Previous
+          </a>
+        </li>
+
+        <!-- PAGE NUMBERS -->
+        <% for(let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+            <a
+              class="page-link"
+              href="/admin/products?page=<%= i %>&search=<%= search %>"
+            >
+              <%= i %>
+            </a>
+          </li>
+        <% } %>
+
+        <!-- NEXT -->
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+          <a
+            class="page-link"
+            href="/admin/products?page=<%= currentPage + 1 %>&search=<%= search %>"
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  <% } %>
 
 </div>
 

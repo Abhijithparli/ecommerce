@@ -3,12 +3,20 @@ import * as productService from "../../services/productService.js";
 export const loadProducts = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const data = await productService.getAdminProducts(search);
+    let page = parseInt(req.query.page);
+    if (isNaN(page) || page < 1) {
+      page = 1;
+    }
+    const limit = 5;
+    const data = await productService.getAdminProducts(search, page, limit);
 
     res.render("admin/products", {
       products: data.products,
       categories: data.categories,
       search: data.search,
+      currentPage: data.currentPage,
+      totalPages: data.totalPages,
+      totalProducts: data.totalProducts,
       success: req.session.success,
       error: req.session.error,
       errors: {}

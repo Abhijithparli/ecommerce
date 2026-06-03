@@ -24,7 +24,8 @@ export const getCategories = async (search = "", page = 1, limit = 10) => {
     categories,
     totalPages,
     currentPage: page,
-    search
+    search,
+    totalCategories
   };
 };
 
