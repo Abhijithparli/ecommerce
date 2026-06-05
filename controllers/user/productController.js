@@ -15,8 +15,14 @@ export const loadProducts = async (req, res) => {
       category: data.category,
       sort: data.sort,
       price: data.price,
-      brand: data.brand
+      brand: data.brand,
+      user: req.session.user || null,
+      error: req.session.error || null,
+      success: req.session.success || null
     });
+
+    req.session.error = null;
+    req.session.success = null;
   } catch (error) {
     console.error("Load products user controller error:", error);
     res.redirect("/");
@@ -32,12 +38,14 @@ export const loadProductDetails = async (req, res) => {
       product: data.product,
       relatedProducts: data.relatedProducts,
       reviews: data.reviews,
-      averageRating: data.averageRating
+      averageRating: data.averageRating,
+      user: req.session.user || null
     });
   } catch (error) {
     console.error("Load product details user controller error:", error);
     if (error.isUnavailable) {
-      return res.render("user/productUnavailable");
+      req.session.error = "This product is currently unavailable.";
+      return res.redirect("/products");
     }
     res.redirect("/products");
   }

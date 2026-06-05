@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Landing Page - Headshield</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
@@ -91,7 +92,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: top;  /* 🔥 IMPORTANT */
+    object-position: top; 
 }
 
 .hero-banner {
@@ -148,7 +149,7 @@
 
  .product-image {
     width: 100%;
-    height: 180px; /* reduce height a bit */
+    height: 180px; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -347,25 +348,7 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="header-left">
-            <div class="logo">HS</div>
-            <span class="header-page-title">HeadShield</span>
-        </div>
-        <nav>
-            <a href="#home">HOME</a>
-            <a href="#fullpage">FULL PAGE</a>
-            <a href="#signpage">SIGNPAGE</a>
-            <a href="#about">ABOUT</a>
-            <a href="/products">PRODUCT</a>
-        </nav>
-        <div class="header-icons">
-            <a href="#" title="Wishlist">♡</a>
-            <a href="#" title="Shopping Bag">🛍</a>
-          <a href="/profile" title="User Account">👤</a>
-        </div>
-    </header>
+    <%- include("../partials/user/header") %>
 
    <section class="hero">
     <img src="/img/banner.png" alt="banner" class="hero-banner">
@@ -378,6 +361,26 @@
 
         <!-- Product Grid -->
         <div class="product-grid">
+          <% if (typeof products !== 'undefined' && products && products.length > 0) { %>
+            <% products.forEach(product => { %>
+              <div class="product-card cursor-pointer" onclick="window.location.href='/products/<%= product._id %>'">
+                <div class="product-image relative">
+                  <img src="<%= product.images && product.images[0] ? product.images[0] : '/img/targo-pro-biger.jpg' %>" alt="<%= product.name %>">
+                  <span class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">NEW</span>
+                </div>
+                <div class="product-info">
+                  <div class="product-name font-semibold text-gray-800 text-sm mt-2"><%= product.name %></div>
+                  <div class="text-xs text-gray-500 mb-1"><%= product.brand %></div>
+                  <div class="flex items-center justify-center gap-2">
+                    <span class="product-price text-orange-500 font-bold text-base">₹<%= product.salePrice %></span>
+                    <% if (product.regularPrice > product.salePrice) { %>
+                      <span class="text-gray-400 line-through text-xs">₹<%= product.regularPrice %></span>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
             <div class="product-card">
                 <div class="product-image">
                 <img src="/img/targo-pro-biger.jpg" alt="helmet">
@@ -443,11 +446,25 @@
                     <div class="product-price">USD 1,500.00</div>
                 </div>
             </div>
+          <% } %>
         </div>
 
         <!-- Category Section -->
         <div class="category-section">
             <div class="category-grid">
+              <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                <% categories.forEach(cat => { %>
+                  <div class="category-card cursor-pointer" onclick="window.location.href='/products?category=<%= cat._id %>'">
+                    <% 
+                      let catImg = "/img/axor1.webp";
+                      if (cat.name.toUpperCase().includes("RETRO")) catImg = "/img/retrobest.webp";
+                      if (cat.name.toUpperCase().includes("CROSS")) catImg = "/img/axor_X_cross_720x.webp";
+                    %>
+                    <img src="<%= catImg %>" alt="<%= cat.name %>" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                    <div class="category-name" style="position: relative; z-index: 2;"><%= cat.name %></div>
+                  </div>
+                <% }) %>
+              <% } else { %>
                 <div class="category-card">
                       <img src="/img/axor1.webp" alt="APEX" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
                     <div class="category-name" style="position: relative; z-index: 2;">APEX</div>
@@ -460,6 +477,7 @@
                   <img src="/img/axor_X_cross_720x.webp" alt="X-CROSS" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
                     <div class="category-name" style="position: relative; z-index: 2;">X-CROSS</div>
                 </div>
+              <% } %>
             </div>
         </div>
 
@@ -471,50 +489,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>Exclusive</h3>
-                <ul>
-                    <li><a href="#">Subscribe to our newsletter</a></li>
-                    <li><a href="#">Get 10% off your first order</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Support</h3>
-                <ul>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Shipping Info</a></li>
-                    <li><a href="#">About Us</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Account</h3>
-                <ul>
-                    <li><a href="#">Login</a></li>
-                    <li><a href="#">Register</a></li>
-                    <li><a href="#">Manage Account</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Use</a></li>
-                    <li><a href="#">FAQ</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="social-icons">
-                <a href="#" title="Facebook">f</a>
-                <a href="#" title="Twitter">𝕏</a>
-                <a href="#" title="Instagram">📷</a>
-                <a href="#" title="LinkedIn">in</a>
-            </div>
-            <p style="margin-top: 20px; color: #666;">&copy; 2026 Headshield. All rights reserved.</p>
-        </div>
-    </footer>
+    <%- include("../partials/user/footer") %>
 </body>
 </html>

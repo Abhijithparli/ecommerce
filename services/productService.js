@@ -1,6 +1,7 @@
 import Product from "../models/productModel.js";
 import Category from "../models/categoryModel.js";
 import Review from "../models/reviewModel.js";
+import mongoose from "mongoose";
 import sharp from "sharp";
 import path from "path";
 
@@ -279,9 +280,37 @@ export const getPublicProducts = async (queryParams) => {
     };
   }
 
+  // Fetch active categories
+  const activeCategories = await Category.find({ isDeleted: false });
+  const activeCategoryIds = activeCategories.map(c => c._id);
+
   // Category
+  console.log("[DEBUG] queryParams.category received:", category);
   if (category) {
-    filter.category = category;
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(category);
+    console.log("[DEBUG] Is category a valid ObjectId?", isValidObjectId);
+
+    let categoryObj = null;
+    if (isValidObjectId) {
+      categoryObj = await Category.findOne({ _id: category, isDeleted: false });
+    } else {
+      categoryObj = await Category.findOne({
+        name: { $regex: `^${category}$`, $options: "i" },
+        isDeleted: false
+      });
+    }
+
+    console.log("[DEBUG] Category object found in DB:", categoryObj);
+
+    if (categoryObj) {
+      filter.category = categoryObj._id;
+    } else {
+      // Force query to return no results if category specified but not found/active
+      filter.category = new mongoose.Types.ObjectId();
+    }
+  } else {
+    // Hide products whose category is deleted/inactive
+    filter.category = { $in: activeCategoryIds };
   }
 
   // Price range
@@ -310,11 +339,15 @@ export const getPublicProducts = async (queryParams) => {
     sortOption.name = -1;
   }
 
+  console.log("[DEBUG] Generated MongoDB Filter:", JSON.stringify(filter, null, 2));
+
   const products = await Product.find(filter)
     .populate("category")
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
+
+  console.log("[DEBUG] Products count returned:", products.length);
 
   const totalProducts = await Product.countDocuments(filter);
   const totalPages = Math.ceil(totalProducts / limit);
@@ -408,4 +441,13 @@ export const addProductReview = async (userId, productId, rating, comment) => {
   });
 
   return await review.save();
+};
+
+export const getHomePageData = async () => {
+  const categories = await Category.find({ isDeleted: false }).limit(3);
+  const products = await Product.find({ isDeleted: false, isBlocked: false })
+    .populate("category")
+    .sort({ createdAt: -1 })
+    .limit(6);
+  return { categories, products };
 };

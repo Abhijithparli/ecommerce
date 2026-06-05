@@ -33,7 +33,8 @@ import {
   setDefaultAddress,
   loadEditAddress,
   loadSetPassword,
-  savePassword
+  savePassword,
+  loadAboutPage
 } from "../../controllers/user/usercontroller.js";
 
 import { isAuthenticated, isGuest } from "../../middlewares/userMiddleware.js";
@@ -82,6 +83,9 @@ router.get(
   "/products/:id",
   loadProductDetails
 );
+
+// ABOUT PAGE
+router.get("/about", loadAboutPage);
 
 // ADD REVIEW
 router.post(

@@ -1,5 +1,6 @@
 import * as authService from "../../services/authService.js";
 import * as userService from "../../services/userService.js";
+import * as productService from "../../services/productService.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -30,8 +31,22 @@ export const uploadProfileImage = multer({
 });
 
 // ================= HOME =================
-export const loadHomepage = (req, res) => {
-  res.render("user/home", { user: req.session.user || null });
+export const loadHomepage = async (req, res) => {
+  try {
+    const homeData = await productService.getHomePageData();
+    res.render("user/home", {
+      user: req.session.user || null,
+      categories: homeData.categories,
+      products: homeData.products
+    });
+  } catch (error) {
+    console.error("Load homepage error:", error);
+    res.render("user/home", {
+      user: req.session.user || null,
+      categories: [],
+      products: []
+    });
+  }
 };
 
 // ================= SIGNUP =================
@@ -469,4 +484,8 @@ export const savePassword = async (req, res) => {
     console.error("Save password error:", error);
     res.render("user/setPassword", { error: error.message || "Server error" });
   }
+};
+
+export const loadAboutPage = (req, res) => {
+  res.render("user/about", { user: req.session.user || null });
 };
