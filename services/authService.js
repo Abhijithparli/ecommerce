@@ -54,9 +54,8 @@ export const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-/**
- * Authentication Business Logic
- */
+// Authentication Business Logic
+ 
 
 export const registerUserPreOtp = async ({ firstName, lastName, email, password, confirmPassword }) => {
   if (!firstName || !lastName || !email || !password || !confirmPassword) {

@@ -435,7 +435,7 @@ export const addProductReview = async (userId, productId, rating, comment) => {
 
   const review = new Review({
     user: userId,
-    product: productId,
+    product: productId, 
     rating: Number(rating),
     comment: comment.trim()
   });
@@ -449,5 +449,5 @@ export const getHomePageData = async () => {
     .populate("category")
     .sort({ createdAt: -1 })
     .limit(6);
-  return { categories, products };
+  return { categories, products }; 
 };
