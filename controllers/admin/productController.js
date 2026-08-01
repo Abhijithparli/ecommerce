@@ -88,8 +88,7 @@ export const loadEditProduct = async (req, res) => {
 
 export const editProduct = async (req, res) => {
   try {
-    const { id } = req.params;
-    await productService.updateProduct(id, req.body, req.files);
+    const { id } = req.params;   
 
     req.session.success = "Product updated successfully";
     res.redirect("/admin/products");
