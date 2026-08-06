@@ -39,6 +39,12 @@ import {
   unblockProduct
 } from "../../controllers/admin/productController.js";
 
+import {
+  listAdminOrders,
+  loadAdminOrderDetail,
+  updateAdminOrderStatus
+} from "../../controllers/admin/adminOrderController.js";
+
 
 const router = express.Router();
 
@@ -163,4 +169,9 @@ router.post(
 // block/unblock product
 router.post("/products/block/:id", isAdminAuth, blockProduct);
 router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
+
+// ================= ORDER MANAGEMENT =================
+router.get("/orders", isAdminAuth, listAdminOrders);
+router.get("/orders/:id", isAdminAuth, loadAdminOrderDetail);
+router.post("/orders/:id/status", isAdminAuth, updateAdminOrderStatus);
 export default router;

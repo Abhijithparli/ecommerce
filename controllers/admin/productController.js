@@ -22,7 +22,7 @@ export const loadProducts = async (req, res) => {
       errors: {}
     });
 
-    req.session.success = null;
+    req.session.success = null; 
     req.session.error = null;
   } catch (error) {
     console.error("Load products admin controller error:", error);
@@ -88,14 +88,24 @@ export const loadEditProduct = async (req, res) => {
 
 export const editProduct = async (req, res) => {
   try {
-    const { id } = req.params;   
+    const { id } = req.params;
+
+    await productService.updateProduct(
+      id,
+      req.body,
+      req.files
+    );
 
     req.session.success = "Product updated successfully";
     res.redirect("/admin/products");
+
   } catch (error) {
-    console.error("Edit product admin controller error:", error);
-    req.session.error = error.message || "Failed to update product";
-    res.redirect("/admin/products");
+    console.error("Edit product error:", error);
+
+    req.session.error =
+      error.message || "Failed to update product";
+
+    res.redirect(`/admin/products/${req.params.id}/edit`);
   }
 };
 

@@ -50,8 +50,17 @@ import {
   addToCart,
   loadCart,
   updateCartQuantity,
-  removeCartItem
+  removeCartItem,
+  loadCheckout
 } from "../../controllers/user/cartController.js";
+
+import {
+  placeOrder,
+  loadOrderSuccess,
+  loadOrders,
+  loadOrderDetail,
+  cancelOrderAction
+} from "../../controllers/user/orderController.js";
 
 const router = express.Router();
 
@@ -124,6 +133,15 @@ router.delete(
   isAuthenticated,
   removeCartItem
 );
+
+// ================= checkout & orders =================
+router.get("/checkout", isAuthenticated, loadCheckout);
+router.post("/checkout/place-order", isAuthenticated, placeOrder);
+router.get("/checkout/order-success/:orderId", isAuthenticated, loadOrderSuccess);
+
+router.get("/profile/orders", isAuthenticated, loadOrders);
+router.get("/profile/orders/:id", isAuthenticated, loadOrderDetail);
+router.post("/profile/orders/:id/cancel", isAuthenticated, cancelOrderAction);
 
 // ================= google auth =================
 router.get("/auth/google",

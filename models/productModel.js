@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema({
   },
 
   description: {
-    type: String,
+    type: String, 
     required: true
   },
 
@@ -34,38 +34,29 @@ const productSchema = new mongoose.Schema({
     required: true
   },
 
-  quantity: {
-    type: Number,
-    required: true
-  },
-
-variants: [
-
-  {
-
-    size: {
-
-      type: String
-    },
-
-    quantity: {
-
-      type: Number,
-
-      default: 0
+  variants: [
+    {
+      size: {
+        type: String,
+        required: true
+      },
+      stock: {
+        type: Number,
+        required: true,
+        default: 0
+      }
     }
-  }
-],
+  ],
 
   images: [{
     type: String
   }],
   
   highlights: [
-  {
-    type: String
-  }
-],
+    {
+      type: String
+    }
+  ],
 
   isBlocked: {
     type: Boolean,
@@ -78,7 +69,15 @@ variants: [
   }
 
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for total quantity (sum of all variant stock)
+productSchema.virtual("quantity").get(function () {
+  if (!this.variants || this.variants.length === 0) return 0;
+  return this.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
 });
 
 const Product = mongoose.model("Product", productSchema);

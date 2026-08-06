@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Management - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="flex w-full">
+
+  <!-- SIDEBAR -->
+  <%- include("../partials/sidebar", {
+    currentPage: "orders"
+  }) %>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 ml-56 p-8">
+    <div class="w-full">
+      
+      <!-- HEADER -->
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+          Order Management <span class="text-lg font-normal text-gray-500">(Total: <%= totalOrders %>)</span>
+        </h1>
+      </div>
+
+      <!-- FLASH NOTIFICATIONS -->
+      <% if (success) { %>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+          <%= success %>
+        </div>
+      <% } %>
+      <% if (error) { %>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <!-- SEARCH & FILTERS -->
+      <div class="bg-white rounded-xl p-6 mb-8 border border-gray-200 shadow-sm">
+        <form action="/admin/orders" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+          
+          <!-- Search box -->
+          <div class="flex-1 w-full">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Search Order ID</label>
+            <input
+              type="text"
+              name="search"
+              value="<%= search %>"
+              placeholder="Search by Order ID (e.g. ORD-...)"
+              class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+          </div>
+
+          <!-- Status filter dropdown -->
+          <div class="w-full md:w-60">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Filter by Status</label>
+            <select
+              name="status"
+              class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">All Statuses</option>
+              <option value="Placed" <%= status === 'Placed' ? 'selected' : '' %>>Placed</option>
+              <option value="Shipped" <%= status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+              <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+              <option value="Cancelled" <%= status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              <option value="Returned" <%= status === 'Returned' ? 'selected' : '' %>>Returned</option>
+            </select>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex gap-2 w-full md:w-auto">
+            <button
+              type="submit"
+              class="flex-1 md:flex-initial bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-lg transition"
+            >
+              Filter
+            </button>
+            <a
+              href="/admin/orders"
+              class="flex-1 md:flex-initial bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-6 py-3 rounded-lg transition text-center"
+            >
+              Clear
+            </a>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- ORDERS LIST TABLE -->
+      <% if (orders && orders.length > 0) { %>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase border-b border-gray-200">
+                <th class="px-6 py-4">Order ID</th>
+                <th class="px-6 py-4">Customer</th>
+                <th class="px-6 py-4">Date</th>
+                <th class="px-6 py-4">Total Price</th>
+                <th class="px-6 py-4">Payment</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+              <% orders.forEach(order => { %>
+                <tr class="hover:bg-gray-50/50 transition duration-100">
+                  <td class="px-6 py-4 font-semibold text-gray-900">
+                    <%= order.orderId %>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="font-medium text-gray-900"><%= order.user ? order.user.name : 'Unknown User' %></div>
+                    <div class="text-xs text-gray-500"><%= order.user ? order.user.email : '' %></div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <%= new Date(order.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) %>
+                  </td>
+                  <td class="px-6 py-4 font-bold text-gray-900">
+                    ₹<%= order.finalPrice %>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-xs font-medium text-gray-800"><%= order.paymentMethod %></div>
+                    <div class="text-[10px] uppercase font-bold <%= order.paymentStatus === 'Paid' ? 'text-green-600' : 'text-yellow-600' %>">
+                      <%= order.paymentStatus %>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <% 
+                      let statusClass = "bg-gray-100 text-gray-800";
+                      if (order.status === 'Placed') statusClass = "bg-blue-100 text-blue-800";
+                      else if (order.status === 'Shipped') statusClass = "bg-orange-100 text-orange-800";
+                      else if (order.status === 'Delivered') statusClass = "bg-green-100 text-green-800";
+                      else if (order.status === 'Cancelled') statusClass = "bg-red-100 text-red-800";
+                    %>
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-lg uppercase tracking-wider <%= statusClass %>">
+                      <%= order.status %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <a
+                      href="/admin/orders/<%= order._id %>"
+                      class="inline-block bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg text-xs transition shadow-sm"
+                    >
+                      View Details
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="flex justify-center items-center gap-3 mt-8">
+            <% if (currentPageNum > 1) { %>
+              <a
+                href="/admin/orders?page=<%= currentPageNum - 1 %>&search=<%= search %>&status=<%= status %>"
+                class="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 shadow-sm transition"
+              >
+                Previous
+              </a>
+            <% } %>
+            <span class="text-xs text-gray-500">Page <%= currentPageNum %> of <%= totalPages %></span>
+            <% if (currentPageNum < totalPages) { %>
+              <a
+                href="/admin/orders?page=<%= currentPageNum + 1 %>&search=<%= search %>&status=<%= status %>"
+                class="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 shadow-sm transition"
+              >
+                Next
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <!-- Empty list indicator -->
+        <div class="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
+          <p class="text-gray-500">No orders found matching the filter criteria.</p>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -63,13 +63,11 @@ export const addProduct = async (fields, files) => {
     category,
     regularPrice,
     salePrice,
-    quantity,
-    highlights,
     variantSize,
     variantQuantity
   } = fields;
 
-  const errors = {};
+  const errors = {};  
 
   // Validation
   if (!name || name.trim() === "") {
@@ -153,8 +151,8 @@ export const addProduct = async (fields, files) => {
     brand: brand.trim(),
     category,
     regularPrice: Number(regularPrice),
-    salePrice: Number(salePrice),
-    quantity: Number(quantity),
+    salePrice   : Number(salePrice),
+    // quantity: Number(quantity),
     variants,
     images: imagePaths,
     highlights: highlightsArray
@@ -172,7 +170,9 @@ export const updateProduct = async (id, fields, files) => {
     regularPrice,
     salePrice,
     quantity,
-    highlights
+    highlights,
+    variantSize,
+    variantQuantity
   } = fields;
 
   const product = await Product.findById(id);
@@ -184,6 +184,21 @@ export const updateProduct = async (id, fields, files) => {
   if (!name || !description || !brand || !category || !regularPrice || !salePrice || quantity === undefined) {
     throw new Error("All fields are required");
   }
+  console.log("========== UPDATE PRODUCT ==========");
+
+console.log("name:", name);
+console.log("description:", description);
+console.log("brand:", brand);
+console.log("category:", category);
+console.log("regularPrice:", regularPrice);
+console.log("salePrice:", salePrice);
+console.log("quantity:", quantity);
+console.log("variantSize:", variantSize);
+console.log("variantQuantity:", variantQuantity);
+console.log("highlights:", highlights);
+
+console.log("Full Fields Object:");
+console.log(fields);
 
   const existingProduct = await Product.findOne({
     _id: { $ne: id },
@@ -196,8 +211,18 @@ export const updateProduct = async (id, fields, files) => {
 
   let images = product.images;
 
+  const deletedImages = fields.deletedImages
+  ? JSON.parse(fields.deletedImages)
+  : [];
+
+if (deletedImages.length > 0) {
+  images = images.filter(
+    img => !deletedImages.includes(img)
+  );
+}
+
   if (files && files.length > 0) {
-    images = [];
+    // images = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileName = Date.now() + "-" + i + ".webp";
@@ -216,6 +241,14 @@ export const updateProduct = async (id, fields, files) => {
     ? highlights.split(",").map((item) => item.trim())
     : [];
 
+  const variants = [];
+  if (variantSize && variantQuantity) {
+    variants.push({
+      size: variantSize.trim(),
+      quantity: Number(variantQuantity)
+    });
+  }
+
   return await Product.findByIdAndUpdate(id, {
     name: name.trim(),
     description: description.trim(),
@@ -224,6 +257,7 @@ export const updateProduct = async (id, fields, files) => {
     regularPrice: Number(regularPrice),
     salePrice: Number(salePrice),
     quantity: Number(quantity),
+    variants,
     images,
     highlights: highlightsArray
   }, { new: true });
