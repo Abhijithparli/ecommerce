@@ -440,6 +440,7 @@
 />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <script>
 
 const imageInput = document.querySelector('input[name="images"]');
@@ -567,7 +568,7 @@ function openDeleteModal(button) {
   selectedForm = button.closest("form");
   const modal = document.getElementById("deleteModal");
   modal.classList.remove("hidden");
-  modal.classList.add("flex");
+  modal.classList.add("flex");   
 }
 
 function closeDeleteModal() {

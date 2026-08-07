@@ -43,9 +43,9 @@
         method="POST"
         enctype="multipart/form-data"
         class="grid grid-cols-1 md:grid-cols-2 gap-6"
-        <!-- novalidate -->
+        novalidate
       >
-        <!-- PRODUCT NAME -->
+        <!-- ROW 1: PRODUCT NAME | BRAND -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Product Name</label>
           <input
@@ -54,11 +54,9 @@
             value="<%= product.name %>"
             placeholder="Enter product name"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
         </div>
 
-        <!-- BRAND -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Brand</label>
           <input
@@ -67,21 +65,19 @@
             value="<%= product.brand %>"
             placeholder="Enter brand"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
         </div>
 
-        <!-- CATEGORY -->
+        <!-- ROW 2: CATEGORY | SIZE VARIANT -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Category</label>
           <select
             name="category"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
             <option value="">Select Category</option>
             <% categories.forEach(category => { %>
-              <option  
+              <option
                 value="<%= category._id %>"
                 <%= product.category._id.toString() === category._id.toString() ? "selected" : "" %>
               >
@@ -91,7 +87,23 @@
           </select>
         </div>
 
-        <!-- REGULAR PRICE -->
+        <div>
+          <label class="block mb-2 text-sm font-semibold text-gray-700">
+            Size Variant
+          </label>
+
+          <select
+            name="variantSize"
+            class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none"
+          >
+            <option value="">Select Size</option>
+            <option value="S"  <%= product.variants?.[0]?.size === "S" ? "selected" : "" %>>S</option>
+            <option value="L"  <%= product.variants?.[0]?.size === "L" ? "selected" : "" %>>L</option>
+            <option value="XL" <%= product.variants?.[0]?.size === "XL" ? "selected" : "" %>>XL</option>
+          </select>
+        </div>
+
+        <!-- ROW 3: REGULAR PRICE | SALE PRICE -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Regular Price</label>
           <input
@@ -100,11 +112,9 @@
             value="<%= product.regularPrice %>"
             placeholder="Enter regular price"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
         </div>
 
-        <!-- SALE PRICE -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Sale Price</label>
           <input
@@ -113,11 +123,10 @@
             value="<%= product.salePrice %>"
             placeholder="Enter sale price"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
         </div>
 
-        <!-- QUANTITY -->
+        <!-- ROW 4: QUANTITY | VARIANT QUANTITY -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Quantity</label>
           <input
@@ -126,28 +135,9 @@
             value="<%= product.quantity %>"
             placeholder="Enter quantity"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           >
         </div>
 
-        <!-- SIZE VARIANT -->
-     <div>
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Size Variant
-  </label>
-
-  <select
-    name="variantSize"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none"
-  >
-    <option value="">Select Size</option>
-
-    <option value="S"  <%= product.variants?.[0]?.size === "S" ? "selected" : "" %>>S</option>
-    <option value="L"  <%= product.variants?.[0]?.size === "L" ? "selected" : "" %>>L</option>
-    <option value="XL" <%= product.variants?.[0]?.size === "XL" ? "selected" : "" %>>XL</option>
-  </select>
-</div>
-        <!-- VARIANT QUANTITY -->
         <div>
           <label class="block mb-2 text-sm font-semibold text-gray-700">Variant Quantity</label>
           <input
@@ -159,7 +149,7 @@
           >
         </div>
 
-        <!-- DESCRIPTION -->
+        <!-- ROW 5: DESCRIPTION (FULL WIDTH) -->
         <div class="md:col-span-2">
           <label class="block mb-2 text-sm font-semibold text-gray-700">Description</label>
           <textarea
@@ -167,11 +157,10 @@
             rows="4"
             placeholder="Enter product description"
             class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-            required
           ><%= product.description %></textarea>
         </div>
 
-        <!-- HIGHLIGHTS -->
+        <!-- ROW 6: HIGHLIGHTS (FULL WIDTH) -->
         <div class="md:col-span-2">
           <label class="block mb-2 text-sm font-semibold text-gray-700">Product Highlights</label>
           <textarea
@@ -183,58 +172,59 @@
           <p class="text-xs text-gray-500 mt-2">Example: Lightweight, DOT Certified, Scratch Resistant</p>
         </div>
 
-       <!-- CURRENT IMAGES -->
-<div class="md:col-span-2">
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Current Product Images
-  </label>
-
-  <div class="flex flex-wrap gap-4">
-    <% product.images.forEach((img, index) => { %>
-
-      <div class="existing-image relative border border-gray-300 rounded-lg overflow-hidden bg-white p-1">
-       
-        <!-- Delete Button -->
-      <button
-  type="button"
-  class="absolute top-1 right-1
-         flex items-center justify-center
-         w-4 h-4
-         rounded-full
-         bg-red-500/90
-         hover:bg-red-600
-         text-white
-         text-lg
-         font-medium
-         shadow-lg
-         transition-all duration-200
-         hover:scale-110"
-  onclick="deleteExistingImage('<%= img %>', this)"
->
-  x
-</button>
-
-        <img
-          src="<%= img %>"
-          class="w-24 h-24 object-cover rounded-lg"
-        >
-      </div>
-
-    <% }) %>
-  </div>
-
-  <!-- Hidden input to store deleted images -->
-  <input
-    type="hidden"
-    id="deletedImages"
-    name="deletedImages"
-    value=""
-  >
-</div>
-
-        <!-- IMAGES UPLOAD -->
+        <!-- ROW 7: CURRENT IMAGES (FULL WIDTH) -->
         <div class="md:col-span-2">
-          <label class="block mb-2 text-sm font-semibold text-gray-700">Upload New Images (Replacing Current - Min 3)</label>
+          <label class="block mb-2 text-sm font-semibold text-gray-700">
+            Current Product Images
+          </label>
+
+          <div class="flex flex-wrap gap-4">
+            <% product.images.forEach((img, index) => { %>
+
+              <div class="existing-image relative border border-gray-300 rounded-lg overflow-hidden bg-white p-1">
+
+                <!-- Delete Button -->
+                <button
+                  type="button"
+                  class="absolute top-1 right-1
+                         flex items-center justify-center
+                         w-5 h-5
+                         rounded-full
+                         bg-red-500/90
+                         hover:bg-red-600
+                         text-white
+                         text-xs
+                         font-bold
+                         shadow-lg
+                         transition-all duration-200
+                         hover:scale-110"
+                  onclick="deleteExistingImage('<%= img %>', this)"
+                >
+                  &times;
+                </button>
+
+                <img
+                  src="<%= img %>"
+                  class="w-24 h-24 object-cover rounded-lg"
+                >
+              </div>
+
+            <% }) %>
+          </div>
+
+          <!-- Hidden input to store deleted images -->
+          <input
+            type="hidden"
+            id="deletedImages"
+            name="deletedImages"
+            value=""
+          >
+        </div>
+
+        <!-- IMAGES UPLOAD (FULL WIDTH) -->
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-semibold text-gray-700">Add More Images (Total Images Must Be At Least 3)</label>
+          <p class="text-xs text-gray-500 mb-2">You can click this multiple times to add images one by one. Existing images above are kept unless you delete them.</p>
           <input
             type="file"
             name="images"
@@ -310,67 +300,75 @@
   const cropSaveBtn = document.getElementById("cropSaveBtn");
   const cropCancelBtn = document.getElementById("cropCancelBtn");
 
-  let files = [];
-  let croppedFiles = [];
+  let pendingFiles = [];   // files from the latest file-picker selection, awaiting crop
+  let croppedFiles = [];   // ALL cropped images accumulated across every selection (persists)
   let currentIndex = 0;
   let deletedImages = [];
 
+  function getExistingImageCount() {
+    return document.querySelectorAll(".existing-image").length;
+  }
 
-async function deleteExistingImage(imagePath, button) {
+  function getActiveNewImageCount() {
+    return croppedFiles.filter(f => f !== null).length;
+  }
+
+
+  async function deleteExistingImage(imagePath, button) {
 
     const result = await Swal.fire({
-        title: "Delete Image?",
-        text: "Do you want to remove this image?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#ef4444",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, Delete",
-        cancelButtonText: "Cancel"
+      title: "Delete Image?",
+      text: "Do you want to remove this image?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel"
     });
 
     if (!result.isConfirmed) {
-        return;
+      return;
     }
 
-    const currentImages = document.querySelectorAll(".existing-image");
+    const remainingAfterDelete = getExistingImageCount() - 1;
+    const totalAfterDelete = remainingAfterDelete + getActiveNewImageCount();
 
-    if (currentImages.length <= 3) {
+    if (totalAfterDelete < 3) {
 
-        Swal.fire({
-            icon: "warning",
-            title: "Minimum Images Required",
-            text: "A product must have at least 3 images."
-        });
+      Swal.fire({
+        icon: "warning",
+        title: "Minimum Images Required",
+        text: "A product must have at least 3 images in total. Add a new image before removing this one."
+      });
 
-        return;
+      return;
     }
 
     deletedImages.push(imagePath);
 
     document.getElementById("deletedImages").value =
-        JSON.stringify(deletedImages);
+      JSON.stringify(deletedImages);
 
     button.closest(".existing-image").remove();
 
     Swal.fire({
-        icon: "success",
-        title: "Deleted",
-        text: "Image removed successfully.",
-        timer: 1200,
-        showConfirmButton: false
+      icon: "success",
+      title: "Deleted",
+      text: "Image removed successfully.",
+      timer: 1200,
+      showConfirmButton: false
     });
-}
+  }
 
 
   imageInput.addEventListener("change", function (e) {
-    previewContainer.innerHTML = "";
-    files = Array.from(e.target.files);
-    croppedFiles = [];
+    // Each selection is ADDED to what's already cropped, not a replacement
+    pendingFiles = Array.from(e.target.files);
     currentIndex = 0;
 
-    if (files.length > 0) {
-      showCropper(files[currentIndex]);
+    if (pendingFiles.length > 0) {
+      showCropper(pendingFiles[currentIndex]);
     }
   });
 
@@ -419,7 +417,7 @@ async function deleteExistingImage(imagePath, button) {
       removeBtn.innerHTML = "✕";
       removeBtn.type = "button";
       removeBtn.className = "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm";
-      
+
       removeBtn.onclick = () => {
         console.log("delete button clicked")
         const idx = parseInt(wrapper.dataset.index);
@@ -435,11 +433,15 @@ async function deleteExistingImage(imagePath, button) {
     cropper.destroy();
     currentIndex++;
 
-    if (currentIndex < files.length) {
-      showCropper(files[currentIndex]);
+    if (currentIndex < pendingFiles.length) {
+      showCropper(pendingFiles[currentIndex]);
     } else {
       cropModal.classList.add("hidden");
       cropModal.classList.remove("flex");
+      // Reset so the picker fires "change" again even if the same file is re-selected
+      pendingFiles = [];
+      currentIndex = 0;
+      imageInput.value = "";
     }
   });
 
@@ -451,22 +453,110 @@ async function deleteExistingImage(imagePath, button) {
     }
   });
 
-  // Handle form submission to validate images and append cropped files
+  // Handle form submission — all validation shown via SweetAlert2 popups
   const form = document.querySelector("form");
+
+  function showValidationError(text, focusEl) {
+    Swal.fire({
+      icon: "warning",
+      title: "Validation Error",
+      text: text
+    });
+    if (focusEl) {
+      focusEl.focus();
+    }
+  }
+
   form.addEventListener("submit", function (e) {
+    const nameField = form.querySelector('[name="name"]');
+    const brandField = form.querySelector('[name="brand"]');
+    const categoryField = form.querySelector('[name="category"]');
+    const regularPriceField = form.querySelector('[name="regularPrice"]');
+    const salePriceField = form.querySelector('[name="salePrice"]');
+    const quantityField = form.querySelector('[name="quantity"]');
+    const descriptionField = form.querySelector('[name="description"]');
+
+    // PRODUCT NAME
+    if (!nameField.value.trim()) {
+      e.preventDefault();
+      showValidationError("Product name is required.", nameField);
+      return;
+    }
+
+    // BRAND
+    if (!brandField.value.trim()) {
+      e.preventDefault();
+      showValidationError("Brand is required.", brandField);
+      return;
+    }
+
+    // CATEGORY
+    if (!categoryField.value) {
+      e.preventDefault();
+      showValidationError("Please select a category.", categoryField);
+      return;
+    }
+
+    // REGULAR PRICE
+    if (regularPriceField.value === "" || isNaN(regularPriceField.value)) {
+      e.preventDefault();
+      showValidationError("Regular price is required.", regularPriceField);
+      return;
+    }
+    if (Number(regularPriceField.value) < 0) {
+      e.preventDefault();
+      showValidationError("Regular price cannot be negative.", regularPriceField);
+      return;
+    }
+
+    // SALE PRICE
+    if (salePriceField.value === "" || isNaN(salePriceField.value)) {
+      e.preventDefault();
+      showValidationError("Sale price is required.", salePriceField);
+      return;
+    }
+    if (Number(salePriceField.value) < 0) {
+      e.preventDefault();
+      showValidationError("Sale price cannot be negative.", salePriceField);
+      return;
+    }
+    if (Number(salePriceField.value) > Number(regularPriceField.value)) {
+      e.preventDefault();
+      showValidationError("Sale price cannot be greater than regular price.", salePriceField);
+      return;
+    }
+
+    // QUANTITY
+    if (quantityField.value === "" || isNaN(quantityField.value)) {
+      e.preventDefault();
+      showValidationError("Quantity is required.", quantityField);
+      return;
+    }
+    if (Number(quantityField.value) < 0) {
+      e.preventDefault();
+      showValidationError("Quantity cannot be negative.", quantityField);
+      return;
+    }
+
+    // DESCRIPTION
+    if (!descriptionField.value.trim()) {
+      e.preventDefault();
+      showValidationError("Description is required.", descriptionField);
+      return;
+    }
+
+    // IMAGES — total = existing images remaining + newly added images
     const activeFiles = croppedFiles.filter(f => f !== null);
-    
-    // Only validate if they decided to upload new images
-    if (imageInput.files.length > 0) {
-      if (activeFiles.length < 3) {
-        e.preventDefault();
-        Swal.fire({
-    icon: "warning",
-    title: "Validation Error",
-    text: "Minimum 3 product images are required."
-});
-        return;
-      }
+    const totalImages = getExistingImageCount() + activeFiles.length;
+
+    if (totalImages < 3) {
+      e.preventDefault();
+      showValidationError("A product must have at least 3 images in total.");
+      return;
+    }
+
+    // Only touch the file input if new images were actually added
+    if (activeFiles.length > 0) {
       const dt = new DataTransfer();
       activeFiles.forEach(file => dt.items.add(file));
       imageInput.files = dt.files;

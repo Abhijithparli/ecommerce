@@ -63,6 +63,7 @@ export const addProduct = async (fields, files) => {
     category,
     regularPrice,
     salePrice,
+    highlights,
     variantSize,
     variantQuantity
   } = fields;
@@ -97,11 +98,6 @@ export const addProduct = async (fields, files) => {
   if (!salePrice || Number(salePrice) <= 0) {
     errors.salePrice = "Sale price must be greater than 0";
   }
-
-  if (quantity === undefined || Number(quantity) < 0) {
-    errors.quantity = "Quantity must be a valid number";
-  }
-
   if (!description || description.trim() === "") {
     errors.description = "Description is required";
   }
@@ -141,7 +137,7 @@ export const addProduct = async (fields, files) => {
   if (variantSize && variantQuantity) {
     variants.push({
       size: variantSize,
-      quantity: Number(variantQuantity)
+      stock: Number(variantQuantity)
     });
   }
 
@@ -169,19 +165,30 @@ export const updateProduct = async (id, fields, files) => {
     category,
     regularPrice,
     salePrice,
-    quantity,
     highlights,
     variantSize,
     variantQuantity
   } = fields;
+  console.log(fields.deletedImages);
+if (isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
+    throw new Error("Regular Price must be greater than 0");
+}
 
+if (isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
+    throw new Error("Sale Price must be greater than 0");
+}
+
+if (Number(salePrice) > Number(regularPrice)) {
+    throw new Error("Sale Price cannot be greater than Regular Price");
+}
   const product = await Product.findById(id);
+  console.log("Deleted Images:", fields.deletedImages);
   if (!product || product.isDeleted) {
     throw new Error("Product not found");
   }
 
   // Validation
-  if (!name || !description || !brand || !category || !regularPrice || !salePrice || quantity === undefined) {
+  if (!name || !description || !brand || !category || !regularPrice || !salePrice) {
     throw new Error("All fields are required");
   }
   console.log("========== UPDATE PRODUCT ==========");
@@ -192,7 +199,6 @@ console.log("brand:", brand);
 console.log("category:", category);
 console.log("regularPrice:", regularPrice);
 console.log("salePrice:", salePrice);
-console.log("quantity:", quantity);
 console.log("variantSize:", variantSize);
 console.log("variantQuantity:", variantQuantity);
 console.log("highlights:", highlights);
@@ -245,7 +251,7 @@ if (deletedImages.length > 0) {
   if (variantSize && variantQuantity) {
     variants.push({
       size: variantSize.trim(),
-      quantity: Number(variantQuantity)
+      stock: Number(variantQuantity)
     });
   }
 
@@ -256,7 +262,6 @@ if (deletedImages.length > 0) {
     category,
     regularPrice: Number(regularPrice),
     salePrice: Number(salePrice),
-    quantity: Number(quantity),
     variants,
     images,
     highlights: highlightsArray
