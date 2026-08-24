@@ -13,15 +13,13 @@ import nocache from "nocache";
 
 dotenv.config();
 connectDB();
-console.log('jo');
-
-
+console.log("jo");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(morgan("dev"))
+app.use(morgan("dev"));
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -38,17 +36,19 @@ app.use(
       httpOnly: true,
       secure: false,
     },
-  })
+  }),
 );
 
 app.use(nocache());
 app.use((req, res, next) => {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, private",
+  );
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   next();
 });
-
 
 app.use(passport.initialize());
 app.use(passport.session());

@@ -74,7 +74,7 @@ export const requestAdminPasswordReset = async (email) => {
 
 export const getUsersList = async ({ page = 1, limit = 5, searchQuery = "", filterStatus = "all" }) => {
   const skip = (page - 1) * limit;
-  const filter = {};
+  const filter = {}; 
 
   if (searchQuery) {
     filter.$or = [

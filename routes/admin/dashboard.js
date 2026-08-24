@@ -3,7 +3,7 @@
 import { loadAdminLogin,adminLogin } from '../controllers/admin/adminController.js';
 import {loadDashboard} from "../controllers/admin/dashboardController.js";
 import { get } from "mongoose";
-
+ 
 const router = express.Router();
 
 //login

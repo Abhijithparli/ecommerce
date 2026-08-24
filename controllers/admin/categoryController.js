@@ -1,6 +1,6 @@
 import * as categoryService from "../../services/categoryService.js";
 
-// ================= LOAD CATEGORY PAGE =================
+// ================= load category page =================
 export const loadCategories = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -19,7 +19,7 @@ export const loadCategories = async (req, res) => {
       totalPages: data.totalPages,
       totalCategories: data.totalCategories,
       success: req.session.success,
-      error: req.session.error
+      error: req.session.error,
     });
 
     req.session.success = null;
@@ -30,11 +30,11 @@ export const loadCategories = async (req, res) => {
   }
 };
 
-// ================= LOAD ADD CATEGORY PAGE =================
+// ================= load add category page =================
 export const loadAddCategory = async (req, res) => {
   try {
     res.render("admin/addCategory", {
-      error: req.session.error
+      error: req.session.error,
     });
     req.session.error = null;
   } catch (error) {
@@ -43,7 +43,7 @@ export const loadAddCategory = async (req, res) => {
   }
 };
 
-// ================= ADD CATEGORY =================
+// ================= add category  =================
 export const addCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -58,7 +58,7 @@ export const addCategory = async (req, res) => {
   }
 };
 
-// ================= LOAD EDIT CATEGORY PAGE =================
+// ================= load edit catrgory page =================
 export const loadEditCategory = async (req, res) => {
   try {
     const category = await categoryService.getCategoryById(req.params.id);
@@ -75,7 +75,7 @@ export const loadEditCategory = async (req, res) => {
   }
 };
 
-// ================= EDIT CATEGORY =================
+// ================= edit category =================
 export const editCategory = async (req, res) => {
   try {
     const { id } = req.params;
@@ -92,12 +92,11 @@ export const editCategory = async (req, res) => {
   }
 };
 
-// ================= SOFT DELETE =================
+// ================= soft delete =================
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
     await categoryService.deleteCategory(id);
-
     req.session.success = "Category deleted successfully";
     res.redirect("/admin/categories");
   } catch (err) {

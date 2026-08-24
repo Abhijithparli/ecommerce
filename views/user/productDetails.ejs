@@ -130,7 +130,7 @@
               <select id="sizeSelector" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition duration-200">
                 <% if (product.variants && product.variants.length > 0) { %>
                   <% product.variants.forEach(variant => { %>
-                    <option value="<%= variant.size %>"><%= variant.size %> (Qty: <%= variant.quantity %>)</option>
+                    <option value="<%= variant.size %>"><%= variant.size %> (Stock: <%= variant.stock %>)</option>
                   <% }) %>
                 <% } else { %>
                   <option value="M">Medium (M)</option>
@@ -434,10 +434,12 @@
       
       try {
         const qty = parseInt(document.getElementById("qtyInput").value) || 1;
+        const sizeSelector = document.getElementById("sizeSelector");
+        const size = sizeSelector ? sizeSelector.value : "M";
         const response = await fetch(`/cart/add/${productId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: qty })
+          body: JSON.stringify({ quantity: qty, size: size })
         });
         
         const data = await response.json();

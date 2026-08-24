@@ -106,6 +106,41 @@ export const addProduct = async (fields, files) => {
     errors.images = "Minimum 3 product images required";
   }
 
+  // Variants conversion & validation
+  const variants = [];
+  if (variantSize && variantQuantity) {
+    const sizes = Array.isArray(variantSize) ? variantSize : [variantSize];
+    const quantities = Array.isArray(variantQuantity) ? variantQuantity : [variantQuantity];
+    const seenSizes = new Set();
+    
+    for (let i = 0; i < sizes.length; i++) {
+      const s = sizes[i]?.trim().toUpperCase();
+      const q = Number(quantities[i]);
+      
+      if (!s) {
+        errors.variants = "Size is required for all variants";
+        break;
+      }
+      if (isNaN(q) || q < 0) {
+        errors.variants = "Stock must be 0 or greater for all variants";
+        break;
+      }
+      if (seenSizes.has(s)) {
+        errors.variants = "Duplicate variant sizes are not allowed";
+        break;
+      }
+      seenSizes.add(s);
+      variants.push({
+        size: s,
+        stock: q
+      });
+    }
+  }
+
+  if (variants.length === 0) {
+    errors.variants = "At least one size variant is required";
+  }
+
   if (Object.keys(errors).length > 0) {
     const err = new Error("Validation failed");
     err.validationErrors = errors;
@@ -132,14 +167,7 @@ export const addProduct = async (fields, files) => {
     imagePaths.push("/uploads/products/" + fileName);
   }
 
-  // Variants conversion
-  const variants = [];
-  if (variantSize && variantQuantity) {
-    variants.push({
-      size: variantSize,
-      stock: Number(variantQuantity)
-    });
-  }
+
 
   const newProduct = new Product({
     name: name.trim(),
@@ -169,20 +197,20 @@ export const updateProduct = async (id, fields, files) => {
     variantSize,
     variantQuantity
   } = fields;
-  console.log(fields.deletedImages);
-if (isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
+
+  if (isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
     throw new Error("Regular Price must be greater than 0");
-}
+  }
 
-if (isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
+  if (isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
     throw new Error("Sale Price must be greater than 0");
-}
+  }
 
-if (Number(salePrice) > Number(regularPrice)) {
+  if (Number(salePrice) > Number(regularPrice)) {
     throw new Error("Sale Price cannot be greater than Regular Price");
-}
+  }
+
   const product = await Product.findById(id);
-  console.log("Deleted Images:", fields.deletedImages);
   if (!product || product.isDeleted) {
     throw new Error("Product not found");
   }
@@ -191,20 +219,6 @@ if (Number(salePrice) > Number(regularPrice)) {
   if (!name || !description || !brand || !category || !regularPrice || !salePrice) {
     throw new Error("All fields are required");
   }
-  console.log("========== UPDATE PRODUCT ==========");
-
-console.log("name:", name);
-console.log("description:", description);
-console.log("brand:", brand);
-console.log("category:", category);
-console.log("regularPrice:", regularPrice);
-console.log("salePrice:", salePrice);
-console.log("variantSize:", variantSize);
-console.log("variantQuantity:", variantQuantity);
-console.log("highlights:", highlights);
-
-console.log("Full Fields Object:");
-console.log(fields);
 
   const existingProduct = await Product.findOne({
     _id: { $ne: id },
@@ -249,10 +263,33 @@ if (deletedImages.length > 0) {
 
   const variants = [];
   if (variantSize && variantQuantity) {
-    variants.push({
-      size: variantSize.trim(),
-      stock: Number(variantQuantity)
-    });
+    const sizes = Array.isArray(variantSize) ? variantSize : [variantSize];
+    const quantities = Array.isArray(variantQuantity) ? variantQuantity : [variantQuantity];
+    const seenSizes = new Set();
+    
+    for (let i = 0; i < sizes.length; i++) {
+      const s = sizes[i]?.trim().toUpperCase();
+      const q = Number(quantities[i]);
+      
+      if (!s) {
+        throw new Error("Size is required for all variants");
+      }
+      if (isNaN(q) || q < 0) {
+        throw new Error("Stock must be 0 or greater for all variants");
+      }
+      if (seenSizes.has(s)) {
+        throw new Error("Duplicate variant sizes are not allowed");
+      }
+      seenSizes.add(s);
+      variants.push({
+        size: s,
+        stock: q
+      });
+    }
+  }
+
+  if (variants.length === 0) {
+    throw new Error("At least one size variant is required");
   }
 
   return await Product.findByIdAndUpdate(id, {
@@ -367,15 +404,17 @@ export const getPublicProducts = async (queryParams) => {
   }
 
   // Sort options
-  const sortOption = { createdAt: -1 };
+  let sortOption = {};
   if (sort === "low-high") {
-    sortOption.salePrice = 1;
+    sortOption = { salePrice: 1 };
   } else if (sort === "high-low") {
-    sortOption.salePrice = -1;
+    sortOption = { salePrice: -1 };
   } else if (sort === "a-z") {
-    sortOption.name = 1;
+    sortOption = { name: 1 };
   } else if (sort === "z-a") {
-    sortOption.name = -1;
+    sortOption = { name: -1 };
+  } else {
+    sortOption = { createdAt: -1 };
   }
 
   console.log("[DEBUG] Generated MongoDB Filter:", JSON.stringify(filter, null, 2));

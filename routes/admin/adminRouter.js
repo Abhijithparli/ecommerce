@@ -23,7 +23,7 @@ import {
   editCategory,
   deleteCategory,
   loadEditCategory,
-  loadAddCategory
+  loadAddCategory,
 } from "../../controllers/admin/categoryController.js";
 
 import upload from "../../config/multer.js";
@@ -36,18 +36,17 @@ import {
   editProduct,
   deleteProduct,
   blockProduct,
-  unblockProduct
+  unblockProduct,
 } from "../../controllers/admin/productController.js";
 
 import {
   listAdminOrders,
   loadAdminOrderDetail,
-  updateAdminOrderStatus
+  updateAdminOrderStatus,
 } from "../../controllers/admin/adminOrderController.js";
 
-
 const router = express.Router();
-
+console.log("idfklsdkjl;f");
 
 // ── Auth middleware ────────────────────────────────────────
 const isAdminAuth = (req, res, next) => {
@@ -56,9 +55,8 @@ const isAdminAuth = (req, res, next) => {
 };
 
 // ── Public routes ──────────────────────────────────────────
-router.get("/login",  loadAdminLogin);
+router.get("/login", loadAdminLogin);
 router.post("/login", adminLogin);
-
 
 router.get("/forgot-password", getForgotPassword);
 router.post("/forgot-password", postForgotPassword);
@@ -69,19 +67,14 @@ router.post("/resend-otp", resendAdminOtp);
 router.get("/reset-password/:token", getResetPassword);
 router.post("/reset-password/:token", postResetPassword);
 
-
-
-// Logout — no auth check needed, works from any page
+// ── Admin Dashboard & Logout ───────────────────────────────
+router.get("/dashboard", isAdminAuth, loadDashboard);
 router.get("/logout", adminLogout);
 
-// ── Protected routes ───────────────────────────────────────
-router.get("/dashboard", isAdminAuth, loadDashboard);
-
-router.get("/users",              isAdminAuth, listUsers);
-router.post("/users/block/:id",   isAdminAuth, blockUser);
+// ── Admin User Management ──────────────────────────────────
+router.get("/users", isAdminAuth, listUsers);
+router.post("/users/block/:id", isAdminAuth, blockUser);
 router.post("/users/unblock/:id", isAdminAuth, unblockUser);
-
-// routes/admin/adminRoute.js
 
 router.get("/categories", isAdminAuth, loadCategories);
 router.get("/categories/add", isAdminAuth, loadAddCategory);
@@ -94,76 +87,55 @@ router.post("/categories/:id/delete", isAdminAuth, deleteCategory);
 // ================= PRODUCT MANAGEMENT =================
 
 // Load products page
-router.get(
-  "/products",
-  isAdminAuth,
-  loadProducts
-);
+router.get("/products", isAdminAuth, loadProducts);
 
 // load add product router
 router.get(
-
   "/products/add",
 
   isAdminAuth,
 
-  loadAddProduct
+  loadAddProduct,
 );
 
 // Add product
 router.post(
-
   "/products/add",
 
   isAdminAuth,
 
   (req, res, next) => {
-
     upload.array("images", 10)(
-
       req,
       res,
 
       function (err) {
-
         if (err) {
-
           req.session.error = err.message;
 
-          return res.redirect(
-
-            "/admin/products"
-          );
+          return res.redirect("/admin/products");
         }
 
         next();
-      }
+      },
     );
   },
 
-  addProduct
+  addProduct,
 );
 
 // laod edit product page
-router.get(
-  "/products/:id/edit",
-  isAdminAuth,
-  loadEditProduct
-);
+router.get("/products/:id/edit", isAdminAuth, loadEditProduct);
 
 // DELETE PRODUCT
-router.post(
-  "/products/:id/delete",
-  isAdminAuth,
-  deleteProduct
-);
+router.post("/products/:id/delete", isAdminAuth, deleteProduct);
 
 // update product
 router.post(
   "/products/:id/edit",
   isAdminAuth,
   upload.array("images", 10),
-  editProduct
+  editProduct,
 );
 
 // block/unblock product

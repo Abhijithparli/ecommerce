@@ -19,10 +19,10 @@ export const loadProducts = async (req, res) => {
       totalProducts: data.totalProducts,
       success: req.session.success,
       error: req.session.error,
-      errors: {}
+      errors: {},
     });
 
-    req.session.success = null; 
+    req.session.success = null;
     req.session.error = null;
   } catch (error) {
     console.error("Load products admin controller error:", error);
@@ -37,7 +37,7 @@ export const loadAddProduct = async (req, res) => {
       categories,
       errors: {},
       success: null,
-      error: null
+      error: null,
     });
   } catch (error) {
     console.error("Load add product admin controller error:", error);
@@ -60,7 +60,7 @@ export const addProduct = async (req, res) => {
         categories,
         success: null,
         error: error.message,
-        errors: error.validationErrors
+        errors: error.validationErrors,
       });
     }
     req.session.error = error.message || "Failed to add product";
@@ -76,7 +76,7 @@ export const loadEditProduct = async (req, res) => {
     res.render("admin/editProduct", {
       product,
       categories,
-      error: req.session.error
+      error: req.session.error,
     });
     req.session.error = null;
   } catch (error) {
@@ -90,20 +90,14 @@ export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await productService.updateProduct(
-      id,
-      req.body,
-      req.files
-    );
+    await productService.updateProduct(id, req.body, req.files);
 
     req.session.success = "Product updated successfully";
     res.redirect("/admin/products");
-
   } catch (error) {
     console.error("Edit product error:", error);
 
-    req.session.error =
-      error.message || "Failed to update product";
+    req.session.error = error.message || "Failed to update product";
 
     res.redirect(`/admin/products/${req.params.id}/edit`);
   }

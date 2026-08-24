@@ -6,7 +6,7 @@ export const loadAdminLogin = (req, res) => {
   res.render("admin/login", { error: null });
 };
 
-// ================= ADMIN LOGIN =================
+// ================= admin login =================
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -16,7 +16,9 @@ export const adminLogin = async (req, res) => {
     req.session.save((err) => {
       if (err) {
         console.error("Session error:", err);
-        return res.render("admin/login", { error: "Session error. Try again." });
+        return res.render("admin/login", {
+          error: "Session error. Try again.",
+        });
       }
       return res.redirect("/admin/dashboard");
     });
@@ -26,27 +28,27 @@ export const adminLogin = async (req, res) => {
   }
 };
 
-// ================= ADMIN LOGOUT =================
+// ================= admin logout =================
 export const adminLogout = (req, res) => {
   delete req.session.admin;
   res.redirect("/admin/login");
 };
 
-// ================= LOAD DASHBOARD =================
+// ================= load dashboard=================
 export const loadDashboard = (req, res) => {
   res.render("admin/dashboard");
 };
 
-// ================= LOAD FORGOT PASSWORD PAGE =================
+// ================= load forgot password page =================
 export const getForgotPassword = (req, res) => {
   res.render("admin/forgotPassword", {
     message: null,
     error: null,
-    formAction: "/admin/forgot-password"
+    formAction: "/admin/forgot-password",
   });
 };
 
-// ================= POST FORGOT PASSWORD =================
+// ================= post forgot password =================
 export const postForgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -56,57 +58,65 @@ export const postForgotPassword = async (req, res) => {
 
     res.render("admin/forgotPassword", {
       error: null,
-      message: "Reset link sent to your email."
+      message: "Reset link sent to your email.",
     });
   } catch (error) {
     console.error("Admin forgot password error:", error);
     res.render("admin/forgotPassword", {
       error: error.message || "Server error. Try again.",
-      message: null
+      message: null,
     });
   }
 };
 
-// ================= GET RESET PASSWORD =================
+// ================= get reset password =================
 export const getResetPassword = (req, res) => {
   const { token } = req.params;
   const adminReset = req.session.adminReset;
 
-  if (!adminReset || adminReset.token !== token || Date.now() > adminReset.expiry) {
+  if (
+    !adminReset ||
+    adminReset.token !== token ||
+    Date.now() > adminReset.expiry
+  ) {
     return res.render("admin/resetPassword", {
       error: "Invalid or expired reset link.",
-      token: null
+      token: null,
     });
   }
 
   res.render("admin/resetPassword", { error: null, token });
 };
 
-// ================= POST RESET PASSWORD =================
+// ================= POST reset password=================
 export const postResetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
     const adminReset = req.session.adminReset;
 
-    if (!adminReset || adminReset.token !== token || Date.now() > adminReset.expiry) {
+    if (
+      !adminReset ||
+      adminReset.token !== token ||
+      Date.now() > adminReset.expiry
+    ) {
       return res.render("admin/resetPassword", {
         error: "Invalid or expired reset link.",
-        token: null
+        token: null,
       });
     }
 
     if (password !== confirmPassword) {
       return res.render("admin/resetPassword", {
         error: "Passwords do not match.",
-        token
+        token,
       });
     }
 
     if (password.length < 6) {
       return res.render("admin/resetPassword", {
         error: "Password must be at least 6 characters.",
-        token
+        token,
       });
     }
 
@@ -118,7 +128,7 @@ export const postResetPassword = async (req, res) => {
   }
 };
 
-// ================= LIST USERS =================
+// ================= list users =================
 export const listUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -126,7 +136,12 @@ export const listUsers = async (req, res) => {
     const searchQuery = req.query.search || "";
     const filterStatus = req.query.status || "all";
 
-    const data = await adminService.getUsersList({ page, limit, searchQuery, filterStatus });
+    const data = await adminService.getUsersList({
+      page,
+      limit,
+      searchQuery,
+      filterStatus,
+    });
 
     res.render("admin/userManagementpage", {
       users: data.users,
@@ -135,7 +150,7 @@ export const listUsers = async (req, res) => {
       totalUsers: data.totalUsers,
       searchQuery,
       filterStatus,
-      limit
+      limit,
     });
   } catch (error) {
     console.error("List users error:", error);
@@ -146,7 +161,7 @@ export const listUsers = async (req, res) => {
       totalUsers: 0,
       searchQuery: "",
       filterStatus: "all",
-      limit: 5
+      limit: 5,
     });
   }
 };
@@ -158,18 +173,28 @@ export const blockUser = async (req, res) => {
     res.json({ success: true, message: "User blocked successfully" });
   } catch (error) {
     console.error("Block user error:", error);
-    res.status(500).json({ success: false, message: error.message || "Error blocking user" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Error blocking user",
+      });
   }
 };
 
-// ================= UNBLOCK USER =================
+// ================= ublock user =================
 export const unblockUser = async (req, res) => {
   try {
     await adminService.unblockUser(req.params.id);
     res.json({ success: true, message: "User unblocked successfully" });
   } catch (error) {
     console.error("Unblock user error:", error);
-    res.status(500).json({ success: false, message: error.message || "Error unblocking user" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Error unblocking user",
+      });
   }
 };
 
@@ -178,7 +203,11 @@ export const verifyAdminOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (otp === "123456") return res.send("OTP Verified (Temporary)");
-    return res.render("admin/enterOtp", { email, error: "Invalid OTP", success: null });
+    return res.render("admin/enterOtp", {
+      email,
+      error: "Invalid OTP",
+      success: null,
+    });
   } catch (error) {
     console.error(error);
   }

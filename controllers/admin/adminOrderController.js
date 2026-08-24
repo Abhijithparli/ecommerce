@@ -16,7 +16,7 @@ export const listAdminOrders = async (req, res) => {
       search,
       status,
       error: req.session.error || null,
-      success: req.session.success || null
+      success: req.session.success || null,
     });
 
     // clear notifications
@@ -35,7 +35,7 @@ export const loadAdminOrderDetail = async (req, res) => {
       order,
       currentPage: "orders",
       error: req.session.error || null,
-      success: req.session.success || null
+      success: req.session.success || null,
     });
 
     // clear notifications

@@ -1,4 +1,6 @@
 import Category from "../models/categoryModel.js";
+import Product from "../models/productModel.js";
+
 
 /**
  * Service to handle Category business logic
@@ -95,15 +97,29 @@ export const updateCategory = async (id, { name, description }) => {
 };
 
 export const deleteCategory = async (id) => {
+  const category = await Category.findById(id);
+  if (!category) {
+    throw new Error("Category not found");
+  }
+
+  // Prevent deletion if active products are still linked to this category
+  const linkedProducts = await Product.countDocuments({
+    category: id,
+    isDeleted: false
+  });
+
+  if (linkedProducts > 0) {
+    throw new Error(
+      `Cannot delete this category. It has ${linkedProducts} active product(s). Remove or reassign the products first.`
+    );
+  }
+
   const deletedCategory = await Category.findByIdAndUpdate(
     id,
     { isDeleted: true },
     { new: true }
   );
 
-  if (!deletedCategory) {
-    throw new Error("Category not found");
-  }
-
   return deletedCategory;
 };
+
