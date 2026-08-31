@@ -55,6 +55,54 @@ export const getProductById = async (id) => {
   return product;
 };
 
+export const parseVariants = (fields) => {
+  if (!fields) return [];
+
+  // Case 1: fields.variants is already an array of objects
+  if (Array.isArray(fields.variants)) {
+    return fields.variants;
+  }
+
+  // Case 2: fields.variants is an object like { '0': { size: 'S', stock: '5' }, ... }
+  if (fields.variants && typeof fields.variants === "object") {
+    return Object.values(fields.variants);
+  }
+
+  // Case 3: fields has bracket notation keys like 'variants[0][size]' and 'variants[0][stock]' from multipart/form-data
+  const variantMap = {};
+  for (const key of Object.keys(fields)) {
+    const match = key.match(/^variants\[(\d+)\]\[(size|stock)\]$/);
+    if (match) {
+      const index = match[1];
+      const prop = match[2];
+      if (!variantMap[index]) {
+        variantMap[index] = {};
+      }
+      variantMap[index][prop] = fields[key];
+    }
+  }
+  const indices = Object.keys(variantMap).sort((a, b) => Number(a) - Number(b));
+  if (indices.length > 0) {
+    return indices.map((idx) => variantMap[idx]);
+  }
+
+  // Case 4: legacy fields variantSize and variantQuantity
+  if (fields.variantSize && fields.variantQuantity) {
+    const sizes = Array.isArray(fields.variantSize) ? fields.variantSize : [fields.variantSize];
+    const quantities = Array.isArray(fields.variantQuantity) ? fields.variantQuantity : [fields.variantQuantity];
+    const legacyVariants = [];
+    for (let i = 0; i < sizes.length; i++) {
+      legacyVariants.push({
+        size: sizes[i],
+        stock: quantities[i]
+      });
+    }
+    return legacyVariants;
+  }
+
+  return [];
+};
+
 export const addProduct = async (fields, files) => {
   const {
     name,
@@ -63,9 +111,7 @@ export const addProduct = async (fields, files) => {
     category,
     regularPrice,
     salePrice,
-    highlights,
-    variantSize,
-    variantQuantity
+    highlights
   } = fields;
 
   const errors = {};  
@@ -91,13 +137,16 @@ export const addProduct = async (fields, files) => {
     errors.category = "Category is required";
   }
 
-  if (!regularPrice || Number(regularPrice) <= 0) {
+  if (!regularPrice || isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
     errors.regularPrice = "Regular price must be greater than 0";
   }
 
-  if (!salePrice || Number(salePrice) <= 0) {
+  if (!salePrice || isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
     errors.salePrice = "Sale price must be greater than 0";
+  } else if (regularPrice && Number(salePrice) > Number(regularPrice)) {
+    errors.salePrice = "Sale price cannot be greater than regular price";
   }
+
   if (!description || description.trim() === "") {
     errors.description = "Description is required";
   }
@@ -107,67 +156,93 @@ export const addProduct = async (fields, files) => {
   }
 
   // Variants conversion & validation
+  const rawVariants = parseVariants(fields);
   const variants = [];
-  if (variantSize && variantQuantity) {
-    const sizes = Array.isArray(variantSize) ? variantSize : [variantSize];
-    const quantities = Array.isArray(variantQuantity) ? variantQuantity : [variantQuantity];
-    const seenSizes = new Set();
-    
-    for (let i = 0; i < sizes.length; i++) {
-      const s = sizes[i]?.trim().toUpperCase();
-      const q = Number(quantities[i]);
-      
+  const allowedSizes = ["S", "M", "L", "XL"];
+  const seenSizes = new Set();
+
+  if (!rawVariants || rawVariants.length === 0) {
+    errors.variants = "At least one size variant is required";
+  } else {
+    for (let i = 0; i < rawVariants.length; i++) {
+      const v = rawVariants[i];
+      const s = typeof v?.size === "string" ? v.size.trim().toUpperCase() : "";
+      const stockRaw = v?.stock;
+
+      // 1. Size present
       if (!s) {
         errors.variants = "Size is required for all variants";
         break;
       }
-      if (isNaN(q) || q < 0) {
-        errors.variants = "Stock must be 0 or greater for all variants";
+
+      // 2. Allowed sizes check
+      if (!allowedSizes.includes(s)) {
+        errors.variants = `Invalid size "${s}". Allowed sizes: ${allowedSizes.join(", ")}`;
         break;
       }
+
+      // 3. Stock present
+      if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
+        errors.variants = `Stock is required for size ${s}`;
+        break;
+      }
+
+      // 4. Stock valid non-negative integer
+      const stockNum = Number(stockRaw);
+      if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
+        errors.variants = `Stock for size ${s} must be a non-negative integer`;
+        break;
+      }
+
+      // 5. Duplicate sizes rejected
       if (seenSizes.has(s)) {
-        errors.variants = "Duplicate variant sizes are not allowed";
+        errors.variants = `Duplicate variant size "${s}" is not allowed`;
         break;
       }
+
       seenSizes.add(s);
       variants.push({
         size: s,
-        stock: q
+        stock: stockNum
       });
     }
   }
 
-  if (variants.length === 0) {
+  if (variants.length === 0 && !errors.variants) {
     errors.variants = "At least one size variant is required";
   }
 
   if (Object.keys(errors).length > 0) {
-    const err = new Error("Validation failed");
+    const err = new Error(errors.variants || errors.name || "Validation failed");
     err.validationErrors = errors;
     throw err;
   }
 
   // Highlights conversion
   const highlightsArray = highlights
-    ? highlights.split(",").map((item) => item.trim())
+    ? (Array.isArray(highlights) ? highlights : highlights.split(",")).map((item) => item.trim()).filter(Boolean)
     : [];
 
   // Image upload and sharp processing
   const imagePaths = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const fileName = Date.now() + "-" + i + ".webp";
-    const uploadPath = path.join("public/uploads/products", fileName);
+  if (files && files.length > 0) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.buffer) {
+        const fileName = Date.now() + "-" + i + ".webp";
+        const uploadPath = path.join("public/uploads/products", fileName);
 
-    await sharp(file.buffer)
-      .resize(800, 800)
-      .webp({ quality: 80 })
-      .toFile(uploadPath);
+        await sharp(file.buffer)
+          .resize(800, 800)
+          .webp({ quality: 80 })
+          .toFile(uploadPath);
 
-    imagePaths.push("/uploads/products/" + fileName);
+        imagePaths.push("/uploads/products/" + fileName);
+      } else if (file.path || typeof file === "string") {
+        imagePaths.push(typeof file === "string" ? file : file.path);
+      }
+    }
   }
-
-
 
   const newProduct = new Product({
     name: name.trim(),
@@ -176,7 +251,6 @@ export const addProduct = async (fields, files) => {
     category,
     regularPrice: Number(regularPrice),
     salePrice   : Number(salePrice),
-    // quantity: Number(quantity),
     variants,
     images: imagePaths,
     highlights: highlightsArray

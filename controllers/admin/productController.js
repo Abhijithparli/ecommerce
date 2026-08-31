@@ -13,7 +13,7 @@ export const loadProducts = async (req, res) => {
     res.render("admin/products", {
       products: data.products,
       categories: data.categories,
-      search: data.search,
+      search: data.search,  
       currentPage: data.currentPage,
       totalPages: data.totalPages,
       totalProducts: data.totalProducts,

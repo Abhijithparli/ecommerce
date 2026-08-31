@@ -39,52 +39,108 @@ export const getCategoryById = async (id) => {
   return category;
 };
 
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 export const addCategory = async ({ name, description }) => {
-  if (!name || !name.trim()) {
-    throw new Error("Category name is required");
+  const errors = {};
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const trimmedDescription = typeof description === "string" ? description.trim() : "";
+
+  if (!trimmedName) {
+    errors.name = "Category name is required";
+  } else if (trimmedName.length < 3) {
+    errors.name = "Category name must be at least 3 characters long";
+  } else if (trimmedName.length > 50) {
+    errors.name = "Category name must not exceed 50 characters";
+  } else if (!/^[a-zA-Z0-9\s\-&]+$/.test(trimmedName)) {
+    errors.name = "Category name can only contain letters, numbers, spaces, hyphens (-), and ampersands (&)";
+  } else if (!/[a-zA-Z]/.test(trimmedName)) {
+    errors.name = "Category name must contain at least one letter";
   }
 
-  const trimmedName = name.trim();
+  if (!trimmedDescription) {
+    errors.description = "Description is required";
+  } else if (trimmedDescription.length < 5) {
+    errors.description = "Description must be at least 5 characters long";
+  } else if (trimmedDescription.length > 500) {
+    errors.description = "Description cannot exceed 500 characters";
+  }
 
-  // case-insensitive duplicate check
+  if (Object.keys(errors).length > 0) {
+    const error = new Error(Object.values(errors)[0]);
+    error.validationErrors = errors;
+    throw error;
+  }
+
+  // Case-insensitive duplicate check among active categories
   const existingCategory = await Category.findOne({
-    name: { $regex: `^${trimmedName}$`, $options: "i" },
-    isDeleted: false
+    name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, "i") },
+    isDeleted: false,
   });
 
   if (existingCategory) {
-    throw new Error("Category already exists");
+    const error = new Error("A category with this name already exists");
+    error.validationErrors = { name: "A category with this name already exists" };
+    throw error;
   }
 
   return await Category.create({
     name: trimmedName,
-    description: description?.trim() || ""
+    description: trimmedDescription,
   });
 };
 
 export const updateCategory = async (id, { name, description }) => {
-  if (!name || !name.trim()) {
-    throw new Error("Category name is required");
+  const errors = {};
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const trimmedDescription = typeof description === "string" ? description.trim() : "";
+
+  if (!trimmedName) {
+    errors.name = "Category name is required";
+  } else if (trimmedName.length < 3) {
+    errors.name = "Category name must be at least 3 characters long";
+  } else if (trimmedName.length > 50) {
+    errors.name = "Category name must not exceed 50 characters";
+  } else if (!/^[a-zA-Z0-9\s\-&]+$/.test(trimmedName)) {
+    errors.name = "Category name can only contain letters, numbers, spaces, hyphens (-), and ampersands (&)";
+  } else if (!/[a-zA-Z]/.test(trimmedName)) {
+    errors.name = "Category name must contain at least one letter";
   }
 
-  const trimmedName = name.trim();
+  if (!trimmedDescription) {
+    errors.description = "Description is required";
+  } else if (trimmedDescription.length < 5) {
+    errors.description = "Description must be at least 5 characters long";
+  } else if (trimmedDescription.length > 500) {
+    errors.description = "Description cannot exceed 500 characters";
+  }
 
-  // case-insensitive duplicate check excluding current id
+  if (Object.keys(errors).length > 0) {
+    const error = new Error(Object.values(errors)[0]);
+    error.validationErrors = errors;
+    throw error;
+  }
+
+  // Case-insensitive duplicate check excluding current id
   const existingCategory = await Category.findOne({
     _id: { $ne: id },
-    name: { $regex: `^${trimmedName}$`, $options: "i" },
-    isDeleted: false
+    name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, "i") },
+    isDeleted: false,
   });
 
   if (existingCategory) {
-    throw new Error("Another category already exists");
+    const error = new Error("Another category with this name already exists");
+    error.validationErrors = { name: "Another category with this name already exists" };
+    throw error;
   }
 
   const updatedCategory = await Category.findByIdAndUpdate(
     id,
     {
       name: trimmedName,
-      description: description?.trim() || ""
+      description: trimmedDescription,
     },
     { new: true }
   );

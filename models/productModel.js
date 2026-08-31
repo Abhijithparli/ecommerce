@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { trusted } from "mongoose";
 
 const productSchema = new mongoose.Schema({
 
@@ -38,12 +38,14 @@ const productSchema = new mongoose.Schema({
     {
       size: {
         type: String,
-        required: true
+        required: true,
+        trim:true
       },
       stock: {
         type: Number,
         required: true,
-        default: 0
+        default: 0,
+        min:0
       }
     }
   ],

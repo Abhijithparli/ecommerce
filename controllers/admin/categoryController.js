@@ -34,40 +34,72 @@ export const loadCategories = async (req, res) => {
 export const loadAddCategory = async (req, res) => {
   try {
     res.render("admin/addCategory", {
-      error: req.session.error,
+      error: req.session.error || null,
+      errors: req.session.errors || {},
+      formData: req.session.formData || {},
     });
     req.session.error = null;
+    req.session.errors = null;
+    req.session.formData = null;
   } catch (error) {
     console.error("Load add category page error:", error);
     res.redirect("/admin/categories");
   }
 };
 
-// ================= add category  =================
+// ================= add category =================
 export const addCategory = async (req, res) => {
+  const isAjax = req.xhr || req.headers.accept?.includes("application/json") || req.is("json");
+  const { name, description } = req.body;
+
   try {
-    const { name, description } = req.body;
-    await categoryService.addCategory({ name, description });
+    const newCategory = await categoryService.addCategory({ name, description });
+
+    if (isAjax) {
+      return res.status(201).json({
+        success: true,
+        message: "Category added successfully",
+        category: newCategory,
+        redirectUrl: "/admin/categories",
+      });
+    }
 
     req.session.success = "Category added successfully";
-    res.redirect("/admin/categories");
+    return res.redirect("/admin/categories");
   } catch (err) {
     console.error("Add category controller error:", err);
-    req.session.error = err.message || "Something went wrong";
-    res.redirect("/admin/categories");
+    const validationErrors = err.validationErrors || { name: err.message };
+
+    if (isAjax) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Failed to add category",
+        errors: validationErrors,
+      });
+    }
+
+    return res.status(400).render("admin/addCategory", {
+      error: err.message || "Failed to add category",
+      errors: validationErrors,
+      formData: { name, description },
+    });
   }
 };
 
-// ================= load edit catrgory page =================
+// ================= load edit category page =================
 export const loadEditCategory = async (req, res) => {
   try {
     const category = await categoryService.getCategoryById(req.params.id);
 
     res.render("admin/editCategory", {
       category,
-      error: req.session.error,
+      error: req.session.error || null,
+      errors: req.session.errors || {},
+      formData: { name: category.name, description: category.description },
     });
     req.session.error = null;
+    req.session.errors = null;
+    req.session.formData = null;
   } catch (error) {
     console.error("Load edit category page error:", error);
     req.session.error = error.message;
@@ -77,18 +109,42 @@ export const loadEditCategory = async (req, res) => {
 
 // ================= edit category =================
 export const editCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, description } = req.body;
+  const { id } = req.params;
+  const { name, description } = req.body;
+  const isAjax = req.xhr || req.headers.accept?.includes("application/json") || req.is("json");
 
-    await categoryService.updateCategory(id, { name, description });
+  try {
+    const updatedCategory = await categoryService.updateCategory(id, { name, description });
+
+    if (isAjax) {
+      return res.status(200).json({
+        success: true,
+        message: "Category updated successfully",
+        category: updatedCategory,
+        redirectUrl: "/admin/categories",
+      });
+    }
 
     req.session.success = "Category updated successfully";
-    res.redirect("/admin/categories");
+    return res.redirect("/admin/categories");
   } catch (err) {
     console.error("Edit category controller error:", err);
-    req.session.error = err.message || "Update failed";
-    res.redirect("/admin/categories");
+    const validationErrors = err.validationErrors || { name: err.message };
+
+    if (isAjax) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Update failed",
+        errors: validationErrors,
+      });
+    }
+
+    return res.status(400).render("admin/editCategory", {
+      category: { _id: id, name, description },
+      error: err.message || "Update failed",
+      errors: validationErrors,
+      formData: { name, description },
+    });
   }
 };
 

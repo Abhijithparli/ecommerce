@@ -96,8 +96,8 @@
             <span class="text-gray-600">•</span>
             <span class="text-gray-400"><%= reviews.length %> Verified Reviews</span>
             <span class="text-gray-600">•</span>
-            <% if (product.quantity > 0) { %>
-              <span class="text-emerald-400 font-semibold uppercase tracking-wider text-xs">In Stock</span>
+            <% if (product.quantity < 5) { %>
+              <span class="text-emerald-400 font-semibold uppercase tracking-wider text-xs">error will</span>
             <% } else { %>
               <span class="text-red-400 font-semibold uppercase tracking-wider text-xs">Out Of Stock</span>
             <% } %>

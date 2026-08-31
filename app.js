@@ -8,7 +8,7 @@ import passport from "./config/passport.js";
 import adminRouter from "./routes/admin/adminRouter.js";
 import userRouter from "./routes/user/userRoute.js";
 import connectDB from "./config/db.js";
-import morgan from "morgan";
+import morgan from "morgan"; 
 import nocache from "nocache";
 
 dotenv.config();

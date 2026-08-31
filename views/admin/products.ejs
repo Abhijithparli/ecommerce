@@ -307,19 +307,28 @@
 
     </form>
 
-    <!-- BLOCK / UNBLOCK -->
-    <form
-      action="/admin/products/<%= product.isBlocked ? 'unblock' : 'block' %>/<%= product._id %>"
-      method="POST"
-    >
-      <button
-        type="submit"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition text-white <%= product.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600' %>"
-      >
-        <%= product.isBlocked ? 'Unblock' : 'Block' %>
-      </button>
-    </form>
-
+   <!-- BLOCK / UNBLOCK -->
+<form
+  id="blockForm-<%= product._id %>"
+  action="/admin/products/<%= product.isBlocked ? 'unblock' : 'block' %>/<%= product._id %>"
+  method="POST"
+>
+  <button
+    type="button"
+    onclick="openBlockModal(
+      '<%= product._id %>',
+      '<%= product.isBlocked ? 'Unblock' : 'Block' %>',
+      '<%= product.isBlocked ? 'green' : 'orange' %>'
+    )"
+    class="px-4 py-2 rounded-lg text-sm font-medium transition text-white
+      <%= product.isBlocked
+        ? 'bg-green-600 hover:bg-green-700'
+        : 'bg-orange-500 hover:bg-orange-600'
+      %>"
+  >
+    <%= product.isBlocked ? 'Unblock' : 'Block' %>
+  </button>
+</form>
   </div>
 
 </td>
@@ -584,10 +593,203 @@ document
       selectedForm.submit();
     }
   });
-</script>
+  </script>
+
 
   </div>
 
 </div>
+
+<!-- ================= BLOCK / UNBLOCK CONFIRMATION MODAL ================= -->
+
+<div
+  id="blockModal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm"
+>
+  <div
+    class="w-full max-w-md mx-4 rounded-xl bg-white shadow-2xl"
+  >
+
+    <!-- MODAL HEADER -->
+    <div class="px-6 py-5 border-b border-gray-200">
+
+      <div class="flex items-center gap-3">
+
+        <div
+          id="modalIcon"
+          class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100"
+        >
+          <svg
+            class="h-5 w-5 text-orange-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+            />
+          </svg>
+        </div>
+
+        <h2
+          id="modalTitle"
+          class="text-lg font-semibold text-gray-900"
+        >
+          Confirm Action
+        </h2>
+
+      </div>
+
+    </div>
+
+
+    <!-- MODAL BODY -->
+    <div class="px-6 py-5">
+
+      <p
+        id="modalMessage"
+        class="text-sm leading-6 text-gray-600"
+      >
+        Are you sure you want to perform this action?
+      </p>
+
+    </div>
+
+
+    <!-- MODAL FOOTER -->
+    <div
+      class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl"
+    >
+
+      <!-- CANCEL -->
+      <button
+        type="button"
+        onclick="closeBlockModal()"
+        class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-100 transition"
+      >
+        Cancel
+      </button>
+
+
+      <!-- CONFIRM -->
+      <button
+        type="button"
+        id="confirmBlockButton"
+        onclick="confirmBlockAction()"
+        class="px-5 py-2.5 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-600 transition"
+      >
+        Block
+      </button>
+
+    </div>
+
+  </div>
+</div>
+<script>
+
+  let selectedProductId = null;
+
+
+  // ================= OPEN MODAL =================
+
+  function openBlockModal(productId, action, color) {
+
+    selectedProductId = productId;
+
+    const modal = document.getElementById("blockModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMessage = document.getElementById("modalMessage");
+    const confirmButton = document.getElementById("confirmBlockButton");
+
+
+    // BLOCK
+    if (action === "Block") {
+
+      modalTitle.textContent = "Block Product";
+
+      modalMessage.textContent =
+        "Are you sure you want to block this product? The product will no longer be available to users.";
+
+      confirmButton.textContent = "Block";
+
+      confirmButton.className =
+        "px-5 py-2.5 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-600 transition";
+
+    }
+
+
+    // UNBLOCK
+    else {
+
+      modalTitle.textContent = "Unblock Product";
+
+      modalMessage.textContent =
+        "Are you sure you want to unblock this product? The product will become available to users again.";
+
+      confirmButton.textContent = "Unblock";
+
+      confirmButton.className =
+        "px-5 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition";
+
+    }
+
+
+    // Show modal
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+
+
+  // ================= CONFIRM ACTION =================
+
+  function confirmBlockAction() {
+
+    if (!selectedProductId) {
+      return;
+    }
+
+    const form = document.getElementById(
+      "blockForm-" + selectedProductId
+    );
+
+    if (form) {
+      form.submit();
+    }
+
+    closeBlockModal();
+  }
+
+
+
+  // ================= CLOSE MODAL =================
+
+  function closeBlockModal() {
+
+    const modal = document.getElementById("blockModal");
+
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+
+    selectedProductId = null;
+  }
+
+
+
+  // ================= CLOSE WITH ESC =================
+
+  document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Escape") {
+      closeBlockModal();
+    }
+
+  });
+
+</script>
+
 </body>
 </html>
