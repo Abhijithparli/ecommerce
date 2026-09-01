@@ -6,12 +6,16 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
+      minlength: 3,
+      maxlength: 50
     },
 
     description: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 500
     },
 
     isDeleted: {

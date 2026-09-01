@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import { generateOTP, sendMail, otpTemplate } from "./authService.js";
+import { MESSAGES } from "../constants/messages.js";
 
 /**
  * Service to handle User profile, address, and password business logic
@@ -9,7 +10,7 @@ import { generateOTP, sendMail, otpTemplate } from "./authService.js";
 export const getUserById = async (id) => {
   const user = await User.findById(id).select("-password");
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
   return user;
 };
@@ -26,7 +27,7 @@ export const updateProfile = async (userId, { name }, filename) => {
 
   const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
   if (!updatedUser) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
   return updatedUser;
 };
@@ -34,7 +35,7 @@ export const updateProfile = async (userId, { name }, filename) => {
 export const changeUserEmailRequest = async (userId, newEmail) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(newEmail)) {
@@ -65,7 +66,7 @@ export const changeUserEmailRequest = async (userId, newEmail) => {
 export const changeUserEmailVerify = async (userId, newEmail, otp, emailChangeSession) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   if (!emailChangeSession || emailChangeSession.newEmail !== newEmail) {
@@ -87,7 +88,7 @@ export const changeUserEmailVerify = async (userId, newEmail, otp, emailChangeSe
 export const changeUserPassword = async (userId, currentPassword, newPassword, confirmPassword) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   const isGoogleUser = !user.password;
@@ -107,7 +108,7 @@ export const changeUserPassword = async (userId, currentPassword, newPassword, c
   }
 
   if (newPassword !== confirmPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(MESSAGES.AUTH.PASSWORDS_DO_NOT_MATCH);
   }
 
   user.password = await bcrypt.hash(newPassword, 10);
@@ -117,7 +118,7 @@ export const changeUserPassword = async (userId, currentPassword, newPassword, c
 export const getUserAddresses = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
   return user.addresses || [];
 };
@@ -126,7 +127,7 @@ export const addUserAddress = async (userId, addressData) => {
   const { name, phone, street, city, state, pincode, country, type, isDefault } = addressData;
 
   if (!name || !phone || !street || !city || !state || !pincode) {
-    throw new Error("All fields are required");
+    throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
   }
 
   if (!/^[A-Za-z\s]{3,50}$/.test(name.trim())) {
@@ -151,7 +152,7 @@ export const addUserAddress = async (userId, addressData) => {
 
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   const newAddr = {
@@ -183,12 +184,12 @@ export const updateUserAddress = async (userId, addressId, addressData) => {
 
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   const addr = user.addresses.id(addressId);
   if (!addr) {
-    throw new Error("Address not found");
+    throw new Error(MESSAGES.ADDRESS.NOT_FOUND);
   }
 
   addr.name = name.trim();
@@ -211,12 +212,12 @@ export const updateUserAddress = async (userId, addressId, addressData) => {
 export const deleteUserAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   const addr = user.addresses.id(addressId);
   if (!addr) {
-    throw new Error("Address not found");
+    throw new Error(MESSAGES.ADDRESS.NOT_FOUND);
   }
 
   const wasDefault = addr.isDefault;
@@ -232,7 +233,7 @@ export const deleteUserAddress = async (userId, addressId) => {
 export const setDefaultAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   user.addresses.forEach((a) => {
@@ -245,7 +246,7 @@ export const setDefaultAddress = async (userId, addressId) => {
 export const setInitialPassword = async (userId, { password, confirmPassword }) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   if (user.password) {
@@ -253,11 +254,11 @@ export const setInitialPassword = async (userId, { password, confirmPassword }) 
   }
 
   if (!password || !confirmPassword) {
-    throw new Error("All fields are required");
+    throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
   }
 
   if (password !== confirmPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(MESSAGES.AUTH.PASSWORDS_DO_NOT_MATCH);
   }
 
   if (password.length < 6) {

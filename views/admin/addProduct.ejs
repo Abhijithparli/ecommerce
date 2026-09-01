@@ -4,831 +4,953 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Add Product</title>
+  <title>Add Product - Headshield Admin</title>
 
   <!-- TAILWIND -->
   <script src="https://cdn.tailwindcss.com"></script>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
-/>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body class="bg-gray-100 text-gray-900 min-h-screen">
 <div class="flex w-full min-h-screen bg-gray-100 text-gray-900">
 
   <!-- SIDEBAR -->
-<%- include("../partials/sidebar", {
-  currentPage: "products"
-}) %>
+  <%- include("../partials/sidebar", {
+    currentPage: "products"
+  }) %>
 
   <!-- MAIN CONTENT -->
-<div class="flex-1 ml-56 p-6">
-<h1 class="text-3xl font-bold mb-8">
-
-  Add Product
-
-</h1>
-
-     <!-- ADD PRODUCT FORM -->
- <div class="
-  bg-white
-  rounded-2xl
-  p-8
-  mb-10
-  shadow-lg
-  border
-  border-gray-200
-">
-
-    <h2 class="text-2xl font-semibold mb-6">
-      Add Product
-    </h2>
-  
-<form
-  action="/admin/products/add"
-  method="POST"
-  enctype="multipart/form-data"
-  novalidate
->
-
-    <!-- PRODUCT NAME -->
-<div>
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Product Name
-  </label>
-
-  <input
-    type="text"
-    id="productName"
-    name="name"
-    placeholder="Enter product name"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  >
-
-  <% if (errors?.name) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.name %>
-
-    </p>
-
-  <% } %>
-
-</div>
-
-    <!-- BRAND -->
-<div>
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Brand
-  </label>
-
-  <input
-    type="text"
-    name="brand"
-    placeholder="Enter brand"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  >
-
-  <% if (errors?.brand) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.brand %>
-
-    </p>
-
-  <% } %>
-
-</div>
-      
-      
-
-
-      <!-- CATEGORY -->
+  <div class="flex-1 ml-56 p-6">
+    <div class="flex justify-between items-center mb-8">
       <div>
-
-        <label class="block mb-2 text-sm font-semibold text-gray-700">
-          Category
-        </label>
-
-        <select
-          name="category"
-          class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-          required
-        >
-
-          <option value="">
-            Select Category
-          </option>
-
-          <% categories.forEach(category => { %>
-
-            <option value="<%= category._id %>">
-              <%= category.name %>
-            </option>
-
-          <% }) %>
-
-        </select>
- <% if (errors?.category) { %>
-
-  <p class="text-red-500 text-sm mt-1">
-
-    <%= errors.category %>
-
-  </p>
-
-<% } %>
-
+        <nav class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <a href="/admin/products" class="hover:text-orange-500 transition">Products</a>
+          <span>/</span>
+          <span class="text-gray-800 font-medium">Add Product</span>
+        </nav>
+        <h1 class="text-3xl font-bold text-gray-900">Add Product</h1>
       </div>
 
-
-     <!-- REGULAR PRICE -->
-<div>
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Regular Price
-  </label>
-
-  <input
-    type="number"
-    name="regularPrice"
-    placeholder="Enter regular price"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  >
-
-  <% if (errors?.regularPrice) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.regularPrice %>
-
-    </p>
-
-  <% } %>
-
-</div>
-
-
-     <!-- SALE PRICE -->
-<div>
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Sale Price
-  </label>
-
-  <input
-    type="number"
-    name="salePrice"
-    placeholder="Enter sale price"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  >
-
-  <% if (errors?.salePrice) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.salePrice %>
-
-    </p>
-
-  <% } %>
-
-</div>
- 
-      <!-- PRODUCT VARIANTS -->
-      <div class="md:col-span-2 bg-gray-50/80 p-5 rounded-xl border border-gray-200 mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-base font-semibold text-gray-800">
-              Product Variants
-            </h3>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Add available size variants (S, M, L, XL) and their specific stock counts.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            id="addVariantBtn"
-            class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-150"
-          >
-            <span>+</span> Add Variant
-          </button>
-        </div>
-
-        <!-- Variant Table Header -->
-        <div class="grid grid-cols-12 gap-3 mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
-          <div class="col-span-5">Size</div>
-          <div class="col-span-5">Stock</div>
-          <div class="col-span-2 text-center">Action</div>
-        </div>
-
-        <!-- Variants Container -->
-        <div id="variantsContainer" class="space-y-3">
-          <!-- Initial Variant Row -->
-          <div class="variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
-            <div class="col-span-5">
-              <select
-                name="variants[0][size]"
-                class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-                required
-              >
-                <option value="">Select size</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-              </select>
-            </div>
-
-            <div class="col-span-5">
-              <input
-                type="number"
-                name="variants[0][stock]"
-                placeholder="Stock quantity (e.g. 5)"
-                min="0"
-                step="1"
-                class="variant-stock-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-                required
-              >
-            </div>
-
-            <div class="col-span-2 flex justify-center">
-              <button
-                type="button"
-                class="remove-variant-btn px-3 py-2 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 shadow-sm"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <% if (errors?.variants) { %>
-          <p class="text-red-500 text-sm mt-2 font-medium">
-            <%= errors.variants %>
-          </p>
-        <% } %>
-      </div>
-
-<!-- DESCRIPTION -->
-<div class="md:col-span-2">
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Description
-  </label>
-
-  <textarea
-    name="description"
-    rows="4"
-    placeholder="Enter product description"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  ></textarea>
-
-  <% if (errors?.description) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.description %>
-
-    </p>
-
-  <% } %>
-
-</div>
-
-        <!-- HIGHLIGHTS -->
-<div class="md:col-span-2">
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Product Highlights
-  </label>
-
-  <textarea
-    name="highlights"
-    rows="4"
-    placeholder="Enter highlights separated by comma"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-  ></textarea>
-
-  <p class="text-xs text-gray-500 mt-2">
-    Example:
-    Lightweight, DOT Certified, Scratch Resistant
-  </p>
-
-</div>
-
-<!-- IMAGES -->
-<div class="md:col-span-2">
-
-  <label class="block mb-2 text-sm font-semibold text-gray-700">
-    Product Images (Minimum 3)
-  </label>
-
-  <input
-    type="file"
-    name="images"
-    multiple
-    accept="image/*"
-    class="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-    required
-  >
-
-  <% if (errors?.images) { %>
-
-    <p class="text-red-500 text-sm mt-1">
-
-      <%= errors.images %>
-
-    </p>
-
-  <% } %>
-
-
-  <!-- IMAGE PREVIEW -->
-  <div
-    id="imagePreviewContainer"
-    class="flex flex-wrap gap-4 mt-4"
-  ></div>
-  <!-- CROP MODAL -->
-<div
-  id="cropModal"
-  class="
-    fixed
-    inset-0
-    bg-black/70
-    hidden
-    items-center
-    justify-center
-    z-50
-  "
->
-
-  <div class="
-    bg-white
-    p-6
-    rounded-2xl
-    w-[500px]
-  ">
-
-    <h2 class="text-xl font-bold mb-4">
-      Crop Image
-    </h2>
-<div class="w-full h-[300px]">
-    <img
-  id="cropImage"
-  class="block max-w-full max-h-[300px]"
->
+      <a
+        href="/admin/products"
+        class="bg-gray-600 hover:bg-gray-500 text-white px-5 py-2.5 rounded-lg font-semibold transition inline-flex items-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Products
+      </a>
     </div>
 
-    <div class="flex justify-end gap-3 mt-5">
+    <!-- FLASH TOP ERROR BANNER -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div id="topErrorBanner" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6 max-w-4xl flex items-center gap-3 shadow-sm">
+        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-sm font-medium"><%= error %></span>
+      </div>
+    <% } %>
 
-      <button
-        type="button"
-        id="cropCancelBtn"
-        class="
-          bg-gray-300
-          px-5
-          py-2
-          rounded-lg
-        "
+    <!-- ADD PRODUCT FORM CONTAINER -->
+    <div class="bg-white rounded-2xl p-8 mb-10 shadow-lg border border-gray-200 max-w-4xl">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-800">
+        Product Information
+      </h2>
+
+      <form
+        id="addProductForm"
+        action="/admin/products/add"
+        method="POST"
+        enctype="multipart/form-data"
+        class="grid grid-cols-1 md:grid-cols-2 gap-6"
+        novalidate
       >
-        Cancel
-      </button>
 
-      <button
-        type="button"
-        id="cropSaveBtn"
-        class="
-          bg-orange-500
-          text-white
-          px-5
-          py-2
-          rounded-lg
-        "
-      >
-        Crop
-      </button>
+        <!-- PRODUCT NAME -->
+        <div class="md:col-span-1">
+          <label for="productName" class="block mb-2 text-sm font-semibold text-gray-700">
+            Product Name <span class="text-orange-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="productName"
+            name="name"
+            placeholder="Enter product name (e.g. Thunder 4 SV)"
+            value="<%= (typeof formData !== 'undefined' && formData && formData.name) ? formData.name : '' %>"
+            maxlength="100"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.name) ? 'true' : 'false' %>"
+            aria-describedby="nameError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.name) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+          <p
+            id="nameError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.name) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="nameErrorText"><%= (typeof errors !== 'undefined' && errors?.name) ? errors.name : '' %></span>
+          </p>
+        </div>
 
+        <!-- BRAND -->
+        <div class="md:col-span-1">
+          <label for="productBrand" class="block mb-2 text-sm font-semibold text-gray-700">
+            Brand <span class="text-orange-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="productBrand"
+            name="brand"
+            placeholder="Enter brand (e.g. MT, Steelbird, Vega)"
+            value="<%= (typeof formData !== 'undefined' && formData && formData.brand) ? formData.brand : '' %>"
+            maxlength="50"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.brand) ? 'true' : 'false' %>"
+            aria-describedby="brandError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.brand) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+          <p
+            id="brandError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.brand) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="brandErrorText"><%= (typeof errors !== 'undefined' && errors?.brand) ? errors.brand : '' %></span>
+          </p>
+        </div>
+
+        <!-- CATEGORY -->
+        <div class="md:col-span-1">
+          <label for="productCategory" class="block mb-2 text-sm font-semibold text-gray-700">
+            Category <span class="text-orange-500">*</span>
+          </label>
+          <select
+            id="productCategory"
+            name="category"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.category) ? 'true' : 'false' %>"
+            aria-describedby="categoryError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.category) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+            <option value="">Select Category</option>
+            <% if (typeof categories !== 'undefined' && categories) { %>
+              <% categories.forEach(category => { %>
+                <option
+                  value="<%= category._id %>"
+                  <%= (typeof formData !== 'undefined' && formData && formData.category && formData.category.toString() === category._id.toString()) ? 'selected' : '' %>
+                >
+                  <%= category.name %>
+                </option>
+              <% }) %>
+            <% } %>
+          </select>
+          <p
+            id="categoryError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.category) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="categoryErrorText"><%= (typeof errors !== 'undefined' && errors?.category) ? errors.category : '' %></span>
+          </p>
+        </div>
+
+        <!-- REGULAR PRICE -->
+        <div class="md:col-span-1">
+          <label for="regularPrice" class="block mb-2 text-sm font-semibold text-gray-700">
+            Regular Price (₹) <span class="text-orange-500">*</span>
+          </label>
+          <input
+            type="number"
+            id="regularPrice"
+            name="regularPrice"
+            min="0.01"
+            max="1000000"
+            step="0.01"
+            placeholder="e.g. 4999"
+            value="<%= (typeof formData !== 'undefined' && formData && formData.regularPrice) ? formData.regularPrice : '' %>"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.regularPrice) ? 'true' : 'false' %>"
+            aria-describedby="regularPriceError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.regularPrice) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+          <p
+            id="regularPriceError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.regularPrice) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="regularPriceErrorText"><%= (typeof errors !== 'undefined' && errors?.regularPrice) ? errors.regularPrice : '' %></span>
+          </p>
+        </div>
+
+        <!-- SALE PRICE -->
+        <div class="md:col-span-1">
+          <label for="salePrice" class="block mb-2 text-sm font-semibold text-gray-700">
+            Sale Price (₹) <span class="text-orange-500">*</span>
+          </label>
+          <input
+            type="number"
+            id="salePrice"
+            name="salePrice"
+            min="0.01"
+            max="1000000"
+            step="0.01"
+            placeholder="e.g. 4499"
+            value="<%= (typeof formData !== 'undefined' && formData && formData.salePrice) ? formData.salePrice : '' %>"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.salePrice) ? 'true' : 'false' %>"
+            aria-describedby="salePriceError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.salePrice) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+          <p
+            id="salePriceError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.salePrice) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="salePriceErrorText"><%= (typeof errors !== 'undefined' && errors?.salePrice) ? errors.salePrice : '' %></span>
+          </p>
+        </div>
+
+        <!-- PRODUCT VARIANTS (MULTI-VARIANT DYNAMIC SECTION) -->
+        <div class="md:col-span-2 bg-gray-50/80 p-5 rounded-xl border border-gray-200">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-semibold text-gray-800">
+                Size &amp; Stock Variants <span class="text-orange-500">*</span>
+              </h3>
+              <p class="text-xs text-gray-500 mt-0.5">
+                Add size variants (S, M, L, XL) and their specific inventory counts.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              id="addVariantBtn"
+              class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-all duration-150"
+            >
+              <span>+</span> Add Variant Row
+            </button>
+          </div>
+
+          <!-- Variant Table Header -->
+          <div class="grid grid-cols-12 gap-3 mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div class="col-span-5">Size <span class="text-orange-500">*</span></div>
+            <div class="col-span-5">Stock Quantity <span class="text-orange-500">*</span></div>
+            <div class="col-span-2 text-center">Action</div>
+          </div>
+
+          <!-- Variants Container -->
+          <div id="variantsContainer" class="space-y-3">
+            <% 
+              const preservedVariants = (typeof formData !== 'undefined' && formData && Array.isArray(formData.variants) && formData.variants.length > 0)
+                ? formData.variants
+                : [{ size: '', stock: '' }];
+            %>
+
+            <% preservedVariants.forEach((v, index) => { %>
+              <div class="variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
+                <div class="col-span-5">
+                  <select
+                    name="variants[<%= index %>][size]"
+                    class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+                  >
+                    <option value="">Select size</option>
+                    <option value="S" <%= v.size === 'S' ? 'selected' : '' %>>S</option>
+                    <option value="M" <%= v.size === 'M' ? 'selected' : '' %>>M</option>
+                    <option value="L" <%= v.size === 'L' ? 'selected' : '' %>>L</option>
+                    <option value="XL" <%= v.size === 'XL' ? 'selected' : '' %>>XL</option>
+                  </select>
+                </div>
+
+                <div class="col-span-5">
+                  <input
+                    type="number"
+                    name="variants[<%= index %>][stock]"
+                    placeholder="Stock quantity (e.g. 5)"
+                    min="0"
+                    step="1"
+                    value="<%= (v.stock !== undefined && v.stock !== null) ? v.stock : '' %>"
+                    class="variant-stock-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+                  >
+                </div>
+
+                <div class="col-span-2 flex justify-center">
+                  <button
+                    type="button"
+                    class="remove-variant-btn px-3 py-2 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 shadow-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <!-- INLINE ERROR DIRECTLY UNDER VARIANTS -->
+          <p
+            id="variantsError"
+            role="alert"
+            class="text-red-500 text-sm mt-2 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.variants) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="variantsErrorText"><%= (typeof errors !== 'undefined' && errors?.variants) ? errors.variants : '' %></span>
+          </p>
+        </div>
+
+        <!-- DESCRIPTION -->
+        <div class="md:col-span-2">
+          <label for="productDescription" class="block mb-2 text-sm font-semibold text-gray-700">
+            Description <span class="text-orange-500">*</span>
+          </label>
+          <textarea
+            id="productDescription"
+            name="description"
+            rows="4"
+            placeholder="Enter comprehensive product description..."
+            maxlength="2000"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.description) ? 'true' : 'false' %>"
+            aria-describedby="descriptionError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.description) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          ><%= (typeof formData !== 'undefined' && formData && formData.description) ? formData.description : '' %></textarea>
+          <p
+            id="descriptionError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.description) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="descriptionErrorText"><%= (typeof errors !== 'undefined' && errors?.description) ? errors.description : '' %></span>
+          </p>
+        </div>
+
+        <!-- HIGHLIGHTS -->
+        <div class="md:col-span-2">
+          <label for="productHighlights" class="block mb-2 text-sm font-semibold text-gray-700">
+            Product Highlights
+          </label>
+          <textarea
+            id="productHighlights"
+            name="highlights"
+            rows="3"
+            placeholder="Enter key highlights separated by comma (e.g. Lightweight, DOT Certified, Scratch Resistant)"
+            maxlength="500"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.highlights) ? 'true' : 'false' %>"
+            aria-describedby="highlightsError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.highlights) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          ><%= (typeof formData !== 'undefined' && formData && formData.highlights) ? (Array.isArray(formData.highlights) ? formData.highlights.join(', ') : formData.highlights) : '' %></textarea>
+          <p
+            id="highlightsError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.highlights) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="highlightsErrorText"><%= (typeof errors !== 'undefined' && errors?.highlights) ? errors.highlights : '' %></span>
+          </p>
+          <p class="text-xs text-gray-500 mt-1">Optional. Maximum 500 characters.</p>
+        </div>
+
+        <!-- IMAGES -->
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-semibold text-gray-700">
+            Product Images <span class="text-orange-500">*</span> (Minimum 3 images required)
+          </label>
+          <input
+            type="file"
+            id="imageFileInput"
+            name="images"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/jpg"
+            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.images) ? 'true' : 'false' %>"
+            aria-describedby="imagesError"
+            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.images) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+          >
+
+          <!-- INLINE ERROR DIRECTLY UNDER IMAGES -->
+          <p
+            id="imagesError"
+            role="alert"
+            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.images) ? '' : 'hidden' %>"
+          >
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span id="imagesErrorText"><%= (typeof errors !== 'undefined' && errors?.images) ? errors.images : '' %></span>
+          </p>
+
+          <!-- IMAGE PREVIEW -->
+          <div id="imagePreviewContainer" class="flex flex-wrap gap-4 mt-4"></div>
+        </div>
+
+        <!-- SUBMIT BUTTONS -->
+        <div class="md:col-span-2 flex items-center gap-4 pt-4 border-t border-gray-200">
+          <button
+            type="submit"
+            id="submitProductBtn"
+            class="bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white px-8 py-3 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            <span id="submitProductBtnText">Add Product</span>
+          </button>
+          <a
+            href="/admin/products"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-8 py-3 rounded-lg font-semibold transition text-center"
+          >
+            Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- CROP MODAL -->
+    <div
+      id="cropModal"
+      class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">
+          Crop Product Image
+        </h2>
+        <div class="w-full h-[320px] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+          <img id="cropImage" class="block max-w-full max-h-[320px]" alt="Crop preview">
+        </div>
+        <div class="flex justify-end gap-3 mt-5">
+          <button
+            type="button"
+            id="cropCancelBtn"
+            class="bg-gray-300 hover:bg-gray-400 px-5 py-2.5 rounded-lg text-gray-800 font-semibold transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="cropSaveBtn"
+            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold transition"
+          >
+            Crop &amp; Save
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
-
 </div>
 
-</div>
-
-
-
-      <!-- BUTTON -->
-      <div class="md:col-span-2">
-
-      <button
-type="submit"
-class="bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded-lg font-semibold text-white transition duration-200 shadow-md hover:shadow-lg"
->
-Add Product
-</button>
-
-      </div>
-
-    </form>
-       </div>
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("addProductForm");
+  const nameInput = document.getElementById("productName");
+  const brandInput = document.getElementById("productBrand");
+  const categorySelect = document.getElementById("productCategory");
+  const regularPriceInput = document.getElementById("regularPrice");
+  const salePriceInput = document.getElementById("salePrice");
+  const descriptionInput = document.getElementById("productDescription");
+  const highlightsInput = document.getElementById("productHighlights");
+  const imageInput = document.getElementById("imageFileInput");
 
-let cropper;
+  const nameError = document.getElementById("nameError");
+  const nameErrorText = document.getElementById("nameErrorText");
+  const brandError = document.getElementById("brandError");
+  const brandErrorText = document.getElementById("brandErrorText");
+  const categoryError = document.getElementById("categoryError");
+  const categoryErrorText = document.getElementById("categoryErrorText");
+  const regularPriceError = document.getElementById("regularPriceError");
+  const regularPriceErrorText = document.getElementById("regularPriceErrorText");
+  const salePriceError = document.getElementById("salePriceError");
+  const salePriceErrorText = document.getElementById("salePriceErrorText");
+  const variantsError = document.getElementById("variantsError");
+  const variantsErrorText = document.getElementById("variantsErrorText");
+  const descriptionError = document.getElementById("descriptionError");
+  const descriptionErrorText = document.getElementById("descriptionErrorText");
+  const highlightsError = document.getElementById("highlightsError");
+  const highlightsErrorText = document.getElementById("highlightsErrorText");
+  const imagesError = document.getElementById("imagesError");
+  const imagesErrorText = document.getElementById("imagesErrorText");
 
-const imageInput =
-  document.querySelector('input[name="images"]');
+  const previewContainer = document.getElementById("imagePreviewContainer");
+  const cropModal = document.getElementById("cropModal");
+  const cropImage = document.getElementById("cropImage");
+  const cropSaveBtn = document.getElementById("cropSaveBtn");
+  const cropCancelBtn = document.getElementById("cropCancelBtn");
 
-const previewContainer =
-  document.getElementById("imagePreviewContainer");
+  const variantsContainer = document.getElementById("variantsContainer");
+  const addVariantBtn = document.getElementById("addVariantBtn");
 
-const cropModal =
-  document.getElementById("cropModal");
+  let cropper;
+  let filesToCrop = [];
+  let croppedFiles = [];
+  let currentCropIndex = 0;
 
-const cropImage =
-  document.getElementById("cropImage");
-
-const cropSaveBtn =
-  document.getElementById("cropSaveBtn");
-
-const cropCancelBtn =
-  document.getElementById("cropCancelBtn");
-
-let files = [];
-let croppedFiles = []; // Keeps track of cropped File objects
-let currentIndex = 0;
-
-imageInput.addEventListener("change", function (e) {
-  previewContainer.innerHTML = "";
-  const newFiles = Array.from(e.target.files);
-files.push(...newFiles);
-  croppedFiles = [];
-  currentIndex = 0;
-
-  if (files.length > 0) {
-    showCropper(files[currentIndex]);
-  }
-});
-
-function showCropper(file) {
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    cropImage.src = event.target.result;
-    cropModal.classList.remove("hidden");
-    cropModal.classList.add("flex");
-
-    if (cropper) {
-      cropper.destroy();
+  // Helper functions for field-level inline error display
+  function setError(input, errorContainer, textElement, message) {
+    if (input) {
+      input.classList.remove("border-gray-300");
+      input.classList.add("border-red-500", "ring-2", "ring-red-500/20");
+      input.setAttribute("aria-invalid", "true");
     }
-
-    cropper = new Cropper(cropImage, {
-      aspectRatio: 1,
-      viewMode: 1,
-      autoCropArea: 1,
-    });
-  };
-  reader.readAsDataURL(file);
-}
-
-cropSaveBtn.addEventListener("click", function () {
-  if (!cropper) return;
-
-  const canvas = cropper.getCroppedCanvas({
-    width: 800,
-    height: 800
-  });
-
-  canvas.toBlob((blob) => {
-    const fileName = `cropped-${Date.now()}-${croppedFiles.length}.png`;
-    const file = new File([blob], fileName, { type: "image/png" });
-    croppedFiles.push(file);
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "relative";
-    wrapper.dataset.index = croppedFiles.length - 1;
-
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(blob);
-    img.className = "w-24 h-24 object-cover rounded-lg border border-gray-300";
-
-    const removeBtn = document.createElement("button");
-    removeBtn.innerHTML = "✕";
-    removeBtn.type = "button";
-    removeBtn.className = "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm";
-    
-    removeBtn.onclick = () => {
-      const idx = parseInt(wrapper.dataset.index);
-      croppedFiles[idx] = null;
-      wrapper.remove();
-    };
-
-    wrapper.appendChild(img);
-    wrapper.appendChild(removeBtn);
-    previewContainer.appendChild(wrapper);
-  }, "image/png");
-
-  cropper.destroy();
-  currentIndex++;
-
-  if (currentIndex < files.length) {
-    showCropper(files[currentIndex]);
-  } else {
-    cropModal.classList.add("hidden");
-    cropModal.classList.remove("flex");
-  }
-});
-
-cropCancelBtn.addEventListener("click", function () {
-  cropModal.classList.add("hidden");
-  cropModal.classList.remove("flex");
-  if (cropper) {
-    cropper.destroy();
-  }
-});
-
-// --- DYNAMIC PRODUCT VARIANTS MANAGEMENT ---
-const variantsContainer = document.getElementById("variantsContainer");
-const addVariantBtn = document.getElementById("addVariantBtn");
-
-function reindexVariants() {
-  const rows = variantsContainer.querySelectorAll(".variant-row");
-  rows.forEach((row, index) => {
-    const sizeSelect = row.querySelector(".variant-size-select");
-    const stockInput = row.querySelector(".variant-stock-input");
-    if (sizeSelect) sizeSelect.name = `variants[${index}][size]`;
-    if (stockInput) stockInput.name = `variants[${index}][stock]`;
-  });
-}
-
-function createVariantRow(index, sizeVal = "", stockVal = "") {
-  const row = document.createElement("div");
-  row.className = "variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm";
-  row.innerHTML = `
-    <div class="col-span-5">
-      <select
-        name="variants[${index}][size]"
-        class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-        required
-      >
-        <option value="">Select size</option>
-        <option value="S" ${sizeVal === "S" ? "selected" : ""}>S</option>
-        <option value="M" ${sizeVal === "M" ? "selected" : ""}>M</option>
-        <option value="L" ${sizeVal === "L" ? "selected" : ""}>L</option>
-        <option value="XL" ${sizeVal === "XL" ? "selected" : ""}>XL</option>
-      </select>
-    </div>
-    <div class="col-span-5">
-      <input
-        type="number"
-        name="variants[${index}][stock]"
-        placeholder="Stock quantity (e.g. 5)"
-        min="0"
-        step="1"
-        value="${stockVal}"
-        class="variant-stock-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-        required
-      >
-    </div>
-    <div class="col-span-2 flex justify-center">
-      <button
-        type="button"
-        class="remove-variant-btn px-3 py-2 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 shadow-sm"
-      >
-        Remove
-      </button>
-    </div>
-  `;
-  return row;
-}
-
-if (addVariantBtn) {
-  addVariantBtn.addEventListener("click", function () {
-    const rowCount = variantsContainer.querySelectorAll(".variant-row").length;
-    const newRow = createVariantRow(rowCount);
-    variantsContainer.appendChild(newRow);
-  });
-}
-
-variantsContainer.addEventListener("click", function (e) {
-  const removeBtn = e.target.closest(".remove-variant-btn");
-  if (!removeBtn) return;
-
-  const rows = variantsContainer.querySelectorAll(".variant-row");
-  if (rows.length <= 1) {
-    Swal.fire({
-      icon: "warning",
-      title: "Minimum Required",
-      text: "At least one product variant is required. You cannot remove the last row."
-    });
-    return;
+    if (textElement) textElement.textContent = message;
+    if (errorContainer) errorContainer.classList.remove("hidden");
   }
 
-  const row = removeBtn.closest(".variant-row");
-  if (row) {
-    row.remove();
-    reindexVariants();
+  function clearError(input, errorContainer, textElement) {
+    if (input) {
+      input.classList.remove("border-red-500", "ring-2", "ring-red-500/20");
+      input.classList.add("border-gray-300");
+      input.setAttribute("aria-invalid", "false");
+    }
+    if (textElement) textElement.textContent = "";
+    if (errorContainer) errorContainer.classList.add("hidden");
   }
-});
 
-// Intercept form submit to validate and assign the cropped files
-const form = document.querySelector("form");
-
-form.addEventListener("submit", function (e) {
-    const name = document.querySelector("[name='name']").value.trim();
-    const brand = document.querySelector("[name='brand']").value.trim();
-    const category = document.querySelector("[name='category']").value;
-    const regularPrice = document.querySelector("[name='regularPrice']").value.trim();
-    const salePrice = document.querySelector("[name='salePrice']").value.trim();
-    const highlights = document.querySelector("[name='highlights']").value.trim();
-    const description = document.querySelector("[name='description']").value.trim();
-
-    if (!name) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Product Name is required."
-        });
-        return;
+  // --- INDIVIDUAL FIELD VALIDATION FUNCTIONS ---
+  function validateName() {
+    const val = nameInput.value.trim();
+    if (!val) {
+      setError(nameInput, nameError, nameErrorText, "Product name is required.");
+      return false;
     }
-
-    if (!brand) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Brand is required."
-        });
-        return;
+    if (val.length < 3) {
+      setError(nameInput, nameError, nameErrorText, "Product name must be at least 3 characters long.");
+      return false;
     }
-
-    if (!category) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Category is required."
-        });
-        return;
+    if (val.length > 100) {
+      setError(nameInput, nameError, nameErrorText, "Product name must not exceed 100 characters.");
+      return false;
     }
+    clearError(nameInput, nameError, nameErrorText);
+    return true;
+  }
 
-    if (!regularPrice || isNaN(regularPrice) || Number(regularPrice) <= 0) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Regular Price must be a valid number greater than 0."
-        });
-        return;
+  function validateBrand() {
+    const val = brandInput.value.trim();
+    if (!val) {
+      setError(brandInput, brandError, brandErrorText, "Brand is required.");
+      return false;
     }
-
-    if (!salePrice || isNaN(salePrice) || Number(salePrice) <= 0) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Sale Price must be a valid number greater than 0."
-        });
-        return;
+    if (val.length < 2) {
+      setError(brandInput, brandError, brandErrorText, "Brand must be at least 2 characters long.");
+      return false;
     }
-
-    if (Number(salePrice) > Number(regularPrice)) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Sale Price cannot be greater than Regular Price."
-        });
-        return;
+    if (val.length > 50) {
+      setError(brandInput, brandError, brandErrorText, "Brand must not exceed 50 characters.");
+      return false;
     }
+    clearError(brandInput, brandError, brandErrorText);
+    return true;
+  }
 
-    // --- VARIANT VALIDATION ---
-    const variantRows = document.querySelectorAll("#variantsContainer .variant-row");
-    if (variantRows.length === 0) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "At least one product size variant is required."
-        });
-        return;
+  function validateCategory() {
+    const val = categorySelect.value;
+    if (!val) {
+      setError(categorySelect, categoryError, categoryErrorText, "Please select a category.");
+      return false;
+    }
+    clearError(categorySelect, categoryError, categoryErrorText);
+    return true;
+  }
+
+  function validateRegularPrice() {
+    const raw = regularPriceInput.value.trim();
+    const num = Number(raw);
+    if (!raw || isNaN(num)) {
+      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price is required.");
+      return false;
+    }
+    if (num <= 0) {
+      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price must be greater than 0.");
+      return false;
+    }
+    if (num > 1000000) {
+      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price cannot exceed 1,000,000.");
+      return false;
+    }
+    clearError(regularPriceInput, regularPriceError, regularPriceErrorText);
+
+    // Re-check sale price if regular price changed
+    if (salePriceInput.value.trim()) {
+      validateSalePrice();
+    }
+    return true;
+  }
+
+  function validateSalePrice() {
+    const raw = salePriceInput.value.trim();
+    const num = Number(raw);
+    const regRaw = regularPriceInput.value.trim();
+    const regNum = Number(regRaw);
+
+    if (!raw || isNaN(num)) {
+      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price is required.");
+      return false;
+    }
+    if (num <= 0) {
+      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price must be greater than 0.");
+      return false;
+    }
+    if (!isNaN(regNum) && regNum > 0 && num > regNum) {
+      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price cannot be greater than regular price.");
+      return false;
+    }
+    clearError(salePriceInput, salePriceError, salePriceErrorText);
+    return true;
+  }
+
+  function validateVariants() {
+    const rows = variantsContainer.querySelectorAll(".variant-row");
+    if (rows.length === 0) {
+      setError(null, variantsError, variantsErrorText, "At least one size variant is required.");
+      return false;
     }
 
     const seenSizes = new Set();
-    for (let i = 0; i < variantRows.length; i++) {
-        const row = variantRows[i];
-        const sizeSelect = row.querySelector(".variant-size-select");
-        const stockInput = row.querySelector(".variant-stock-input");
+    const allowedSizes = ["S", "M", "L", "XL"];
 
-        const size = sizeSelect ? sizeSelect.value.trim() : "";
-        const stock = stockInput ? stockInput.value.trim() : "";
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const sizeSelect = row.querySelector(".variant-size-select");
+      const stockInput = row.querySelector(".variant-stock-input");
 
-        if (!size) {
-            e.preventDefault();
-            Swal.fire({
-                icon: "warning",
-                title: "Validation Error",
-                text: `Please select a size for variant row #${i + 1}.`
-            });
-            if (sizeSelect) sizeSelect.focus();
-            return;
-        }
+      const size = sizeSelect ? sizeSelect.value.trim() : "";
+      const stockRaw = stockInput ? stockInput.value.trim() : "";
 
-        if (stock === "") {
-            e.preventDefault();
-            Swal.fire({
-                icon: "warning",
-                title: "Validation Error",
-                text: `Please enter stock quantity for size ${size}.`
-            });
-            if (stockInput) stockInput.focus();
-            return;
-        }
+      if (!size) {
+        setError(sizeSelect, variantsError, variantsErrorText, `Please select a size for variant #${i + 1}.`);
+        return false;
+      }
+      if (!allowedSizes.includes(size)) {
+        setError(sizeSelect, variantsError, variantsErrorText, `Invalid size "${size}". Allowed: S, M, L, XL.`);
+        return false;
+      }
+      if (seenSizes.has(size)) {
+        setError(sizeSelect, variantsError, variantsErrorText, `Duplicate size "${size}" is not allowed. Each variant size must be unique.`);
+        return false;
+      }
+      seenSizes.add(size);
 
-        const stockNum = Number(stock);
-        if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
-            e.preventDefault();
-            Swal.fire({
-                icon: "warning",
-                title: "Validation Error",
-                text: `Stock for size ${size} must be a valid non-negative integer (0 or greater).`
-            });
-            if (stockInput) stockInput.focus();
-            return;
-        }
+      if (stockRaw === "" || isNaN(Number(stockRaw))) {
+        setError(stockInput, variantsError, variantsErrorText, `Stock quantity is required for size ${size}.`);
+        return false;
+      }
+      const stockNum = Number(stockRaw);
+      if (stockNum < 0 || !Number.isInteger(stockNum)) {
+        setError(stockInput, variantsError, variantsErrorText, `Stock for size ${size} must be a whole non-negative integer (0 or greater).`);
+        return false;
+      }
 
-        if (seenSizes.has(size)) {
-            e.preventDefault();
-            Swal.fire({
-                icon: "warning",
-                title: "Validation Error",
-                text: `Duplicate variant size "${size}" is not allowed. Each size must be unique.`
-            });
-            if (sizeSelect) sizeSelect.focus();
-            return;
-        }
-
-        seenSizes.add(size);
+      // Clear row-level inputs if valid
+      if (sizeSelect) sizeSelect.classList.remove("border-red-500");
+      if (stockInput) stockInput.classList.remove("border-red-500");
     }
 
-    if (!description) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Description is required."
-        });
-        return;
+    clearError(null, variantsError, variantsErrorText);
+    return true;
+  }
+
+  function validateDescription() {
+    const val = descriptionInput.value.trim();
+    if (!val) {
+      setError(descriptionInput, descriptionError, descriptionErrorText, "Description is required.");
+      return false;
     }
-    
-    if (!highlights) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Product Highlights are required."
-        });
-        return;
+    if (val.length < 10) {
+      setError(descriptionInput, descriptionError, descriptionErrorText, "Description must be at least 10 characters long.");
+      return false;
+    }
+    if (val.length > 2000) {
+      setError(descriptionInput, descriptionError, descriptionErrorText, "Description cannot exceed 2000 characters.");
+      return false;
+    }
+    clearError(descriptionInput, descriptionError, descriptionErrorText);
+    return true;
+  }
+
+  function validateHighlights() {
+    const val = highlightsInput.value.trim();
+    if (val.length > 500) {
+      setError(highlightsInput, highlightsError, highlightsErrorText, "Highlights cannot exceed 500 characters.");
+      return false;
+    }
+    clearError(highlightsInput, highlightsError, highlightsErrorText);
+    return true;
+  }
+
+  function validateImages() {
+    const activeImagesCount = croppedFiles.filter((f) => f !== null).length;
+    if (activeImagesCount < 3) {
+      setError(imageInput, imagesError, imagesErrorText, `Minimum 3 product images required (currently selected: ${activeImagesCount}).`);
+      return false;
+    }
+    clearError(imageInput, imagesError, imagesErrorText);
+    return true;
+  }
+
+  // --- REAL-TIME LIVE EVENT LISTENERS ---
+  nameInput.addEventListener("input", validateName);
+  nameInput.addEventListener("blur", validateName);
+
+  brandInput.addEventListener("input", validateBrand);
+  brandInput.addEventListener("blur", validateBrand);
+
+  categorySelect.addEventListener("change", validateCategory);
+  categorySelect.addEventListener("blur", validateCategory);
+
+  regularPriceInput.addEventListener("input", validateRegularPrice);
+  regularPriceInput.addEventListener("blur", validateRegularPrice);
+
+  salePriceInput.addEventListener("input", validateSalePrice);
+  salePriceInput.addEventListener("blur", validateSalePrice);
+
+  descriptionInput.addEventListener("input", validateDescription);
+  descriptionInput.addEventListener("blur", validateDescription);
+
+  highlightsInput.addEventListener("input", validateHighlights);
+
+  variantsContainer.addEventListener("input", function (e) {
+    if (e.target.matches(".variant-size-select, .variant-stock-input")) {
+      validateVariants();
+    }
+  });
+  variantsContainer.addEventListener("change", function (e) {
+    if (e.target.matches(".variant-size-select, .variant-stock-input")) {
+      validateVariants();
+    }
+  });
+
+  // --- DYNAMIC VARIANT ROW HELPERS ---
+  function reindexVariants() {
+    const rows = variantsContainer.querySelectorAll(".variant-row");
+    rows.forEach((row, index) => {
+      const sizeSelect = row.querySelector(".variant-size-select");
+      const stockInput = row.querySelector(".variant-stock-input");
+      if (sizeSelect) sizeSelect.name = `variants[${index}][size]`;
+      if (stockInput) stockInput.name = `variants[${index}][stock]`;
+    });
+  }
+
+  function createVariantRow(index, sizeVal = "", stockVal = "") {
+    const row = document.createElement("div");
+    row.className = "variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm";
+    row.innerHTML = `
+      <div class="col-span-5">
+        <select
+          name="variants[${index}][size]"
+          class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+        >
+          <option value="">Select size</option>
+          <option value="S" ${sizeVal === "S" ? "selected" : ""}>S</option>
+          <option value="M" ${sizeVal === "M" ? "selected" : ""}>M</option>
+          <option value="L" ${sizeVal === "L" ? "selected" : ""}>L</option>
+          <option value="XL" ${sizeVal === "XL" ? "selected" : ""}>XL</option>
+        </select>
+      </div>
+      <div class="col-span-5">
+        <input
+          type="number"
+          name="variants[${index}][stock]"
+          placeholder="Stock quantity (e.g. 5)"
+          min="0"
+          step="1"
+          value="${stockVal}"
+          class="variant-stock-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+        >
+      </div>
+      <div class="col-span-2 flex justify-center">
+        <button
+          type="button"
+          class="remove-variant-btn px-3 py-2 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 shadow-sm"
+        >
+          Remove
+        </button>
+      </div>
+    `;
+    return row;
+  }
+
+  if (addVariantBtn) {
+    addVariantBtn.addEventListener("click", function () {
+      const rowCount = variantsContainer.querySelectorAll(".variant-row").length;
+      const newRow = createVariantRow(rowCount);
+      variantsContainer.appendChild(newRow);
+      validateVariants();
+    });
+  }
+
+  variantsContainer.addEventListener("click", function (e) {
+    const removeBtn = e.target.closest(".remove-variant-btn");
+    if (!removeBtn) return;
+
+    const rows = variantsContainer.querySelectorAll(".variant-row");
+    if (rows.length <= 1) {
+      setError(null, variantsError, variantsErrorText, "At least one product variant is required. You cannot remove the last row.");
+      return;
     }
 
-    if (croppedFiles.length < 3) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "warning",
-            title: "Validation Error",
-            text: "Minimum 3 product images are required."
-        });
-        return;
+    const row = removeBtn.closest(".variant-row");
+    if (row) {
+      row.remove();
+      reindexVariants();
+      validateVariants();
+    }
+  });
+
+  // --- CROPPER IMAGE LOGIC ---
+  imageInput.addEventListener("change", function (e) {
+    const newFiles = Array.from(e.target.files);
+    filesToCrop = newFiles;
+    currentCropIndex = 0;
+
+    if (filesToCrop.length > 0) {
+      showCropper(filesToCrop[currentCropIndex]);
+    }
+  });
+
+  function showCropper(file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      cropImage.src = event.target.result;
+      cropModal.classList.remove("hidden");
+      cropModal.classList.add("flex");
+
+      if (cropper) {
+        cropper.destroy();
+      }
+
+      cropper = new Cropper(cropImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 1,
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  cropSaveBtn.addEventListener("click", function () {
+    if (!cropper) return;
+
+    const canvas = cropper.getCroppedCanvas({
+      width: 800,
+      height: 800
+    });
+
+    canvas.toBlob((blob) => {
+      const fileName = `cropped-${Date.now()}-${croppedFiles.length}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+      croppedFiles.push(file);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative inline-block";
+      wrapper.dataset.index = croppedFiles.length - 1;
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(blob);
+      img.className = "w-24 h-24 object-cover rounded-lg border border-gray-300 shadow-sm";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.innerHTML = "&times;";
+      removeBtn.type = "button";
+      removeBtn.className = "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center shadow";
+
+      removeBtn.onclick = () => {
+        const idx = parseInt(wrapper.dataset.index);
+        croppedFiles[idx] = null;
+        wrapper.remove();
+        validateImages();
+      };
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(removeBtn);
+      previewContainer.appendChild(wrapper);
+
+      validateImages();
+    }, "image/png");
+
+    cropper.destroy();
+    currentCropIndex++;
+
+    if (currentCropIndex < filesToCrop.length) {
+      showCropper(filesToCrop[currentCropIndex]);
+    } else {
+      cropModal.classList.add("hidden");
+      cropModal.classList.remove("flex");
+      filesToCrop = [];
+      currentCropIndex = 0;
+      imageInput.value = "";
+    }
+  });
+
+  cropCancelBtn.addEventListener("click", function () {
+    cropModal.classList.add("hidden");
+    cropModal.classList.remove("flex");
+    if (cropper) {
+      cropper.destroy();
+    }
+  });
+
+  // --- FORM SUBMIT HANDLER ---
+  form.addEventListener("submit", function (e) {
+    const isNameValid = validateName();
+    const isBrandValid = validateBrand();
+    const isCategoryValid = validateCategory();
+    const isRegularPriceValid = validateRegularPrice();
+    const isSalePriceValid = validateSalePrice();
+    const isVariantsValid = validateVariants();
+    const isDescriptionValid = validateDescription();
+    const isHighlightsValid = validateHighlights();
+    const isImagesValid = validateImages();
+
+    if (
+      !isNameValid ||
+      !isBrandValid ||
+      !isCategoryValid ||
+      !isRegularPriceValid ||
+      !isSalePriceValid ||
+      !isVariantsValid ||
+      !isDescriptionValid ||
+      !isHighlightsValid ||
+      !isImagesValid
+    ) {
+      e.preventDefault();
+
+      // Focus the first invalid field
+      if (!isNameValid) nameInput.focus();
+      else if (!isBrandValid) brandInput.focus();
+      else if (!isCategoryValid) categorySelect.focus();
+      else if (!isRegularPriceValid) regularPriceInput.focus();
+      else if (!isSalePriceValid) salePriceInput.focus();
+      else if (!isVariantsValid) {
+        const firstInvalidSelect = variantsContainer.querySelector(".variant-size-select:invalid") || variantsContainer.querySelector(".variant-size-select");
+        if (firstInvalidSelect) firstInvalidSelect.focus();
+      } else if (!isDescriptionValid) descriptionInput.focus();
+      else if (!isImagesValid) imageInput.focus();
+
+      return;
     }
 
-    const activeFiles = croppedFiles.filter(file => file !== null);
-
+    // Transfer valid cropped files to the file input
+    const activeFiles = croppedFiles.filter((file) => file !== null);
     const dt = new DataTransfer();
-    activeFiles.forEach(file => dt.items.add(file));
+    activeFiles.forEach((file) => dt.items.add(file));
     imageInput.files = dt.files;
+  });
 });
-
 </script>
-    
-  </div>
-
-</div>
 
 </body>
 </html>

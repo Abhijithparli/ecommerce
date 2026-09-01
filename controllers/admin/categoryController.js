@@ -1,4 +1,6 @@
 import * as categoryService from "../../services/categoryService.js";
+import { MESSAGES } from "../../constants/messages.js";
+
 
 // ================= load category page =================
 export const loadCategories = async (req, res) => {
@@ -64,7 +66,7 @@ export const addCategory = async (req, res) => {
       });
     }
 
-    req.session.success = "Category added successfully";
+    req.session.success = MESSAGES.CATEGORY.ADDED
     return res.redirect("/admin/categories");
   } catch (err) {
     console.error("Add category controller error:", err);
@@ -125,7 +127,7 @@ export const editCategory = async (req, res) => {
       });
     }
 
-    req.session.success = "Category updated successfully";
+   req.session.success = MESSAGES.CATEGORY.UPDATED;
     return res.redirect("/admin/categories");
   } catch (err) {
     console.error("Edit category controller error:", err);
@@ -153,7 +155,7 @@ export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
     await categoryService.deleteCategory(id);
-    req.session.success = "Category deleted successfully";
+    req.session.success = MESSAGES.CATEGORY.DELETED;
     res.redirect("/admin/categories");
   } catch (err) {
     console.error("Delete category controller error:", err);

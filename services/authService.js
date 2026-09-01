@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { MESSAGES } from "../constants/messages.js";
 
 /**
  * Transporter & Mail Helper
@@ -55,14 +56,14 @@ export const generateOTP = () => {
 };
 
 // Authentication Business Logic
- 
+
 
 export const registerUserPreOtp = async ({ firstName, lastName, email, password, confirmPassword }) => {
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
-    throw new Error("All fields are required");
+    throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
   }
   if (password !== confirmPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(MESSAGES.AUTH.PASSWORDS_DO_NOT_MATCH);
   }
   if (password.length < 6) {
     throw new Error("Password must be at least 6 characters");
@@ -95,10 +96,10 @@ export const verifyRegisterOtp = async (tempUser, userOtp) => {
     throw new Error("Session expired. Please sign up again.");
   }
   if (tempUser.otp !== userOtp) {
-    throw new Error("Invalid OTP code");
+    throw new Error(MESSAGES.AUTH.INVALID_OTP);
   }
   if (Date.now() > tempUser.otpExpiry) {
-    throw new Error("OTP has expired. Request a new one.");
+    throw new Error(MESSAGES.AUTH.OTP_EXPIRED);
   }
 
   return await User.create({
@@ -116,16 +117,16 @@ export const loginUser = async (email, password) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("Invalid credentials");
+    throw new Error(MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
 
   if (user.isBlocked) {
-    throw new Error("Your account has been blocked by admin");
+    throw new Error(MESSAGES.AUTH.ACCOUNT_BLOCKED);
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new Error("Invalid credentials");
+    throw new Error(MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
 
   return {
@@ -142,7 +143,7 @@ export const forgotPasswordRequest = async (email) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   if (user.isBlocked) {
@@ -168,15 +169,15 @@ export const verifyForgotPasswordOtp = async (email, userOtp) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
   if (user.otp !== userOtp) {
-    throw new Error("Invalid OTP code");
+    throw new Error(MESSAGES.AUTH.INVALID_OTP);
   }
 
   if (new Date() > user.otpExpiry) {
-    throw new Error("OTP has expired");
+    throw new Error(MESSAGES.AUTH.OTP_EXPIRED);
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -191,10 +192,10 @@ export const verifyForgotPasswordOtp = async (email, userOtp) => {
 
 export const resetPassword = async (token, password, confirmPassword) => {
   if (!password || !confirmPassword) {
-    throw new Error("All fields are required");
+    throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
   }
   if (password !== confirmPassword) {
-    throw new Error("Passwords do not match");
+    throw new Error(MESSAGES.AUTH.PASSWORDS_DO_NOT_MATCH);
   }
   if (password.length < 6) {
     throw new Error("Password must be at least 6 characters");
@@ -216,3 +217,4 @@ export const resetPassword = async (token, password, confirmPassword) => {
 
   return user;
 };
+

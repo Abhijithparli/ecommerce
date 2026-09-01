@@ -1,4 +1,5 @@
 import User from "../../models/userModel.js";
+import { MESSAGES } from "../../constants/messages.js";
 
 // user block
 export const blockUser = async (req, res) => {
@@ -9,7 +10,7 @@ export const blockUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: MESSAGES.USER.NOT_FOUND,
       });
     }
 
@@ -17,7 +18,7 @@ export const blockUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "User blocked successfully",
+      message: MESSAGES.USER.BLOCKED,
     });
   } catch (error) {
     console.error("Error blocking user:", error);
@@ -37,7 +38,7 @@ export const unblockUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: MESSAGES.USER.NOT_FOUND,
       });
     }
 
@@ -45,7 +46,7 @@ export const unblockUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "User unblocked successfully",
+      message: MESSAGES.USER.UNBLOCKED,
     });
   } catch (error) {
     console.error("Error unblocking user:", error);
@@ -55,6 +56,7 @@ export const unblockUser = async (req, res) => {
     });
   }
 };
+
 
 //  users listing with pagination, search, and sorting:
 

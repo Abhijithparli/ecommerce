@@ -4,6 +4,7 @@ import Review from "../models/reviewModel.js";
 import mongoose from "mongoose";
 import sharp from "sharp";
 import path from "path";
+import { MESSAGES } from "../constants/messages.js";
 
 /**
  * Service to handle Product business logic
@@ -48,9 +49,12 @@ export const getActiveCategories = async () => {
 };
 
 export const getProductById = async (id) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
   const product = await Product.findById(id).populate("category");
   if (!product || product.isDeleted) {
-    throw new Error("Product not found");
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
   }
   return product;
 };
@@ -87,9 +91,10 @@ export const parseVariants = (fields) => {
   }
 
   // Case 4: legacy fields variantSize and variantQuantity
-  if (fields.variantSize && fields.variantQuantity) {
+  if (fields.variantSize && (fields.variantQuantity !== undefined || fields.stock !== undefined)) {
     const sizes = Array.isArray(fields.variantSize) ? fields.variantSize : [fields.variantSize];
-    const quantities = Array.isArray(fields.variantQuantity) ? fields.variantQuantity : [fields.variantQuantity];
+    const rawQty = fields.variantQuantity !== undefined ? fields.variantQuantity : fields.stock;
+    const quantities = Array.isArray(rawQty) ? rawQty : [rawQty];
     const legacyVariants = [];
     for (let i = 0; i < sizes.length; i++) {
       legacyVariants.push({
@@ -116,85 +121,128 @@ export const addProduct = async (fields, files) => {
 
   const errors = {};  
 
-  // Validation
-  if (!name || name.trim() === "") {
-    errors.name = "Product name is required";
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const trimmedBrand = typeof brand === "string" ? brand.trim() : "";
+  const trimmedDescription = typeof description === "string" ? description.trim() : "";
+  const trimmedCategory = typeof category === "string" ? category.trim() : "";
+
+  // 1. Name validation
+  if (!trimmedName) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_REQUIRED;
+  } else if (trimmedName.length < 3) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_MIN;
+  } else if (trimmedName.length > 100) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_MAX;
   } else {
     const existingProduct = await Product.findOne({
-      name: { $regex: `^${name.trim()}$`, $options: "i" },
+      name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
       isDeleted: false
     });
     if (existingProduct) {
-      errors.name = "Product name already exists";
+      errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_EXISTS;
     }
   }
 
-  if (!brand || brand.trim() === "") {
-    errors.brand = "Brand is required";
+  // 2. Brand validation
+  if (!trimmedBrand) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_REQUIRED;
+  } else if (trimmedBrand.length < 2) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MIN;
+  } else if (trimmedBrand.length > 50) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MAX;
   }
 
-  if (!category || category.trim() === "") {
-    errors.category = "Category is required";
+  // 3. Category validation
+  if (!trimmedCategory) {
+    errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_REQUIRED;
+  } else if (!mongoose.Types.ObjectId.isValid(trimmedCategory)) {
+    errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_INVALID;
+  } else {
+    const activeCategory = await Category.findOne({ _id: trimmedCategory, isDeleted: false });
+    if (!activeCategory) {
+      errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_INVALID;
+    }
   }
 
-  if (!regularPrice || isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
-    errors.regularPrice = "Regular price must be greater than 0";
+  // 4. Regular Price validation
+  const regNum = Number(regularPrice);
+  if (regularPrice === undefined || regularPrice === null || regularPrice === "" || isNaN(regNum)) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_REQUIRED;
+  } else if (regNum <= 0 || !Number.isFinite(regNum)) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_INVALID;
+  } else if (regNum > 1000000) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_MAX;
   }
 
-  if (!salePrice || isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
-    errors.salePrice = "Sale price must be greater than 0";
-  } else if (regularPrice && Number(salePrice) > Number(regularPrice)) {
-    errors.salePrice = "Sale price cannot be greater than regular price";
+  // 5. Sale Price validation
+  const saleNum = Number(salePrice);
+  if (salePrice === undefined || salePrice === null || salePrice === "" || isNaN(saleNum)) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_REQUIRED;
+  } else if (saleNum <= 0 || !Number.isFinite(saleNum)) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_INVALID;
+  } else if (!errors.regularPrice && saleNum > regNum) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_EXCEEDS_REGULAR;
   }
 
-  if (!description || description.trim() === "") {
-    errors.description = "Description is required";
+  // 6. Description validation
+  if (!trimmedDescription) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_REQUIRED;
+  } else if (trimmedDescription.length < 10) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MIN;
+  } else if (trimmedDescription.length > 2000) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MAX;
   }
 
+  // 7. Highlights validation
+  if (highlights && typeof highlights === "string" && highlights.trim().length > 500) {
+    errors.highlights = MESSAGES.VALIDATION.PRODUCT.HIGHLIGHTS_MAX;
+  }
+
+  // 8. Images validation
   if (!files || files.length < 3) {
-    errors.images = "Minimum 3 product images required";
+    errors.images = MESSAGES.VALIDATION.PRODUCT.IMAGES_MIN;
   }
 
-  // Variants conversion & validation
+  // 9. Variants conversion & validation
   const rawVariants = parseVariants(fields);
   const variants = [];
   const allowedSizes = ["S", "M", "L", "XL"];
   const seenSizes = new Set();
 
   if (!rawVariants || rawVariants.length === 0) {
-    errors.variants = "At least one size variant is required";
+    errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANTS_REQUIRED;
   } else {
     for (let i = 0; i < rawVariants.length; i++) {
       const v = rawVariants[i];
       const s = typeof v?.size === "string" ? v.size.trim().toUpperCase() : "";
-      const stockRaw = v?.stock;
+      const stockRaw = v?.stock !== undefined ? v.stock : v?.quantity;
 
-      // 1. Size present
+      // Size present
       if (!s) {
-        errors.variants = "Size is required for all variants";
+        errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_REQUIRED;
         break;
       }
 
-      // 2. Allowed sizes check
+      // Allowed sizes check
       if (!allowedSizes.includes(s)) {
-        errors.variants = `Invalid size "${s}". Allowed sizes: ${allowedSizes.join(", ")}`;
+        errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_INVALID;
         break;
       }
 
-      // 3. Stock present
+      // Stock present
       if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
         errors.variants = `Stock is required for size ${s}`;
         break;
       }
 
-      // 4. Stock valid non-negative integer
+      // Stock valid non-negative integer
       const stockNum = Number(stockRaw);
       if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
-        errors.variants = `Stock for size ${s} must be a non-negative integer`;
+        errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
         break;
       }
 
-      // 5. Duplicate sizes rejected
+      // Duplicate sizes rejected
       if (seenSizes.has(s)) {
         errors.variants = `Duplicate variant size "${s}" is not allowed`;
         break;
@@ -209,11 +257,11 @@ export const addProduct = async (fields, files) => {
   }
 
   if (variants.length === 0 && !errors.variants) {
-    errors.variants = "At least one size variant is required";
+    errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANTS_REQUIRED;
   }
 
   if (Object.keys(errors).length > 0) {
-    const err = new Error(errors.variants || errors.name || "Validation failed");
+    const err = new Error(Object.values(errors)[0]);
     err.validationErrors = errors;
     throw err;
   }
@@ -245,12 +293,12 @@ export const addProduct = async (fields, files) => {
   }
 
   const newProduct = new Product({
-    name: name.trim(),
-    description: description.trim(),
-    brand: brand.trim(),
-    category,
-    regularPrice: Number(regularPrice),
-    salePrice   : Number(salePrice),
+    name: trimmedName,
+    description: trimmedDescription,
+    brand: trimmedBrand,
+    category: trimmedCategory,
+    regularPrice: regNum,
+    salePrice: saleNum,
     variants,
     images: imagePaths,
     highlights: highlightsArray
@@ -260,6 +308,15 @@ export const addProduct = async (fields, files) => {
 };
 
 export const updateProduct = async (id, fields, files) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
+
+  const product = await Product.findOne({ _id: id, isDeleted: false });
+  if (!product) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
+
   const {
     name,
     description,
@@ -267,138 +324,232 @@ export const updateProduct = async (id, fields, files) => {
     category,
     regularPrice,
     salePrice,
-    highlights,
-    variantSize,
-    variantQuantity
+    highlights
   } = fields;
 
-  if (isNaN(Number(regularPrice)) || Number(regularPrice) <= 0) {
-    throw new Error("Regular Price must be greater than 0");
-  }
+  const errors = {};
 
-  if (isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
-    throw new Error("Sale Price must be greater than 0");
-  }
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const trimmedBrand = typeof brand === "string" ? brand.trim() : "";
+  const trimmedDescription = typeof description === "string" ? description.trim() : "";
+  const trimmedCategory = typeof category === "string" ? category.trim() : "";
 
-  if (Number(salePrice) > Number(regularPrice)) {
-    throw new Error("Sale Price cannot be greater than Regular Price");
-  }
-
-  const product = await Product.findById(id);
-  if (!product || product.isDeleted) {
-    throw new Error("Product not found");
-  }
-
-  // Validation
-  if (!name || !description || !brand || !category || !regularPrice || !salePrice) {
-    throw new Error("All fields are required");
-  }
-
-  const existingProduct = await Product.findOne({
-    _id: { $ne: id },
-    name: { $regex: `^${name.trim()}$`, $options: "i" },
-    isDeleted: false
-  });
-  if (existingProduct) {
-    throw new Error("Product name already exists");
-  }
-
-  let images = product.images;
-
-  const deletedImages = fields.deletedImages
-  ? JSON.parse(fields.deletedImages)
-  : [];
-
-if (deletedImages.length > 0) {
-  images = images.filter(
-    img => !deletedImages.includes(img)
-  );
-}
-
-  if (files && files.length > 0) {
-    // images = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileName = Date.now() + "-" + i + ".webp";
-      const uploadPath = path.join("public/uploads/products", fileName);
-
-      await sharp(file.buffer)
-        .resize(800, 800)
-        .webp({ quality: 80 })
-        .toFile(uploadPath);
-
-      images.push("/uploads/products/" + fileName);
+  // 1. Name validation
+  if (!trimmedName) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_REQUIRED;
+  } else if (trimmedName.length < 3) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_MIN;
+  } else if (trimmedName.length > 100) {
+    errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_MAX;
+  } else {
+    const existingProduct = await Product.findOne({
+      _id: { $ne: id },
+      name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+      isDeleted: false
+    });
+    if (existingProduct) {
+      errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_EXISTS;
     }
   }
 
-  const highlightsArray = highlights
-    ? highlights.split(",").map((item) => item.trim())
-    : [];
+  // 2. Brand validation
+  if (!trimmedBrand) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_REQUIRED;
+  } else if (trimmedBrand.length < 2) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MIN;
+  } else if (trimmedBrand.length > 50) {
+    errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MAX;
+  }
 
+  // 3. Category validation
+  if (!trimmedCategory) {
+    errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_REQUIRED;
+  } else if (!mongoose.Types.ObjectId.isValid(trimmedCategory)) {
+    errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_INVALID;
+  } else {
+    const activeCategory = await Category.findOne({ _id: trimmedCategory, isDeleted: false });
+    if (!activeCategory) {
+      errors.category = MESSAGES.VALIDATION.PRODUCT.CATEGORY_INVALID;
+    }
+  }
+
+  // 4. Regular Price validation
+  const regNum = Number(regularPrice);
+  if (regularPrice === undefined || regularPrice === null || regularPrice === "" || isNaN(regNum)) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_REQUIRED;
+  } else if (regNum <= 0 || !Number.isFinite(regNum)) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_INVALID;
+  } else if (regNum > 1000000) {
+    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_MAX;
+  }
+
+  // 5. Sale Price validation
+  const saleNum = Number(salePrice);
+  if (salePrice === undefined || salePrice === null || salePrice === "" || isNaN(saleNum)) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_REQUIRED;
+  } else if (saleNum <= 0 || !Number.isFinite(saleNum)) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_INVALID;
+  } else if (!errors.regularPrice && saleNum > regNum) {
+    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_EXCEEDS_REGULAR;
+  }
+
+  // 6. Description validation
+  if (!trimmedDescription) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_REQUIRED;
+  } else if (trimmedDescription.length < 10) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MIN;
+  } else if (trimmedDescription.length > 2000) {
+    errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MAX;
+  }
+
+  // 7. Highlights validation
+  if (highlights && typeof highlights === "string" && highlights.trim().length > 500) {
+    errors.highlights = MESSAGES.VALIDATION.PRODUCT.HIGHLIGHTS_MAX;
+  }
+
+  // 8. Image calculations & validation
+  let images = product.images || [];
+  let deletedImages = [];
+  try {
+    if (fields.deletedImages) {
+      deletedImages = typeof fields.deletedImages === "string" ? JSON.parse(fields.deletedImages) : fields.deletedImages;
+    }
+  } catch {
+    deletedImages = [];
+  }
+
+  if (Array.isArray(deletedImages) && deletedImages.length > 0) {
+    images = images.filter((img) => !deletedImages.includes(img));
+  }
+
+  const newFilesCount = files && Array.isArray(files) ? files.length : 0;
+  if (images.length + newFilesCount < 3) {
+    errors.images = MESSAGES.VALIDATION.PRODUCT.IMAGES_MIN;
+  }
+
+  // 9. Variants conversion & validation
+  const rawVariants = parseVariants(fields);
   const variants = [];
-  if (variantSize && variantQuantity) {
-    const sizes = Array.isArray(variantSize) ? variantSize : [variantSize];
-    const quantities = Array.isArray(variantQuantity) ? variantQuantity : [variantQuantity];
-    const seenSizes = new Set();
-    
-    for (let i = 0; i < sizes.length; i++) {
-      const s = sizes[i]?.trim().toUpperCase();
-      const q = Number(quantities[i]);
-      
+  const allowedSizes = ["S", "M", "L", "XL"];
+  const seenSizes = new Set();
+
+  if (!rawVariants || rawVariants.length === 0) {
+    errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANTS_REQUIRED;
+  } else {
+    for (let i = 0; i < rawVariants.length; i++) {
+      const v = rawVariants[i];
+      const s = typeof v?.size === "string" ? v.size.trim().toUpperCase() : "";
+      const stockRaw = v?.stock !== undefined ? v.stock : v?.quantity;
+
       if (!s) {
-        throw new Error("Size is required for all variants");
+        errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_REQUIRED;
+        break;
       }
-      if (isNaN(q) || q < 0) {
-        throw new Error("Stock must be 0 or greater for all variants");
+      if (!allowedSizes.includes(s)) {
+        errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_INVALID;
+        break;
+      }
+      if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
+        errors.variants = `Stock is required for size ${s}`;
+        break;
+      }
+      const stockNum = Number(stockRaw);
+      if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
+        errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
+        break;
       }
       if (seenSizes.has(s)) {
-        throw new Error("Duplicate variant sizes are not allowed");
+        errors.variants = `Duplicate variant size "${s}" is not allowed`;
+        break;
       }
       seenSizes.add(s);
       variants.push({
         size: s,
-        stock: q
+        stock: stockNum
       });
     }
   }
 
-  if (variants.length === 0) {
-    throw new Error("At least one size variant is required");
+  if (variants.length === 0 && !errors.variants) {
+    errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANTS_REQUIRED;
   }
 
-  return await Product.findByIdAndUpdate(id, {
-    name: name.trim(),
-    description: description.trim(),
-    brand: brand.trim(),
-    category,
-    regularPrice: Number(regularPrice),
-    salePrice: Number(salePrice),
-    variants,
-    images,
-    highlights: highlightsArray
-  }, { new: true });
+  if (Object.keys(errors).length > 0) {
+    const err = new Error(Object.values(errors)[0]);
+    err.validationErrors = errors;
+    throw err;
+  }
+
+  // Process new uploaded images
+  if (files && files.length > 0) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.buffer) {
+        const fileName = Date.now() + "-" + i + ".webp";
+        const uploadPath = path.join("public/uploads/products", fileName);
+
+        await sharp(file.buffer)
+          .resize(800, 800)
+          .webp({ quality: 80 })
+          .toFile(uploadPath);
+
+        images.push("/uploads/products/" + fileName);
+      } else if (file.path || typeof file === "string") {
+        images.push(typeof file === "string" ? file : file.path);
+      }
+    }
+  }
+
+  const highlightsArray = highlights
+    ? (Array.isArray(highlights) ? highlights : highlights.split(",")).map((item) => item.trim()).filter(Boolean)
+    : [];
+
+  return await Product.findByIdAndUpdate(
+    id,
+    {
+      name: trimmedName,
+      description: trimmedDescription,
+      brand: trimmedBrand,
+      category: trimmedCategory,
+      regularPrice: regNum,
+      salePrice: saleNum,
+      variants,
+      images,
+      highlights: highlightsArray
+    },
+    { new: true }
+  );
 };
 
 export const deleteProduct = async (id) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
   const product = await Product.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
   if (!product) {
-    throw new Error("Product not found");
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
   }
   return product;
 };
 
 export const blockProduct = async (id) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
   const product = await Product.findByIdAndUpdate(id, { isBlocked: true }, { new: true });
   if (!product) {
-    throw new Error("Product not found");
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
   }
   return product;
 };
 
 export const unblockProduct = async (id) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
+  }
   const product = await Product.findByIdAndUpdate(id, { isBlocked: false }, { new: true });
   if (!product) {
-    throw new Error("Product not found");
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
   }
   return product;
 };
@@ -528,7 +679,7 @@ export const getPublicProductDetails = async (productId) => {
   }).populate("category");
 
   if (!product) {
-    throw new Error("Product not found");
+    throw new Error(MESSAGES.PRODUCT.NOT_FOUND);
   }
 
   // Check block status

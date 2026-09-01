@@ -1,6 +1,7 @@
+import mongoose from "mongoose";
 import Category from "../models/categoryModel.js";
 import Product from "../models/productModel.js";
-
+import { MESSAGES } from "../constants/messages.js";
 
 /**
  * Service to handle Category business logic
@@ -32,12 +33,16 @@ export const getCategories = async (search = "", page = 1, limit = 10) => {
 };
 
 export const getCategoryById = async (id) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
+  }
   const category = await Category.findById(id);
   if (!category || category.isDeleted) {
-    throw new Error("Category not found");
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
   }
   return category;
 };
+
 
 const escapeRegex = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -49,23 +54,23 @@ export const addCategory = async ({ name, description }) => {
   const trimmedDescription = typeof description === "string" ? description.trim() : "";
 
   if (!trimmedName) {
-    errors.name = "Category name is required";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_REQUIRED;
   } else if (trimmedName.length < 3) {
-    errors.name = "Category name must be at least 3 characters long";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_MIN;
   } else if (trimmedName.length > 50) {
-    errors.name = "Category name must not exceed 50 characters";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_MAX;
   } else if (!/^[a-zA-Z0-9\s\-&]+$/.test(trimmedName)) {
-    errors.name = "Category name can only contain letters, numbers, spaces, hyphens (-), and ampersands (&)";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_INVALID;
   } else if (!/[a-zA-Z]/.test(trimmedName)) {
-    errors.name = "Category name must contain at least one letter";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_NO_LETTER;
   }
 
   if (!trimmedDescription) {
-    errors.description = "Description is required";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_REQUIRED;
   } else if (trimmedDescription.length < 5) {
-    errors.description = "Description must be at least 5 characters long";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_MIN;
   } else if (trimmedDescription.length > 500) {
-    errors.description = "Description cannot exceed 500 characters";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_MAX;
   }
 
   if (Object.keys(errors).length > 0) {
@@ -81,8 +86,8 @@ export const addCategory = async ({ name, description }) => {
   });
 
   if (existingCategory) {
-    const error = new Error("A category with this name already exists");
-    error.validationErrors = { name: "A category with this name already exists" };
+    const error = new Error(MESSAGES.VALIDATION.CATEGORY.EXISTS);
+    error.validationErrors = { name: MESSAGES.VALIDATION.CATEGORY.EXISTS };
     throw error;
   }
 
@@ -93,28 +98,32 @@ export const addCategory = async ({ name, description }) => {
 };
 
 export const updateCategory = async (id, { name, description }) => {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
+  }
+
   const errors = {};
   const trimmedName = typeof name === "string" ? name.trim() : "";
   const trimmedDescription = typeof description === "string" ? description.trim() : "";
 
   if (!trimmedName) {
-    errors.name = "Category name is required";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_REQUIRED;
   } else if (trimmedName.length < 3) {
-    errors.name = "Category name must be at least 3 characters long";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_MIN;
   } else if (trimmedName.length > 50) {
-    errors.name = "Category name must not exceed 50 characters";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_MAX;
   } else if (!/^[a-zA-Z0-9\s\-&]+$/.test(trimmedName)) {
-    errors.name = "Category name can only contain letters, numbers, spaces, hyphens (-), and ampersands (&)";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_INVALID;
   } else if (!/[a-zA-Z]/.test(trimmedName)) {
-    errors.name = "Category name must contain at least one letter";
+    errors.name = MESSAGES.VALIDATION.CATEGORY.NAME_NO_LETTER;
   }
 
   if (!trimmedDescription) {
-    errors.description = "Description is required";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_REQUIRED;
   } else if (trimmedDescription.length < 5) {
-    errors.description = "Description must be at least 5 characters long";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_MIN;
   } else if (trimmedDescription.length > 500) {
-    errors.description = "Description cannot exceed 500 characters";
+    errors.description = MESSAGES.VALIDATION.CATEGORY.DESC_MAX;
   }
 
   if (Object.keys(errors).length > 0) {
@@ -131,13 +140,13 @@ export const updateCategory = async (id, { name, description }) => {
   });
 
   if (existingCategory) {
-    const error = new Error("Another category with this name already exists");
-    error.validationErrors = { name: "Another category with this name already exists" };
+    const error = new Error(MESSAGES.VALIDATION.CATEGORY.EXISTS);
+    error.validationErrors = { name: MESSAGES.VALIDATION.CATEGORY.EXISTS };
     throw error;
   }
 
-  const updatedCategory = await Category.findByIdAndUpdate(
-    id,
+  const updatedCategory = await Category.findOneAndUpdate(
+    { _id: id, isDeleted: false },
     {
       name: trimmedName,
       description: trimmedDescription,
@@ -146,16 +155,20 @@ export const updateCategory = async (id, { name, description }) => {
   );
 
   if (!updatedCategory) {
-    throw new Error("Category not found");
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
   }
 
   return updatedCategory;
 };
 
 export const deleteCategory = async (id) => {
-  const category = await Category.findById(id);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
+  }
+
+  const category = await Category.findOne({ _id: id, isDeleted: false });
   if (!category) {
-    throw new Error("Category not found");
+    throw new Error(MESSAGES.CATEGORY.NOT_FOUND);
   }
 
   // Prevent deletion if active products are still linked to this category

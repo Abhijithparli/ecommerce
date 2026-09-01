@@ -1,21 +1,29 @@
-import mongoose, { trusted } from "mongoose";
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
 
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    minlength: 3,
+    maxlength: 100
   },
 
   description: {
     type: String, 
-    required: true
+    required: true,
+    trim: true,
+    minlength: 10,
+    maxlength: 2000
   },
 
   brand: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    minlength: 2,
+    maxlength: 50
   },
 
   category: {
@@ -26,12 +34,16 @@ const productSchema = new mongoose.Schema({
    
   regularPrice: {
     type: Number,
-    required: true
+    required: true,
+    min: 0.01,
+    max: 1000000
   },
 
   salePrice: {
     type: Number,
-    required: true
+    required: true,
+    min: 0.01,
+    max: 1000000
   },
 
   variants: [
@@ -39,13 +51,14 @@ const productSchema = new mongoose.Schema({
       size: {
         type: String,
         required: true,
-        trim:true
+        trim: true,
+        enum: ["S", "M", "L", "XL"]
       },
       stock: {
         type: Number,
         required: true,
         default: 0,
-        min:0
+        min: 0
       }
     }
   ],
@@ -56,7 +69,8 @@ const productSchema = new mongoose.Schema({
   
   highlights: [
     {
-      type: String
+      type: String,
+      trim: true
     }
   ],
 

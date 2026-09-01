@@ -1,6 +1,7 @@
 import Cart from "../../models/cartModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
+import { MESSAGES } from "../../constants/messages.js";
 
 //add to cart
 export const addToCart = async (req, res) => {
@@ -17,11 +18,10 @@ export const addToCart = async (req, res) => {
     });
 
     // product not found
-    
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: MESSAGES.PRODUCT.NOT_FOUND,
       });
     }
 
@@ -74,7 +74,7 @@ export const addToCart = async (req, res) => {
 
       return res.json({
         success: true,
-        message: "Product added to cart",
+        message: MESSAGES.CART.ADDED,
       });
     }
 
@@ -110,14 +110,14 @@ export const addToCart = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Product added to cart",
+      message: MESSAGES.CART.ADDED,
     });
   } catch (error) {
     console.log(error);
 
     res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
   }
 };
@@ -130,9 +130,7 @@ export const loadCart = async (req, res) => {
     // FIND CART
     const cart = await Cart.findOne({
       user: userId,
-    })
-
-      .populate("items.product");
+    }).populate("items.product");
 
     // CART TOTAL
     let total = 0;
@@ -169,7 +167,7 @@ export const updateCartQuantity = async (req, res) => {
     if (!cart) {
       return res.status(404).json({
         success: false,
-        message: "Cart not found",
+        message: MESSAGES.CART.NOT_FOUND,
       });
     }
 
@@ -193,7 +191,7 @@ export const updateCartQuantity = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: MESSAGES.PRODUCT.NOT_FOUND,
       });
     }
 
@@ -250,7 +248,7 @@ export const updateCartQuantity = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
   }
 };
@@ -270,7 +268,7 @@ export const removeCartItem = async (req, res) => {
     if (!cart) {
       return res.status(404).json({
         success: false,
-        message: "Cart not found",
+        message: MESSAGES.CART.NOT_FOUND,
       });
     }
 
@@ -296,7 +294,7 @@ export const removeCartItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Item removed",
+      message: MESSAGES.CART.ITEM_REMOVED,
       grandTotal: grandTotal,
       cartEmpty: populatedCart.items.length === 0
     });
@@ -305,7 +303,7 @@ export const removeCartItem = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
   }
 };
@@ -318,9 +316,7 @@ export const loadCheckout = async (req, res) => {
     // CART
     const cart = await Cart.findOne({
       user: userId,
-    })
-
-      .populate("items.product");
+    }).populate("items.product");
 
     // USER ADDRESSES
     const user = await User.findById(userId);
@@ -339,9 +335,7 @@ export const loadCheckout = async (req, res) => {
 
     res.render("user/checkout", {
       cart,
-
       addresses: user.addresses,
-
       total,
     });
   } catch (error) {
@@ -350,3 +344,4 @@ export const loadCheckout = async (req, res) => {
     res.redirect("/cart");
   }
 };
+

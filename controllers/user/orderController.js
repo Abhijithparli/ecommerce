@@ -1,11 +1,13 @@
 import * as orderService from "../../services/orderService.js";
+import { PAYMENT_METHOD } from "../../constants/enums.js";
+import { MESSAGES } from "../../constants/messages.js";
 
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { addressId, paymentMethod } = req.body;
 
-    if (paymentMethod !== "COD") {
+    if (paymentMethod !== PAYMENT_METHOD.COD) {
       return res.status(400).json({
         success: false,
         message: "Only Cash on Delivery (COD) is supported at this time."
@@ -20,7 +22,7 @@ export const placeOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order placed successfully!",
+      message: MESSAGES.ORDER.PLACED,
       orderId: order._id
     });
   } catch (error) {
@@ -83,7 +85,7 @@ export const cancelOrderAction = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order cancelled successfully!"
+      message: MESSAGES.ORDER.CANCELLED
     });
   } catch (error) {
     console.error("Cancel order error:", error);
@@ -93,3 +95,4 @@ export const cancelOrderAction = async (req, res) => {
     });
   }
 };
+

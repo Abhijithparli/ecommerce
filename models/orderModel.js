@@ -1,4 +1,9 @@
 import mongoose from "mongoose";
+import {
+  ORDER_STATUS,
+  PAYMENT_METHOD,
+  PAYMENT_STATUS
+} from "../constants/enums.js";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -53,13 +58,13 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["COD", "Razorpay", "Wallet"],
-      default: "COD",
+      enum: Object.values(PAYMENT_METHOD),
+      default: PAYMENT_METHOD.COD,
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
-      default: "Pending",
+      enum: Object.values(PAYMENT_STATUS),
+      default: PAYMENT_STATUS.PENDING,
     },
     totalPrice: {
       type: Number,
@@ -75,13 +80,20 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Placed", "Shipped", "Delivered", "Cancelled", "Returned"],
-      default: "Placed",
+      enum: Object.values(ORDER_STATUS),
+      default: ORDER_STATUS.PLACED,
     },
     statusHistory: [
       {
-        status: { type: String, required: true },
-        updatedAt: { type: Date, default: Date.now },
+        status: {
+          type: String,
+          enum: Object.values(ORDER_STATUS),
+          required: true,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
   },

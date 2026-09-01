@@ -2,6 +2,12 @@ import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import User from "../models/userModel.js";
 import Cart from "../models/cartModel.js";
+import {
+  ORDER_STATUS,
+  PAYMENT_METHOD,
+  PAYMENT_STATUS
+} from "../constants/enums.js";
+import { MESSAGES } from "../constants/messages.js";
 
 export const createOrder = async ({ userId, addressId, paymentMethod }) => {
   if (!addressId) {
@@ -11,7 +17,7 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
   // 1. Get Cart
   const cart = await Cart.findOne({ user: userId }).populate("items.product");
   if (!cart || cart.items.length === 0) {
-    throw new Error("Your cart is empty");
+    throw new Error(MESSAGES.CART.EMPTY);
   }
 
   // 2. Validate Stock
@@ -28,7 +34,7 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
   // 3. Get Address
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new Error(MESSAGES.USER.NOT_FOUND);
   }
   const address = user.addresses.id(addressId);
   if (!address) {
@@ -66,12 +72,12 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
       type: address.type || "Home",
     },
     paymentMethod,
-    paymentStatus: paymentMethod === "COD" ? "Pending" : "Paid",
+    paymentStatus: paymentMethod === PAYMENT_METHOD.COD ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.PAID,
     totalPrice,
     discount: 0,
     finalPrice: totalPrice,
-    status: "Placed",
-    statusHistory: [{ status: "Placed", updatedAt: new Date() }],
+    status: ORDER_STATUS.PLACED,
+    statusHistory: [{ status: ORDER_STATUS.PLACED, updatedAt: new Date() }],
   });
 
   // 7. Save Order and update stock
@@ -113,7 +119,7 @@ export const getUserOrders = async (userId, page = 1, limit = 5) => {
 export const getOrderById = async (orderId) => {
   const order = await Order.findById(orderId).populate("user", "name email");
   if (!order) {
-    throw new Error("Order not found");
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
   }
   return order;
 };
@@ -121,15 +127,15 @@ export const getOrderById = async (orderId) => {
 export const cancelOrder = async (orderId, userId) => {
   const order = await Order.findOne({ _id: orderId, user: userId });
   if (!order) {
-    throw new Error("Order not found");
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
   }
 
-  if (order.status !== "Placed" && order.status !== "Shipped") {
+  if (order.status !== ORDER_STATUS.PLACED && order.status !== ORDER_STATUS.SHIPPED) {
     throw new Error(`Cannot cancel order in status: ${order.status}`);
   }
 
-  order.status = "Cancelled";
-  order.statusHistory.push({ status: "Cancelled", updatedAt: new Date() });
+  order.status = ORDER_STATUS.CANCELLED;
+  order.statusHistory.push({ status: ORDER_STATUS.CANCELLED, updatedAt: new Date() });
   await order.save();
 
   // Restore stock
@@ -174,11 +180,11 @@ export const getAdminOrders = async (search = "", status = "", page = 1, limit =
 export const updateOrderStatus = async (orderId, status) => {
   const order = await Order.findById(orderId);
   if (!order) {
-    throw new Error("Order not found");
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
   }
 
   const oldStatus = order.status;
-  if (oldStatus === "Cancelled" || oldStatus === "Delivered") {
+  if (oldStatus === ORDER_STATUS.CANCELLED || oldStatus === ORDER_STATUS.DELIVERED) {
     throw new Error(`Cannot change status of a ${oldStatus} order`);
   }
 
@@ -186,7 +192,7 @@ export const updateOrderStatus = async (orderId, status) => {
   order.statusHistory.push({ status, updatedAt: new Date() });
 
   // If order is cancelled, restore stock
-  if (status === "Cancelled") {
+  if (status === ORDER_STATUS.CANCELLED) {
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { quantity: item.quantity },
@@ -195,10 +201,11 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 
   // If order is delivered, set payment status to Paid for COD
-  if (status === "Delivered" && order.paymentMethod === "COD") {
-    order.paymentStatus = "Paid";
+  if (status === ORDER_STATUS.DELIVERED && order.paymentMethod === PAYMENT_METHOD.COD) {
+    order.paymentStatus = PAYMENT_STATUS.PAID;
   }
 
   await order.save();
   return order;
 };
+
