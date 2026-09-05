@@ -19,7 +19,7 @@ export const getAdminProducts = async (search = "", page = 1, limit = 10) => {
     query.$or = [
       { name: { $regex: search.trim(), $options: "i" } },
       { brand: { $regex: search.trim(), $options: "i" } }
-    ];
+    ];[]
   }
 
   const totalProducts = await Product.countDocuments(query);
@@ -456,6 +456,10 @@ export const updateProduct = async (id, fields, files) => {
       const stockNum = Number(stockRaw);
       if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
         errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
+        break;
+      }
+      if(stockNum < 1){
+        errors.variants = `stock for size ${s} must be at least 1`;
         break;
       }
       if (seenSizes.has(s)) {
