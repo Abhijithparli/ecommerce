@@ -172,7 +172,7 @@
           </th>
 
          <th class="px-6 py-4 text-left w-72">
-  Images
+  Images 
 </th>
 
 <th class="px-6 py-4 text-left w-72">
@@ -222,12 +222,30 @@
 
 
             <!-- PRICE -->
-            <td class="px-6 py-4">
-
-              ₹<%= product.salePrice %>
-
+            <td class="px-6 py-4 font-medium text-gray-900">
+              <%
+                let displayPrice = '';
+                if (product.variants && product.variants.length > 0) {
+                  const prices = product.variants.map(v => v.price).filter(p => typeof p === 'number' && !isNaN(p));
+                  if (prices.length > 0) {
+                    const minP = Math.min(...prices);
+                    const maxP = Math.max(...prices);
+                    displayPrice = minP === maxP ? `₹${minP}` : `₹${minP} - ₹${maxP}`;
+                  }
+                }
+                if (!displayPrice) {
+                  displayPrice = product.salePrice ? `₹${product.salePrice}` : (product.regularPrice ? `₹${product.regularPrice}` : 'N/A');
+                }
+              %>
+              <%= displayPrice %>
             </td>
 
+            <!-- variants -->
+            <!-- <td class="px-6 py-4">
+
+              <%= product.variants?.length || 0 %>
+
+            </td> -->
 
             <!-- QUANTITY -->
             <td class="px-6 py-4">

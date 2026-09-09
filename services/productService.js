@@ -67,15 +67,15 @@ export const parseVariants = (fields) => {
     return fields.variants;
   }
 
-  // Case 2: fields.variants is an object like { '0': { size: 'S', stock: '5' }, ... }
+  // Case 2: fields.variants is an object like { '0': { size: 'S', price: '1000', stock: '5' }, ... }
   if (fields.variants && typeof fields.variants === "object") {
     return Object.values(fields.variants);
   }
 
-  // Case 3: fields has bracket notation keys like 'variants[0][size]' and 'variants[0][stock]' from multipart/form-data
+  // Case 3: fields has bracket notation keys like 'variants[0][size]', 'variants[0][price]', and 'variants[0][stock]'
   const variantMap = {};
   for (const key of Object.keys(fields)) {
-    const match = key.match(/^variants\[(\d+)\]\[(size|stock)\]$/);
+    const match = key.match(/^variants\[(\d+)\]\[(size|price|stock)\]$/);
     if (match) {
       const index = match[1];
       const prop = match[2];
@@ -90,15 +90,19 @@ export const parseVariants = (fields) => {
     return indices.map((idx) => variantMap[idx]);
   }
 
-  // Case 4: legacy fields variantSize and variantQuantity
-  if (fields.variantSize && (fields.variantQuantity !== undefined || fields.stock !== undefined)) {
+  // Case 4: legacy fields variantSize, variantPrice, and variantQuantity / stock
+  if (fields.variantSize && (fields.variantQuantity !== undefined || fields.stock !== undefined || fields.variantPrice !== undefined)) {
     const sizes = Array.isArray(fields.variantSize) ? fields.variantSize : [fields.variantSize];
     const rawQty = fields.variantQuantity !== undefined ? fields.variantQuantity : fields.stock;
     const quantities = Array.isArray(rawQty) ? rawQty : [rawQty];
+    const rawPrices = fields.variantPrice !== undefined ? fields.variantPrice : (fields.salePrice || fields.regularPrice);
+    const prices = Array.isArray(rawPrices) ? rawPrices : [rawPrices];
+
     const legacyVariants = [];
     for (let i = 0; i < sizes.length; i++) {
       legacyVariants.push({
         size: sizes[i],
+        price: prices[i] !== undefined ? prices[i] : (fields.salePrice || fields.regularPrice),
         stock: quantities[i]
       });
     }
@@ -164,27 +168,7 @@ export const addProduct = async (fields, files) => {
     }
   }
 
-  // 4. Regular Price validation
-  const regNum = Number(regularPrice);
-  if (regularPrice === undefined || regularPrice === null || regularPrice === "" || isNaN(regNum)) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_REQUIRED;
-  } else if (regNum <= 0 || !Number.isFinite(regNum)) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_INVALID;
-  } else if (regNum > 1000000) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_MAX;
-  }
-
-  // 5. Sale Price validation
-  const saleNum = Number(salePrice);
-  if (salePrice === undefined || salePrice === null || salePrice === "" || isNaN(saleNum)) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_REQUIRED;
-  } else if (saleNum <= 0 || !Number.isFinite(saleNum)) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_INVALID;
-  } else if (!errors.regularPrice && saleNum > regNum) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_EXCEEDS_REGULAR;
-  }
-
-  // 6. Description validation
+  // 4. Description validation
   if (!trimmedDescription) {
     errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_REQUIRED;
   } else if (trimmedDescription.length < 10) {
@@ -193,17 +177,17 @@ export const addProduct = async (fields, files) => {
     errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MAX;
   }
 
-  // 7. Highlights validation
+  // 5. Highlights validation
   if (highlights && typeof highlights === "string" && highlights.trim().length > 500) {
     errors.highlights = MESSAGES.VALIDATION.PRODUCT.HIGHLIGHTS_MAX;
   }
 
-  // 8. Images validation
+  // 6. Images validation
   if (!files || files.length < 3) {
     errors.images = MESSAGES.VALIDATION.PRODUCT.IMAGES_MIN;
   }
 
-  // 9. Variants conversion & validation
+  // 7. Variants conversion & validation (Price is part of variant management)
   const rawVariants = parseVariants(fields);
   const variants = [];
   const allowedSizes = ["S", "M", "L", "XL"];
@@ -215,30 +199,16 @@ export const addProduct = async (fields, files) => {
     for (let i = 0; i < rawVariants.length; i++) {
       const v = rawVariants[i];
       const s = typeof v?.size === "string" ? v.size.trim().toUpperCase() : "";
+      const priceRaw = v?.price !== undefined ? v.price : (v?.regularPrice || v?.salePrice);
       const stockRaw = v?.stock !== undefined ? v.stock : v?.quantity;
 
-      // Size present
+      // Size present & allowed
       if (!s) {
         errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_REQUIRED;
         break;
       }
-
-      // Allowed sizes check
       if (!allowedSizes.includes(s)) {
         errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_INVALID;
-        break;
-      }
-
-      // Stock present
-      if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
-        errors.variants = `Stock is required for size ${s}`;
-        break;
-      }
-
-      // Stock valid non-negative integer
-      const stockNum = Number(stockRaw);
-      if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
-        errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
         break;
       }
 
@@ -248,9 +218,36 @@ export const addProduct = async (fields, files) => {
         break;
       }
 
+      // Price present & valid number > 0
+      if (priceRaw === undefined || priceRaw === null || (typeof priceRaw === "string" && priceRaw.trim() === "")) {
+        errors.variants = `Price is required for size ${s}`;
+        break;
+      }
+      const priceNum = Number(priceRaw);
+      if (isNaN(priceNum) || priceNum <= 0 || !Number.isFinite(priceNum)) {
+        errors.variants = `Price for size ${s} must be a valid number greater than 0`;
+        break;
+      }
+      if (priceNum > 1000000) {
+        errors.variants = `Price for size ${s} cannot exceed 1,000,000`;
+        break;
+      }
+
+      // Stock present & valid non-negative integer
+      if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
+        errors.variants = `Stock is required for size ${s}`;
+        break;
+      }
+      const stockNum = Number(stockRaw);
+      if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
+        errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
+        break;
+      }
+
       seenSizes.add(s);
       variants.push({
         size: s,
+        price: priceNum,
         stock: stockNum
       });
     }
@@ -286,19 +283,24 @@ export const addProduct = async (fields, files) => {
           .toFile(uploadPath);
 
         imagePaths.push("/uploads/products/" + fileName);
-      } else if (file.path || typeof file === "string") {
-        imagePaths.push(typeof file === "string" ? file : file.path);
+      } else if (file.path || file.filename || typeof file === "string") {
+        imagePaths.push(typeof file === "string" ? file : (file.path || file.filename));
       }
     }
   }
+
+  // Synchronize document-level price bounds for backward compatibility & sorting
+  const variantPrices = variants.map((v) => v.price);
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (Number(salePrice) || 0);
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : (Number(regularPrice) || minPrice);
 
   const newProduct = new Product({
     name: trimmedName,
     description: trimmedDescription,
     brand: trimmedBrand,
     category: trimmedCategory,
-    regularPrice: regNum,
-    salePrice: saleNum,
+    regularPrice: maxPrice,
+    salePrice: minPrice,
     variants,
     images: imagePaths,
     highlights: highlightsArray
@@ -373,27 +375,7 @@ export const updateProduct = async (id, fields, files) => {
     }
   }
 
-  // 4. Regular Price validation
-  const regNum = Number(regularPrice);
-  if (regularPrice === undefined || regularPrice === null || regularPrice === "" || isNaN(regNum)) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_REQUIRED;
-  } else if (regNum <= 0 || !Number.isFinite(regNum)) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_INVALID;
-  } else if (regNum > 1000000) {
-    errors.regularPrice = MESSAGES.VALIDATION.PRODUCT.REGULAR_PRICE_MAX;
-  }
-
-  // 5. Sale Price validation
-  const saleNum = Number(salePrice);
-  if (salePrice === undefined || salePrice === null || salePrice === "" || isNaN(saleNum)) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_REQUIRED;
-  } else if (saleNum <= 0 || !Number.isFinite(saleNum)) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_INVALID;
-  } else if (!errors.regularPrice && saleNum > regNum) {
-    errors.salePrice = MESSAGES.VALIDATION.PRODUCT.SALE_PRICE_EXCEEDS_REGULAR;
-  }
-
-  // 6. Description validation
+  // 4. Description validation
   if (!trimmedDescription) {
     errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_REQUIRED;
   } else if (trimmedDescription.length < 10) {
@@ -402,12 +384,12 @@ export const updateProduct = async (id, fields, files) => {
     errors.description = MESSAGES.VALIDATION.PRODUCT.DESCRIPTION_MAX;
   }
 
-  // 7. Highlights validation
+  // 5. Highlights validation
   if (highlights && typeof highlights === "string" && highlights.trim().length > 500) {
     errors.highlights = MESSAGES.VALIDATION.PRODUCT.HIGHLIGHTS_MAX;
   }
 
-  // 8. Image calculations & validation
+  // 6. Image calculations & validation
   let images = product.images || [];
   let deletedImages = [];
   try {
@@ -427,7 +409,7 @@ export const updateProduct = async (id, fields, files) => {
     errors.images = MESSAGES.VALIDATION.PRODUCT.IMAGES_MIN;
   }
 
-  // 9. Variants conversion & validation
+  // 7. Variants conversion & validation (Price is part of variant management)
   const rawVariants = parseVariants(fields);
   const variants = [];
   const allowedSizes = ["S", "M", "L", "XL"];
@@ -439,6 +421,7 @@ export const updateProduct = async (id, fields, files) => {
     for (let i = 0; i < rawVariants.length; i++) {
       const v = rawVariants[i];
       const s = typeof v?.size === "string" ? v.size.trim().toUpperCase() : "";
+      const priceRaw = v?.price !== undefined ? v.price : (v?.regularPrice || v?.salePrice);
       const stockRaw = v?.stock !== undefined ? v.stock : v?.quantity;
 
       if (!s) {
@@ -449,6 +432,27 @@ export const updateProduct = async (id, fields, files) => {
         errors.variants = MESSAGES.VALIDATION.PRODUCT.VARIANT_SIZE_INVALID;
         break;
       }
+      if (seenSizes.has(s)) {
+        errors.variants = `Duplicate variant size "${s}" is not allowed`;
+        break;
+      }
+
+      // Price validation
+      if (priceRaw === undefined || priceRaw === null || (typeof priceRaw === "string" && priceRaw.trim() === "")) {
+        errors.variants = `Price is required for size ${s}`;
+        break;
+      }
+      const priceNum = Number(priceRaw);
+      if (isNaN(priceNum) || priceNum <= 0 || !Number.isFinite(priceNum)) {
+        errors.variants = `Price for size ${s} must be a valid number greater than 0`;
+        break;
+      }
+      if (priceNum > 1000000) {
+        errors.variants = `Price for size ${s} cannot exceed 1,000,000`;
+        break;
+      }
+
+      // Stock validation
       if (stockRaw === undefined || stockRaw === null || (typeof stockRaw === "string" && stockRaw.trim() === "")) {
         errors.variants = `Stock is required for size ${s}`;
         break;
@@ -458,17 +462,11 @@ export const updateProduct = async (id, fields, files) => {
         errors.variants = `Stock for size ${s} must be a non-negative whole integer`;
         break;
       }
-      if(stockNum < 1){
-        errors.variants = `stock for size ${s} must be at least 1`;
-        break;
-      }
-      if (seenSizes.has(s)) {
-        errors.variants = `Duplicate variant size "${s}" is not allowed`;
-        break;
-      }
+
       seenSizes.add(s);
       variants.push({
         size: s,
+        price: priceNum,
         stock: stockNum
       });
     }
@@ -498,8 +496,8 @@ export const updateProduct = async (id, fields, files) => {
           .toFile(uploadPath);
 
         images.push("/uploads/products/" + fileName);
-      } else if (file.path || typeof file === "string") {
-        images.push(typeof file === "string" ? file : file.path);
+      } else if (file.path || file.filename || typeof file === "string") {
+        images.push(typeof file === "string" ? file : (file.path || file.filename));
       }
     }
   }
@@ -508,6 +506,10 @@ export const updateProduct = async (id, fields, files) => {
     ? (Array.isArray(highlights) ? highlights : highlights.split(",")).map((item) => item.trim()).filter(Boolean)
     : [];
 
+  const variantPrices = variants.map((v) => v.price);
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (Number(salePrice) || product.salePrice || 0);
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : (Number(regularPrice) || product.regularPrice || minPrice);
+
   return await Product.findByIdAndUpdate(
     id,
     {
@@ -515,8 +517,8 @@ export const updateProduct = async (id, fields, files) => {
       description: trimmedDescription,
       brand: trimmedBrand,
       category: trimmedCategory,
-      regularPrice: regNum,
-      salePrice: saleNum,
+      regularPrice: maxPrice,
+      salePrice: minPrice,
       variants,
       images,
       highlights: highlightsArray
@@ -563,7 +565,6 @@ export const unblockProduct = async (id) => {
 
 export const getPublicProducts = async (queryParams) => {
   const search = queryParams.search?.trim() || "";
-  const category = queryParams.category || "";
   const sort = queryParams.sort || "";
   const price = queryParams.price || "";
   const brand = queryParams.brand || "";
@@ -571,13 +572,30 @@ export const getPublicProducts = async (queryParams) => {
   const limit = 5;
   const skip = (page - 1) * limit;
 
-  // Filter
+  // Normalize multiple category selections (e.g. ['cat1', 'cat2'], 'cat1,cat2', or 'cat1')
+  let rawCategory = queryParams.category;
+  let selectedCategories = [];
+  if (rawCategory) {
+    if (Array.isArray(rawCategory)) {
+      selectedCategories = rawCategory
+        .flatMap((c) => (typeof c === "string" ? c.split(",") : c))
+        .map((c) => String(c).trim())
+        .filter(Boolean);
+    } else if (typeof rawCategory === "string") {
+      selectedCategories = rawCategory
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+    }
+  }
+
+  // Base filter for public products
   const filter = {
     isDeleted: false,
     isBlocked: false
   };
 
-  // Search
+  // Search filter
   if (search) {
     filter.name = {
       $regex: search,
@@ -585,49 +603,53 @@ export const getPublicProducts = async (queryParams) => {
     };
   }
 
-  // Fetch active categories
+  // Active categories lookup
   const activeCategories = await Category.find({ isDeleted: false });
-  const activeCategoryIds = activeCategories.map(c => c._id);
+  const activeCategoryIds = activeCategories.map((c) => c._id);
+  const activeCategoryMap = new Map(activeCategories.map((c) => [c._id.toString(), c._id]));
+  const activeCategoryNameMap = new Map(activeCategories.map((c) => [c.name.toLowerCase(), c._id]));
 
-  // Category
-  console.log("[DEBUG] queryParams.category received:", category);
-  if (category) {
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(category);
-    console.log("[DEBUG] Is category a valid ObjectId?", isValidObjectId);
-
-    let categoryObj = null;
-    if (isValidObjectId) {
-      categoryObj = await Category.findOne({ _id: category, isDeleted: false });
-    } else {
-      categoryObj = await Category.findOne({
-        name: { $regex: `^${category}$`, $options: "i" },
-        isDeleted: false
-      });
+  // Multiple category simultaneous filtering (OR condition: category in selectedCategories)
+  if (selectedCategories.length > 0) {
+    const resolvedCategoryIds = [];
+    for (const cat of selectedCategories) {
+      if (mongoose.Types.ObjectId.isValid(cat) && activeCategoryMap.has(cat.toString())) {
+        resolvedCategoryIds.push(activeCategoryMap.get(cat.toString()));
+      } else if (activeCategoryNameMap.has(cat.toLowerCase())) {
+        resolvedCategoryIds.push(activeCategoryNameMap.get(cat.toLowerCase()));
+      }
     }
 
-    console.log("[DEBUG] Category object found in DB:", categoryObj);
-
-    if (categoryObj) {
-      filter.category = categoryObj._id;
+    if (resolvedCategoryIds.length > 0) {
+      filter.category = { $in: resolvedCategoryIds };
     } else {
-      // Force query to return no results if category specified but not found/active
-      filter.category = new mongoose.Types.ObjectId();
+      // Specified categories do not exist or are inactive -> produce empty results
+      filter.category = { $in: [new mongoose.Types.ObjectId()] };
     }
   } else {
-    // Hide products whose category is deleted/inactive
+    // No category filter applied -> restrict to active categories only
     filter.category = { $in: activeCategoryIds };
   }
 
-  // Price range
+  // Price range filter
   if (price === "0-1000") {
-    filter.salePrice = { $gte: 0, $lte: 1000 };
+    filter.$or = [
+      { salePrice: { $gte: 0, $lte: 1000 } },
+      { "variants.price": { $gte: 0, $lte: 1000 } }
+    ];
   } else if (price === "1000-3000") {
-    filter.salePrice = { $gte: 1000, $lte: 3000 };
+    filter.$or = [
+      { salePrice: { $gte: 1000, $lte: 3000 } },
+      { "variants.price": { $gte: 1000, $lte: 3000 } }
+    ];
   } else if (price === "3000-above") {
-    filter.salePrice = { $gte: 3000 };
+    filter.$or = [
+      { salePrice: { $gte: 3000 } },
+      { "variants.price": { $gte: 3000 } }
+    ];
   }
 
-  // Brand
+  // Brand filter
   if (brand) {
     filter.brand = brand;
   }
@@ -646,15 +668,11 @@ export const getPublicProducts = async (queryParams) => {
     sortOption = { createdAt: -1 };
   }
 
-  console.log("[DEBUG] Generated MongoDB Filter:", JSON.stringify(filter, null, 2));
-
   const products = await Product.find(filter)
     .populate("category")
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
-
-  console.log("[DEBUG] Products count returned:", products.length);
 
   const totalProducts = await Product.countDocuments(filter);
   const totalPages = Math.ceil(totalProducts / limit);
@@ -662,14 +680,22 @@ export const getPublicProducts = async (queryParams) => {
   const brands = await Product.distinct("brand");
   const categories = await Category.find({ isDeleted: false });
 
+  // Query string helper for categories in pagination links
+  const categoryQueryString = selectedCategories
+    .map((c) => `category=${encodeURIComponent(c)}`)
+    .join("&");
+
   return {
     products,
     categories,
     brands,
     currentPage: page,
     totalPages,
+    totalProducts,
     search,
-    category,
+    category: selectedCategories.length === 1 ? selectedCategories[0] : selectedCategories,
+    selectedCategories,
+    categoryQueryString,
     sort,
     price,
     brand

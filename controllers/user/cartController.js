@@ -137,7 +137,13 @@ export const loadCart = async (req, res) => {
 
     if (cart) {
       cart.items.forEach((item) => {
-        total += item.product.salePrice * item.quantity;
+        if (item.product) {
+          const variant = item.product.variants?.find(
+            (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+          );
+          const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+          total += itemPrice * item.quantity;
+        }
       });
     }
 
@@ -231,16 +237,25 @@ export const updateCartQuantity = async (req, res) => {
     // Populate products to calculate new grandTotal
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
     let grandTotal = 0;
-    populatedCart.items.forEach(item => {
-      if (item.product) {
-        grandTotal += item.product.salePrice * item.quantity;
+    populatedCart.items.forEach((cItem) => {
+      if (cItem.product) {
+        const v = cItem.product.variants?.find(
+          (varItem) => varItem.size.toUpperCase() === (cItem.size || "M").toUpperCase()
+        );
+        const itemPrice = (v && v.price !== undefined) ? v.price : cItem.product.salePrice;
+        grandTotal += itemPrice * cItem.quantity;
       }
     });
+
+    const activeItemVariant = product.variants?.find(
+      (v) => v.size.toUpperCase() === size
+    );
+    const activeItemPrice = (activeItemVariant && activeItemVariant.price !== undefined) ? activeItemVariant.price : product.salePrice;
 
     res.json({
       success: true,
       quantity: item.quantity,
-      subtotal: product.salePrice * item.quantity,
+      subtotal: activeItemPrice * item.quantity,
       grandTotal: grandTotal
     });
   } catch (error) {
@@ -286,9 +301,13 @@ export const removeCartItem = async (req, res) => {
     // Populate products to calculate new grandTotal
     const populatedCart = await Cart.findById(cart._id).populate("items.product");
     let grandTotal = 0;
-    populatedCart.items.forEach(item => {
-      if (item.product) {
-        grandTotal += item.product.salePrice * item.quantity;
+    populatedCart.items.forEach((cItem) => {
+      if (cItem.product) {
+        const v = cItem.product.variants?.find(
+          (varItem) => varItem.size.toUpperCase() === (cItem.size || "M").toUpperCase()
+        );
+        const itemPrice = (v && v.price !== undefined) ? v.price : cItem.product.salePrice;
+        grandTotal += itemPrice * cItem.quantity;
       }
     });
 
@@ -330,7 +349,13 @@ export const loadCheckout = async (req, res) => {
     let total = 0;
 
     cart.items.forEach((item) => {
-      total += item.product.salePrice * item.quantity;
+      if (item.product) {
+        const variant = item.product.variants?.find(
+          (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+        );
+        const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+        total += itemPrice * item.quantity;
+      }
     });
 
     res.render("user/checkout", {

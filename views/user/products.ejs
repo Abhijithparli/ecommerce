@@ -32,13 +32,18 @@
           <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Categories</h3>
           <div class="space-y-3">
             <% categories.forEach(cat => { %>
+              <% 
+                const isChecked = (typeof selectedCategories !== 'undefined' && Array.isArray(selectedCategories))
+                  ? (selectedCategories.includes(cat._id.toString()) || selectedCategories.some(c => c.toLowerCase() === cat.name.toLowerCase()))
+                  : (category === cat._id.toString() || (category && category.toLowerCase() === cat.name.toLowerCase()));
+              %>
               <label class="flex items-center gap-3 text-sm text-gray-400 hover:text-white cursor-pointer select-none">
                 <input 
                   type="checkbox" 
                   name="category" 
                   value="<%= cat._id %>" 
-                  class="rounded bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4"
-                  <%= (category === cat._id.toString() || (category && category.toLowerCase() === cat.name.toLowerCase())) ? 'checked' : '' %>
+                  class="rounded bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                  <%= isChecked ? 'checked' : '' %>
                   onchange="this.form.submit()"
                 >
                 <span><%= cat.name %></span>
@@ -57,7 +62,7 @@
                   type="checkbox" 
                   name="brand" 
                   value="<%= b %>" 
-                  class="rounded bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4"
+                  class="rounded bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                   <%= brand === b ? 'checked' : '' %>
                   onchange="this.form.submit()"
                 >
@@ -76,7 +81,7 @@
                 type="radio" 
                 name="price" 
                 value="0-1000" 
-                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4"
+                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                 <%= price === '0-1000' ? 'checked' : '' %>
                 onchange="this.form.submit()"
               >
@@ -87,7 +92,7 @@
                 type="radio" 
                 name="price" 
                 value="1000-3000" 
-                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4"
+                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                 <%= price === '1000-3000' ? 'checked' : '' %>
                 onchange="this.form.submit()"
               >
@@ -98,7 +103,7 @@
                 type="radio" 
                 name="price" 
                 value="3000-above" 
-                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4"
+                class="bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                 <%= price === '3000-above' ? 'checked' : '' %>
                 onchange="this.form.submit()"
               >
@@ -118,13 +123,13 @@
     <!-- Right Container: Catalog & Banners -->
     <main class="flex-1 flex flex-col gap-6">
 
-      <!-- Dynamic Category Banners (Figma) -->
+      <!-- Dynamic Category Banners -->
       <% 
         let bannerSrc = "";
         let taglineText = "Revolutionary Security within reach of all types of Riders.";
         
-        // Match active categories for Figma banners
-        const activeCat = categories.find(c => c._id.toString() === category || (category && c.name.toLowerCase() === category.toLowerCase()));
+        const activeCategories = (typeof selectedCategories !== 'undefined' && Array.isArray(selectedCategories)) ? selectedCategories : (category ? [category] : []);
+        const activeCat = categories.find(c => activeCategories.includes(c._id.toString()) || activeCategories.some(ac => ac.toLowerCase() === c.name.toLowerCase()));
         if (activeCat) {
           const catName = activeCat.name.toUpperCase();
           if (catName.includes("APEX")) {
@@ -141,7 +146,7 @@
       %>
 
       <!-- Dynamic Top Banner -->
-      <% if (bannerSrc) { %>
+      <% if (bannerSrc && activeCat) { %>
         <div class="relative w-full h-48 rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
           <img src="<%= bannerSrc %>" alt="Category Banner" class="w-full h-full object-cover opacity-80">
           <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent flex items-center px-8">
@@ -153,7 +158,7 @@
         </div>
       <% } %>
 
-      <!-- Subheader Tagline (Figma) -->
+      <!-- Subheader Tagline -->
       <div class="bg-[#13131a] border border-white/5 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div class="space-y-1">
           <p class="text-gray-400 text-xs tracking-wider uppercase font-semibold">HeadShield Protection</p>
@@ -162,7 +167,13 @@
         
         <!-- Search & Sorting controls -->
         <form action="/products" method="GET" class="flex items-center gap-3 w-full sm:w-auto">
-          <input type="hidden" name="category" value="<%= category %>">
+          <% if (typeof selectedCategories !== 'undefined' && Array.isArray(selectedCategories) && selectedCategories.length > 0) { %>
+            <% selectedCategories.forEach(catVal => { %>
+              <input type="hidden" name="category" value="<%= catVal %>">
+            <% }) %>
+          <% } else if (category) { %>
+            <input type="hidden" name="category" value="<%= category %>">
+          <% } %>
           <input type="hidden" name="brand" value="<%= brand %>">
           <input type="hidden" name="price" value="<%= price %>">
           
@@ -176,7 +187,10 @@
               class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-4 pr-10 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition duration-200"
             >
             <% if (search) { %>
-              <a href="/products?category=<%= category %>&brand=<%= brand %>&price=<%= price %>" class="absolute right-3 top-2.5 text-xs text-gray-500 hover:text-white" title="Clear Search">✕</a>
+              <% 
+                const clearSearchCatPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${category}` : '');
+              %>
+              <a href="/products?brand=<%= brand %>&price=<%= price %><%= clearSearchCatPart %>" class="absolute right-3 top-2.5 text-xs text-gray-500 hover:text-white" title="Clear Search">✕</a>
             <% } %>
           </div>
 
@@ -234,7 +248,7 @@
               <!-- Product Info -->
               <div class="p-5 flex-1 flex flex-col justify-between">
                 <div class="space-y-1">
-                  <!-- Star Ratings (Figma Green Stars) -->
+                  <!-- Star Ratings -->
                   <div class="flex items-center gap-1 text-emerald-400 text-xs">
                     ★ ★ ★ ★ ☆
                     <span class="text-gray-500 ml-1">(4.0)</span>
@@ -247,8 +261,22 @@
 
                 <div class="mt-4 pt-4 border-t border-white/5">
                   <!-- Pricing and Off Label -->
+                  <%
+                    let cardDisplayPrice = '';
+                    if (product.variants && product.variants.length > 0) {
+                      const prices = product.variants.map(v => v.price).filter(p => typeof p === 'number' && !isNaN(p));
+                      if (prices.length > 0) {
+                        const minP = Math.min(...prices);
+                        const maxP = Math.max(...prices);
+                        cardDisplayPrice = minP === maxP ? `₹${minP}` : `₹${minP} - ₹${maxP}`;
+                      }
+                    }
+                    if (!cardDisplayPrice) {
+                      cardDisplayPrice = `₹${product.salePrice || product.regularPrice || 0}`;
+                    }
+                  %>
                   <div class="flex items-baseline gap-2 flex-wrap">
-                    <span class="text-lg font-bold text-orange-500">₹<%= product.salePrice %></span>
+                    <span class="text-lg font-bold text-orange-500"><%= cardDisplayPrice %></span>
                     <% if (product.regularPrice > product.salePrice) { %>
                       <span class="text-gray-500 line-through text-xs">₹<%= product.regularPrice %></span>
                       <span class="text-red-500 text-xs font-bold font-mono">
@@ -257,7 +285,7 @@
                     <% } %>
                   </div>
                   
-                  <!-- Free Delivery Badge (Figma) -->
+                  <!-- Free Delivery Badge -->
                   <p class="text-[11px] text-emerald-400 font-semibold mt-1">Free Delivery</p>
 
                   <!-- Button Link -->
@@ -280,8 +308,11 @@
         <% } %>
       </div>
 
-      <!-- Pagination Component (Bootstrap-styled Tailwind) -->
+      <!-- Pagination Component -->
       <% if (totalPages > 1) { %>
+        <% 
+          const catQueryPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${category}` : '');
+        %>
         <div class="flex justify-center mt-6">
           <nav aria-label="Page navigation">
             <ul class="pagination flex items-center gap-1">
@@ -289,7 +320,7 @@
               <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
                 <a 
                   class="page-link" 
-                  href="/products?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                  href="/products?page=<%= currentPage - 1 %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
                 >
                   Previous
                 </a>
@@ -300,7 +331,7 @@
                 <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                   <a 
                     class="page-link" 
-                    href="/products?page=<%= i %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                    href="/products?page=<%= i %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
                   >
                     <%= i %>
                   </a>
@@ -311,7 +342,7 @@
               <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
                 <a 
                   class="page-link" 
-                  href="/products?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                  href="/products?page=<%= currentPage + 1 %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
                 >
                   Next
                 </a>
@@ -368,31 +399,6 @@
       opacity: 0.5;
     }
   </style>
-  <script>
-    // Exclusive checkbox selection for Categories
-    document.querySelectorAll('input[type="checkbox"][name="category"]').forEach(box => {
-      box.addEventListener('change', function() {
-        if (this.checked) {
-          document.querySelectorAll('input[type="checkbox"][name="category"]').forEach(other => {
-            if (other !== this) other.checked = false;
-          });
-        }
-        this.form.submit();
-      });
-    });
-
-    // Exclusive checkbox selection for Brands
-    document.querySelectorAll('input[type="checkbox"][name="brand"]').forEach(box => {
-      box.addEventListener('change', function() {
-        if (this.checked) {
-          document.querySelectorAll('input[type="checkbox"][name="brand"]').forEach(other => {
-            if (other !== this) other.checked = false;
-          });
-        }
-        this.form.submit();
-      });
-    });
-  </script>
 
 </body>
 </html>

@@ -34,14 +34,14 @@ const productSchema = new mongoose.Schema({
    
   regularPrice: {
     type: Number,
-    required: true,
+    required: false,
     min: 0.01,
     max: 1000000
   },
 
   salePrice: {
     type: Number,
-    required: true,
+    required: false,
     min: 0.01,
     max: 1000000
   },
@@ -53,6 +53,12 @@ const productSchema = new mongoose.Schema({
         required: true,
         trim: true,
         enum: ["S", "M", "L", "XL"]
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0.01,
+        max: 1000000
       },
       stock: {
         type: Number,

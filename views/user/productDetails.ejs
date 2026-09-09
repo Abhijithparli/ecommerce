@@ -96,22 +96,22 @@
             <span class="text-gray-600">•</span>
             <span class="text-gray-400"><%= reviews.length %> Verified Reviews</span>
             <span class="text-gray-600">•</span>
-            <% if (product.quantity < 5) { %>
-              <span class="text-emerald-400 font-semibold uppercase tracking-wider text-xs">error will</span>
-            <% } else { %>
-              <span class="text-red-400 font-semibold uppercase tracking-wider text-xs">Out Of Stock</span>
-            <% } %>
+            <span id="stockBadge" class="font-semibold uppercase tracking-wider text-xs <%= product.quantity > 0 ? 'text-emerald-400' : 'text-red-400' %>">
+              <%= product.quantity > 0 ? 'In Stock' : 'Out Of Stock' %>
+            </span>
           </div>
 
           <!-- Pricing & Discounts -->
           <div class="space-y-2">
             <div class="flex items-baseline gap-4">
-              <!-- Sale Price -->
-              <span class="text-3xl font-extrabold text-orange-500">₹<%= product.salePrice %></span>
+              <!-- Sale Price (Dynamically Updated based on selected variant) -->
+              <span id="displayedPrice" class="text-3xl font-extrabold text-orange-500">
+                ₹<%= (product.variants && product.variants.length > 0 && product.variants[0].price) ? product.variants[0].price : product.salePrice %>
+              </span>
               <!-- Slashed regular price -->
               <% if (product.regularPrice > product.salePrice) { %>
-                <span class="text-xl text-gray-500 line-through">₹<%= product.regularPrice %></span>
-                <span class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold font-mono">
+                <span id="displayedRegularPrice" class="text-xl text-gray-500 line-through">₹<%= product.regularPrice %></span>
+                <span id="discountBadge" class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold font-mono">
                   <%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>% OFF
                 </span>
               <% } %>
@@ -124,23 +124,28 @@
         <div class="space-y-6">
           <div class="flex flex-col sm:flex-row gap-6">
             
-            <!-- Size Select (Figma) -->
+            <!-- Size Select -->
             <div class="flex-1 space-y-2">
               <label class="block text-xs text-gray-500 uppercase tracking-widest font-semibold">Select Size</label>
               <select id="sizeSelector" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition duration-200">
                 <% if (product.variants && product.variants.length > 0) { %>
-                  <% product.variants.forEach(variant => { %>
-                    <option value="<%= variant.size %>"><%= variant.size %> (Stock: <%= variant.stock %>)</option>
+                  <% product.variants.forEach((variant, index) => { %>
+                    <option 
+                      value="<%= variant.size %>" 
+                      data-price="<%= variant.price %>" 
+                      data-stock="<%= variant.stock %>"
+                      <%= index === 0 ? 'selected' : '' %>
+                    >
+                      Size <%= variant.size %> - ₹<%= variant.price %> (<%= variant.stock > 0 ? `Stock: ${variant.stock}` : 'Out of Stock' %>)
+                    </option>
                   <% }) %>
                 <% } else { %>
-                  <option value="M">Medium (M)</option>
-                  <option value="L">Large (L)</option>
-                  <option value="XL">Extra Large (XL)</option>
+                  <option value="M" data-price="<%= product.salePrice %>" data-stock="<%= product.quantity %>">M</option>
                 <% } %>
               </select>
             </div>
 
-            <!-- Quantity Selector (Figma) -->
+            <!-- Quantity Selector -->
             <div class="w-full sm:w-36 space-y-2">
               <label class="block text-xs text-gray-500 uppercase tracking-widest font-semibold font-mono">Quantity</label>
               <div class="flex items-center border border-zinc-700 rounded-xl overflow-hidden bg-zinc-800 h-[46px]">
@@ -152,35 +157,25 @@
 
           </div>
 
-          <!-- Purchase buttons (Figma) & Wishlist heart -->
-          <div class="flex items-center gap-4">
+          <!-- Purchase buttons & Wishlist heart -->
+          <div class="flex items-center gap-4" id="actionButtonsContainer">
+            <button 
+              id="addToCartBtn"
+              onclick="addToCart('<%= product._id %>', false)" 
+              class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg"
+            >
+              Add To Cart
+            </button>
             
-            <% if (product.quantity > 0) { %>
-              <!-- Add to Cart (orange) -->
-              <button 
-                onclick="addToCart('<%= product._id %>', false)" 
-                class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg"
-              >
-                Add To Cart
-              </button>
-              
-              <!-- Buy Now (red) -->
-              <button 
-                onclick="buyNow('<%= product._id %>')" 
-                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg"
-              >
-                Buy Now
-              </button>
-            <% } else { %>
-              <button 
-                disabled 
-                class="flex-1 bg-zinc-800 border border-zinc-700 text-gray-600 font-bold py-3.5 rounded-xl cursor-not-allowed text-center"
-              >
-                Out of Stock
-              </button>
-            <% } %>
+            <button 
+              id="buyNowBtn"
+              onclick="buyNow('<%= product._id %>')" 
+              class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg"
+            >
+              Buy Now
+            </button>
 
-            <!-- Save button (Figma Wishlist Heart) -->
+            <!-- Save button (Wishlist Heart) -->
             <button 
               onclick="handleGuestAction(event, 'wishlist')" 
               class="w-[50px] h-[50px] bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-red-500 border border-zinc-700 rounded-xl flex items-center justify-center text-2xl transition duration-200 shadow"
@@ -188,7 +183,6 @@
             >
               ♡
             </button>
-
           </div>
         </div>
 
@@ -424,6 +418,67 @@
       mainImage.style.transformOrigin = "center center";
     });
 
+    // Dynamic variant price & stock update
+    const sizeSelector = document.getElementById("sizeSelector");
+    const displayedPrice = document.getElementById("displayedPrice");
+    const stockBadge = document.getElementById("stockBadge");
+    const addToCartBtn = document.getElementById("addToCartBtn");
+    const buyNowBtn = document.getElementById("buyNowBtn");
+
+    function updateVariantDetails() {
+      if (!sizeSelector) return;
+      const selectedOption = sizeSelector.options[sizeSelector.selectedIndex];
+      if (!selectedOption) return;
+
+      const price = selectedOption.dataset.price;
+      const stock = parseInt(selectedOption.dataset.stock);
+
+      if (price && displayedPrice) {
+        displayedPrice.textContent = `₹${price}`;
+      }
+
+      const isAvailable = !isNaN(stock) ? stock > 0 : true;
+
+      if (stockBadge) {
+        if (isAvailable) {
+          stockBadge.textContent = `In Stock (${stock} available)`;
+          stockBadge.className = "font-semibold uppercase tracking-wider text-xs text-emerald-400";
+        } else {
+          stockBadge.textContent = "Out Of Stock";
+          stockBadge.className = "font-semibold uppercase tracking-wider text-xs text-red-400";
+        }
+      }
+
+      if (addToCartBtn) {
+        if (isAvailable) {
+          addToCartBtn.disabled = false;
+          addToCartBtn.className = "flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg cursor-pointer";
+          addToCartBtn.textContent = "Add To Cart";
+        } else {
+          addToCartBtn.disabled = true;
+          addToCartBtn.className = "flex-1 bg-zinc-800 border border-zinc-700 text-gray-500 font-bold py-3.5 rounded-xl cursor-not-allowed text-center";
+          addToCartBtn.textContent = "Out of Stock";
+        }
+      }
+
+      if (buyNowBtn) {
+        if (isAvailable) {
+          buyNowBtn.disabled = false;
+          buyNowBtn.style.display = "";
+          buyNowBtn.className = "flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg cursor-pointer";
+        } else {
+          buyNowBtn.disabled = true;
+          buyNowBtn.style.display = "none";
+        }
+      }
+    }
+
+    if (sizeSelector) {
+      sizeSelector.addEventListener("change", updateVariantDetails);
+      // Run once on load
+      updateVariantDetails();
+    }
+
     // AJAX cart submission and guest checks
     async function addToCart(productId, redirect = false) {
       if (!window.isLoggedIn) {
@@ -434,7 +489,6 @@
       
       try {
         const qty = parseInt(document.getElementById("qtyInput").value) || 1;
-        const sizeSelector = document.getElementById("sizeSelector");
         const size = sizeSelector ? sizeSelector.value : "M";
         const response = await fetch(`/cart/add/${productId}`, {
           method: "POST",

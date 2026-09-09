@@ -26,8 +26,14 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     if (!product || product.isDeleted || product.isBlocked) {
       throw new Error(`Product ${product ? product.name : 'Unknown'} is no longer available`);
     }
-    if (item.quantity > product.quantity) {
-      throw new Error(`Insufficient stock for product: ${product.name}. Available: ${product.quantity}`);
+    const variant = product.variants?.find(
+      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+    );
+    if (!variant) {
+      throw new Error(`Variant size ${item.size} not found for product: ${product.name}`);
+    }
+    if (item.quantity > variant.stock) {
+      throw new Error(`Insufficient stock for ${product.name} (Size: ${item.size}). Available: ${variant.stock}`);
     }
   }
 
@@ -41,10 +47,14 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     throw new Error("Delivery address not found in profile");
   }
 
-  // 4. Calculate Prices
+  // 4. Calculate Prices (using selected variant price)
   let totalPrice = 0;
   cart.items.forEach((item) => {
-    totalPrice += item.product.salePrice * item.quantity;
+    const variant = item.product.variants?.find(
+      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+    );
+    const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+    totalPrice += itemPrice * item.quantity;
   });
 
   // 5. Generate unique Order ID
@@ -54,13 +64,20 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
   const order = new Order({
     orderId,
     user: userId,
-    items: cart.items.map((item) => ({
-      product: item.product._id,
-      name: item.product.name,
-      image: item.product.images[0] || "",
-      quantity: item.quantity,
-      price: item.product.salePrice,
-    })),
+    items: cart.items.map((item) => {
+      const variant = item.product.variants?.find(
+        (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+      );
+      const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+      return {
+        product: item.product._id,
+        name: item.product.name,
+        image: item.product.images[0] || "",
+        size: item.size,
+        quantity: item.quantity,
+        price: itemPrice,
+      };
+    }),
     deliveryAddress: {
       name: address.name,
       phone: address.phone,
@@ -80,13 +97,14 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     statusHistory: [{ status: ORDER_STATUS.PLACED, updatedAt: new Date() }],
   });
 
-  // 7. Save Order and update stock
+  // 7. Save Order and update variant stock
   await order.save();
 
   for (const item of cart.items) {
-    await Product.findByIdAndUpdate(item.product._id, {
-      $inc: { quantity: -item.quantity },
-    });
+    await Product.updateOne(
+      { _id: item.product._id, "variants.size": item.size },
+      { $inc: { "variants.$.stock": -item.quantity } }
+    );
   }
 
   // 8. Clear Cart
@@ -138,11 +156,12 @@ export const cancelOrder = async (orderId, userId) => {
   order.statusHistory.push({ status: ORDER_STATUS.CANCELLED, updatedAt: new Date() });
   await order.save();
 
-  // Restore stock
+  // Restore variant stock
   for (const item of order.items) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { quantity: item.quantity },
-    });
+    await Product.updateOne(
+      { _id: item.product, "variants.size": item.size },
+      { $inc: { "variants.$.stock": item.quantity } }
+    );
   }
 
   return order;
@@ -191,12 +210,13 @@ export const updateOrderStatus = async (orderId, status) => {
   order.status = status;
   order.statusHistory.push({ status, updatedAt: new Date() });
 
-  // If order is cancelled, restore stock
+  // If order is cancelled, restore variant stock
   if (status === ORDER_STATUS.CANCELLED) {
     for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { quantity: item.quantity },
-      });
+      await Product.updateOne(
+        { _id: item.product, "variants.size": item.size },
+        { $inc: { "variants.$.stock": item.quantity } }
+      );
     }
   }
 

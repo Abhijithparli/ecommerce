@@ -105,7 +105,7 @@ export const editProduct = async (req, res) => {
     try {
       product = await productService.getProductById(req.params.id);
     } catch {
-      product = { _id: req.params.id, images: [], variants: [] };
+      product = { _id: req.params.id, images: [], variants: []};
     }
 
     const parsedVariants = productService.parseVariants(req.body);

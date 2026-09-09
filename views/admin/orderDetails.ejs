@@ -150,7 +150,7 @@
                   <img src="<%= item.image %>" class="w-14 h-14 object-cover rounded-lg border border-gray-100 shrink-0">
                   <div class="flex-grow min-w-0">
                     <h5 class="font-bold text-gray-800 text-sm truncate"><%= item.name %></h5>
-                    <p class="text-xs text-gray-500 mt-1">Unit Price: <strong>₹<%= item.price %></strong></p>
+                    <p class="text-xs text-gray-500 mt-1"><% if (item.size) { %>Size: <strong class="text-gray-700"><%= item.size %></strong> • <% } %>Unit Price: <strong>₹<%= item.price %></strong></p>
                   </div>
                   <div class="text-right shrink-0">
                     <p class="text-xs text-gray-500">Qty: <span class="font-bold text-gray-800"><%= item.quantity %></span></p>

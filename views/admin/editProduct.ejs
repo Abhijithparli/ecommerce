@@ -49,7 +49,7 @@
 
     <!-- FLASH TOP ERROR BANNER -->
     <% if (typeof error !== 'undefined' && error) { %>
-      <div id="topErrorBanner" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6 max-w-4xl flex items-center gap-3 shadow-sm">
+      <div id="topErrorBanner" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6 w-full flex items-center gap-3 shadow-sm">
         <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
         </svg>
@@ -58,7 +58,7 @@
     <% } %>
 
     <!-- EDIT PRODUCT FORM CONTAINER -->
-    <div class="bg-white rounded-2xl p-8 mb-10 shadow-lg border border-gray-200 max-w-4xl">
+    <div class="bg-white rounded-2xl p-8 mb-10 shadow-lg border border-gray-200 w-full">
       <h2 class="text-2xl font-semibold mb-6 text-gray-800">
         Modify Product Details
       </h2>
@@ -129,7 +129,7 @@
         </div>
 
         <!-- CATEGORY -->
-        <div class="md:col-span-1">
+        <div class="md:col-span-2">
           <label for="productCategory" class="block mb-2 text-sm font-semibold text-gray-700">
             Category <span class="text-orange-500">*</span>
           </label>
@@ -169,75 +169,15 @@
           </p>
         </div>
 
-        <!-- REGULAR PRICE -->
-        <div class="md:col-span-1">
-          <label for="regularPrice" class="block mb-2 text-sm font-semibold text-gray-700">
-            Regular Price (₹) <span class="text-orange-500">*</span>
-          </label>
-          <input
-            type="number"
-            id="regularPrice"
-            name="regularPrice"
-            min="0.01"
-            max="1000000"
-            step="0.01"
-            placeholder="e.g. 4999"
-            value="<%= (typeof formData !== 'undefined' && formData && formData.regularPrice) ? formData.regularPrice : (product ? product.regularPrice : '') %>"
-            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.regularPrice) ? 'true' : 'false' %>"
-            aria-describedby="regularPriceError"
-            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.regularPrice) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-          >
-          <p
-            id="regularPriceError"
-            role="alert"
-            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.regularPrice) ? '' : 'hidden' %>"
-          >
-            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            <span id="regularPriceErrorText"><%= (typeof errors !== 'undefined' && errors?.regularPrice) ? errors.regularPrice : '' %></span>
-          </p>
-        </div>
-
-        <!-- SALE PRICE -->
-        <div class="md:col-span-1">
-          <label for="salePrice" class="block mb-2 text-sm font-semibold text-gray-700">
-            Sale Price (₹) <span class="text-orange-500">*</span>
-          </label>
-          <input
-            type="number"
-            id="salePrice"
-            name="salePrice"
-            min="0.01"
-            max="1000000"
-            step="0.01"
-            placeholder="e.g. 4499"
-            value="<%= (typeof formData !== 'undefined' && formData && formData.salePrice) ? formData.salePrice : (product ? product.salePrice : '') %>"
-            aria-invalid="<%= (typeof errors !== 'undefined' && errors?.salePrice) ? 'true' : 'false' %>"
-            aria-describedby="salePriceError"
-            class="w-full px-4 py-3 rounded-lg bg-white border <%= (typeof errors !== 'undefined' && errors?.salePrice) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-300' %> text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
-          >
-          <p
-            id="salePriceError"
-            role="alert"
-            class="text-red-500 text-sm mt-1.5 font-medium flex items-center gap-1.5 <%= (typeof errors !== 'undefined' && errors?.salePrice) ? '' : 'hidden' %>"
-          >
-            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            <span id="salePriceErrorText"><%= (typeof errors !== 'undefined' && errors?.salePrice) ? errors.salePrice : '' %></span>
-          </p>
-        </div>
-
-        <!-- PRODUCT VARIANTS (MULTI-VARIANT DYNAMIC SECTION) -->
+        <!-- PRODUCT VARIANTS (MULTI-VARIANT DYNAMIC SECTION WITH PRICE) -->
         <div class="md:col-span-2 bg-gray-50/80 p-5 rounded-xl border border-gray-200">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-base font-semibold text-gray-800">
-                Size &amp; Stock Variants <span class="text-orange-500">*</span>
+                Variant Management (Size, Price &amp; Stock) <span class="text-orange-500">*</span>
               </h3>
               <p class="text-xs text-gray-500 mt-0.5">
-                Add size variants (S, M, L, XL) and their specific inventory counts.
+                Manage size variants (S, M, L, XL) with variant-specific prices and inventory counts.
               </p>
             </div>
 
@@ -252,8 +192,9 @@
 
           <!-- Variant Table Header -->
           <div class="grid grid-cols-12 gap-3 mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            <div class="col-span-5">Size <span class="text-orange-500">*</span></div>
-            <div class="col-span-5">Stock Quantity <span class="text-orange-500">*</span></div>
+            <div class="col-span-4">Size <span class="text-orange-500">*</span></div>
+            <div class="col-span-3">Price (₹) <span class="text-orange-500">*</span></div>
+            <div class="col-span-3">Stock Quantity <span class="text-orange-500">*</span></div>
             <div class="col-span-2 text-center">Action</div>
           </div>
 
@@ -266,13 +207,13 @@
               } else if (product && Array.isArray(product.variants) && product.variants.length > 0) {
                 currentVariants = product.variants;
               } else {
-                currentVariants = [{ size: '', stock: '' }];
+                currentVariants = [{ size: '', price: '', stock: '' }];
               }
             %>
 
             <% currentVariants.forEach((v, index) => { %>
               <div class="variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
-                <div class="col-span-5">
+                <div class="col-span-4">
                   <select
                     name="variants[<%= index %>][size]"
                     class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
@@ -285,11 +226,24 @@
                   </select>
                 </div>
 
-                <div class="col-span-5">
+                <div class="col-span-3">
+                  <input
+                    type="number"
+                    name="variants[<%= index %>][price]"
+                    placeholder="Price (₹)"
+                    min="0.01"
+                    max="1000000"
+                    step="0.01"
+                    value="<%= (v.price !== undefined && v.price !== null) ? v.price : ((product && product.salePrice) ? product.salePrice : '') %>"
+                    class="variant-price-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+                  >
+                </div>
+
+                <div class="col-span-3">
                   <input
                     type="number"
                     name="variants[<%= index %>][stock]"
-                    placeholder="Stock quantity (e.g. 5)"
+                    placeholder="Stock (e.g. 5)"
                     min="0"
                     step="1"
                     value="<%= (v.stock !== undefined && v.stock !== null) ? v.stock : (v.quantity !== undefined ? v.quantity : '') %>"
@@ -555,8 +509,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const nameInput = document.getElementById("productName");
   const brandInput = document.getElementById("productBrand");
   const categorySelect = document.getElementById("productCategory");
-  const regularPriceInput = document.getElementById("regularPrice");
-  const salePriceInput = document.getElementById("salePrice");
   const descriptionInput = document.getElementById("productDescription");
   const highlightsInput = document.getElementById("productHighlights");
   const imageInput = document.getElementById("imageFileInput");
@@ -567,10 +519,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const brandErrorText = document.getElementById("brandErrorText");
   const categoryError = document.getElementById("categoryError");
   const categoryErrorText = document.getElementById("categoryErrorText");
-  const regularPriceError = document.getElementById("regularPriceError");
-  const regularPriceErrorText = document.getElementById("regularPriceErrorText");
-  const salePriceError = document.getElementById("salePriceError");
-  const salePriceErrorText = document.getElementById("salePriceErrorText");
   const variantsError = document.getElementById("variantsError");
   const variantsErrorText = document.getElementById("variantsErrorText");
   const descriptionError = document.getElementById("descriptionError");
@@ -661,55 +609,10 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
-  function validateRegularPrice() {
-    const raw = regularPriceInput.value.trim();
-    const num = Number(raw);
-    if (!raw || isNaN(num)) {
-      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price is required.");
-      return false;
-    }
-    if (num <= 0) {
-      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price must be greater than 0.");
-      return false;
-    }
-    if (num > 1000000) {
-      setError(regularPriceInput, regularPriceError, regularPriceErrorText, "Regular price cannot exceed 1,000,000.");
-      return false;
-    }
-    clearError(regularPriceInput, regularPriceError, regularPriceErrorText);
-
-    if (salePriceInput.value.trim()) {
-      validateSalePrice();
-    }
-    return true;
-  }
-
-  function validateSalePrice() {
-    const raw = salePriceInput.value.trim();
-    const num = Number(raw);
-    const regRaw = regularPriceInput.value.trim();
-    const regNum = Number(regRaw);
-
-    if (!raw || isNaN(num)) {
-      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price is required.");
-      return false;
-    }
-    if (num <= 0) {
-      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price must be greater than 0.");
-      return false;
-    }
-    if (!isNaN(regNum) && regNum > 0 && num > regNum) {
-      setError(salePriceInput, salePriceError, salePriceErrorText, "Sale price cannot be greater than regular price.");
-      return false;
-    }
-    clearError(salePriceInput, salePriceError, salePriceErrorText);
-    return true;
-  }
-
   function validateVariants() {
     const rows = variantsContainer.querySelectorAll(".variant-row");
     if (rows.length === 0) {
-      setError(null, variantsError, variantsErrorText, "At least one size variant is required.");
+      setError(null, variantsError, variantsErrorText, "At least one product variant is required.");
       return false;
     }
 
@@ -719,9 +622,11 @@ document.addEventListener("DOMContentLoaded", function () {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const sizeSelect = row.querySelector(".variant-size-select");
+      const priceInput = row.querySelector(".variant-price-input");
       const stockInput = row.querySelector(".variant-stock-input");
 
       const size = sizeSelect ? sizeSelect.value.trim() : "";
+      const priceRaw = priceInput ? priceInput.value.trim() : "";
       const stockRaw = stockInput ? stockInput.value.trim() : "";
 
       if (!size) {
@@ -738,6 +643,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       seenSizes.add(size);
 
+      // Validate Price
+      if (priceRaw === "" || isNaN(Number(priceRaw))) {
+        setError(priceInput, variantsError, variantsErrorText, `Price is required for size ${size}.`);
+        return false;
+      }
+      const priceNum = Number(priceRaw);
+      if (priceNum <= 0) {
+        setError(priceInput, variantsError, variantsErrorText, `Price for size ${size} must be greater than 0.`);
+        return false;
+      }
+      if (priceNum > 1000000) {
+        setError(priceInput, variantsError, variantsErrorText, `Price for size ${size} cannot exceed 1,000,000.`);
+        return false;
+      }
+
+      // Validate Stock
       if (stockRaw === "" || isNaN(Number(stockRaw))) {
         setError(stockInput, variantsError, variantsErrorText, `Stock quantity is required for size ${size}.`);
         return false;
@@ -748,7 +669,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return false;
       }
 
+      // Clear row-level inputs if valid
       if (sizeSelect) sizeSelect.classList.remove("border-red-500");
+      if (priceInput) priceInput.classList.remove("border-red-500");
       if (stockInput) stockInput.classList.remove("border-red-500");
     }
 
@@ -808,24 +731,18 @@ document.addEventListener("DOMContentLoaded", function () {
   categorySelect.addEventListener("change", validateCategory);
   categorySelect.addEventListener("blur", validateCategory);
 
-  regularPriceInput.addEventListener("input", validateRegularPrice);
-  regularPriceInput.addEventListener("blur", validateRegularPrice);
-
-  salePriceInput.addEventListener("input", validateSalePrice);
-  salePriceInput.addEventListener("blur", validateSalePrice);
-
   descriptionInput.addEventListener("input", validateDescription);
   descriptionInput.addEventListener("blur", validateDescription);
 
   highlightsInput.addEventListener("input", validateHighlights);
 
   variantsContainer.addEventListener("input", function (e) {
-    if (e.target.matches(".variant-size-select, .variant-stock-input")) {
+    if (e.target.matches(".variant-size-select, .variant-price-input, .variant-stock-input")) {
       validateVariants();
     }
   });
   variantsContainer.addEventListener("change", function (e) {
-    if (e.target.matches(".variant-size-select, .variant-stock-input")) {
+    if (e.target.matches(".variant-size-select, .variant-price-input, .variant-stock-input")) {
       validateVariants();
     }
   });
@@ -835,17 +752,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const rows = variantsContainer.querySelectorAll(".variant-row");
     rows.forEach((row, index) => {
       const sizeSelect = row.querySelector(".variant-size-select");
+      const priceInput = row.querySelector(".variant-price-input");
       const stockInput = row.querySelector(".variant-stock-input");
       if (sizeSelect) sizeSelect.name = `variants[${index}][size]`;
+      if (priceInput) priceInput.name = `variants[${index}][price]`;
       if (stockInput) stockInput.name = `variants[${index}][stock]`;
     });
   }
 
-  function createVariantRow(index, sizeVal = "", stockVal = "") {
+  function createVariantRow(index, sizeVal = "", priceVal = "", stockVal = "") {
     const row = document.createElement("div");
     row.className = "variant-row grid grid-cols-12 gap-3 items-center bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm";
     row.innerHTML = `
-      <div class="col-span-5">
+      <div class="col-span-4">
         <select
           name="variants[${index}][size]"
           class="variant-size-select w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
@@ -857,11 +776,23 @@ document.addEventListener("DOMContentLoaded", function () {
           <option value="XL" ${sizeVal === "XL" ? "selected" : ""}>XL</option>
         </select>
       </div>
-      <div class="col-span-5">
+      <div class="col-span-3">
+        <input
+          type="number"
+          name="variants[${index}][price]"
+          placeholder="Price (₹)"
+          min="0.01"
+          max="1000000"
+          step="0.01"
+          value="${priceVal}"
+          class="variant-price-input w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200"
+        >
+      </div>
+      <div class="col-span-3">
         <input
           type="number"
           name="variants[${index}][stock]"
-          placeholder="Stock quantity (e.g. 5)"
+          placeholder="Stock (e.g. 5)"
           min="0"
           step="1"
           value="${stockVal}"
@@ -1005,8 +936,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const isNameValid = validateName();
     const isBrandValid = validateBrand();
     const isCategoryValid = validateCategory();
-    const isRegularPriceValid = validateRegularPrice();
-    const isSalePriceValid = validateSalePrice();
     const isVariantsValid = validateVariants();
     const isDescriptionValid = validateDescription();
     const isHighlightsValid = validateHighlights();
@@ -1016,8 +945,6 @@ document.addEventListener("DOMContentLoaded", function () {
       !isNameValid ||
       !isBrandValid ||
       !isCategoryValid ||
-      !isRegularPriceValid ||
-      !isSalePriceValid ||
       !isVariantsValid ||
       !isDescriptionValid ||
       !isHighlightsValid ||
@@ -1028,8 +955,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!isNameValid) nameInput.focus();
       else if (!isBrandValid) brandInput.focus();
       else if (!isCategoryValid) categorySelect.focus();
-      else if (!isRegularPriceValid) regularPriceInput.focus();
-      else if (!isSalePriceValid) salePriceInput.focus();
       else if (!isVariantsValid) {
         const firstInvalidSelect = variantsContainer.querySelector(".variant-size-select:invalid") || variantsContainer.querySelector(".variant-size-select");
         if (firstInvalidSelect) firstInvalidSelect.focus();

@@ -51,9 +51,13 @@
                 Size: <span class="font-bold text-gray-800"><%= item.size %></span>
               </p>
 
+              <%
+                const variant = item.product.variants ? item.product.variants.find(v => v.size === item.size) : null;
+                const itemUnitPrice = (variant && typeof variant.price === 'number') ? variant.price : (item.product.salePrice || 0);
+              %>
               <!-- PRICE -->
               <p class="text-xl font-bold text-orange-600 mb-4">
-                ₹<%= item.product.salePrice %>
+                ₹<%= itemUnitPrice %>
               </p>
 
               <!-- QUANTITY -->
@@ -89,7 +93,7 @@
                   Subtotal
                 </p>
                 <h3 id="subtotal-<%= item.product._id %>-<%= item.size %>" class="text-2xl font-bold text-gray-800">
-                  ₹<%= item.product.salePrice * item.quantity %>
+                  ₹<%= itemUnitPrice * item.quantity %>
                 </h3>
               </div>
 

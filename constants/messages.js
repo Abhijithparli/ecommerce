@@ -99,6 +99,8 @@ export const MESSAGES = Object.freeze({
       VARIANT_SIZE_REQUIRED: "Size is required for all variants",
       VARIANT_SIZE_INVALID: "Allowed sizes are S, M, L, XL",
       VARIANT_SIZE_DUPLICATE: "Duplicate variant size is not allowed",
+      VARIANT_PRICE_REQUIRED: "Price is required for all variants",
+      VARIANT_PRICE_INVALID: "Price must be a valid number greater than 0 and cannot exceed 1,000,000",
       VARIANT_STOCK_REQUIRED: "Stock quantity is required for all variants",
       VARIANT_STOCK_INVALID: "Stock must be a non-negative whole integer (0 or greater)"
     })

@@ -212,7 +212,7 @@
               <img src="<%= item.image %>" class="w-16 h-16 object-cover rounded-xl border border-white/10 shrink-0">
               <div class="flex-grow min-w-0">
                 <h5 class="font-bold text-white text-sm truncate"><%= item.name %></h5>
-                <p class="text-xs text-gray-400 mt-1">Price per unit: <strong class="text-gray-300">₹<%= item.price %></strong></p>
+                <p class="text-xs text-gray-400 mt-1"><% if (item.size) { %>Size: <strong class="text-gray-300"><%= item.size %></strong> • <% } %>Price per unit: <strong class="text-gray-300">₹<%= item.price %></strong></p>
               </div>
               <div class="text-right shrink-0">
                 <p class="text-xs text-gray-400">Qty: <span class="font-bold text-white"><%= item.quantity %></span></p>

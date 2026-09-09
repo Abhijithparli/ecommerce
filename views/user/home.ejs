@@ -371,8 +371,22 @@
                 <div class="product-info">
                   <div class="product-name font-semibold text-gray-800 text-sm mt-2"><%= product.name %></div>
                   <div class="text-xs text-gray-500 mb-1"><%= product.brand %></div>
+                  <%
+                    let homeDisplayPrice = '';
+                    if (product.variants && product.variants.length > 0) {
+                      const prices = product.variants.map(v => v.price).filter(p => typeof p === 'number' && !isNaN(p));
+                      if (prices.length > 0) {
+                        const minP = Math.min(...prices);
+                        const maxP = Math.max(...prices);
+                        homeDisplayPrice = minP === maxP ? `₹${minP}` : `₹${minP} - ₹${maxP}`;
+                      }
+                    }
+                    if (!homeDisplayPrice) {
+                      homeDisplayPrice = `₹${product.salePrice || product.regularPrice || 0}`;
+                    }
+                  %>
                   <div class="flex items-center justify-center gap-2">
-                    <span class="product-price text-orange-500 font-bold text-base">₹<%= product.salePrice %></span>
+                    <span class="product-price text-orange-500 font-bold text-base"><%= homeDisplayPrice %></span>
                     <% if (product.regularPrice > product.salePrice) { %>
                       <span class="text-gray-400 line-through text-xs">₹<%= product.regularPrice %></span>
                     <% } %>
