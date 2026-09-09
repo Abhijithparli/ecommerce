@@ -1,6 +1,6 @@
-import * as authService from "../../services/authService.js";
-import * as userService from "../../services/userService.js";
-import * as productService from "../../services/productService.js";
+import * as authService from "../../services/user/authService.js";
+import * as userService from "../../services/user/userService.js";
+import * as productService from "../../services/user/productService.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";

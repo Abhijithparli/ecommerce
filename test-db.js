@@ -1,5 +1,5 @@
 import connectDB from "./config/db.js";
-import { getPublicProducts } from "./services/productService.js";
+import { getPublicProducts } from "./services/user/productService.js";
 import mongoose from "mongoose";
 
 async function run() {

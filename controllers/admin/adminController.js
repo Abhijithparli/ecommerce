@@ -1,4 +1,4 @@
-import * as adminService from "../../services/adminService.js";
+import * as adminService from "../../services/admin/adminService.js";
 
 // ================= LOAD ADMIN LOGIN PAGE =================
 export const loadAdminLogin = (req, res) => {

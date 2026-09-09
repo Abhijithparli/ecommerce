@@ -1,4 +1,4 @@
-import * as productService from "../../services/productService.js";
+import * as productService from "../../services/user/productService.js";
 
 //load product listing page
 export const loadProducts = async (req, res) => {

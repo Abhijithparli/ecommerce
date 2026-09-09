@@ -1,4 +1,4 @@
-import * as orderService from "../../services/orderService.js";
+import * as orderService from "../../services/user/orderService.js";
 import { PAYMENT_METHOD } from "../../constants/enums.js";
 import { MESSAGES } from "../../constants/messages.js";
 

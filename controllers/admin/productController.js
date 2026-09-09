@@ -1,4 +1,4 @@
-import * as productService from "../../services/productService.js";
+import * as productService from "../../services/admin/productService.js";
 import { MESSAGES } from "../../constants/messages.js";
 
 export const loadProducts = async (req, res) => {
