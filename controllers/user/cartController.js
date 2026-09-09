@@ -5,20 +5,33 @@ import { MESSAGES } from "../../constants/messages.js";
 // ADD TO CART
 export const addToCart = async (req, res) => {
   try {
-    const userId = req.session.user.id;
-    const productId = req.params.productId;
-    const size = (req.body.size || "M").toUpperCase();
-    const quantity = parseInt(req.body.quantity) || 1;
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Please login to add items to your cart",
+        redirectTo: "/login"
+      });
+    }
 
-    await cartService.addToCart({ userId, productId, size, quantity });
+    const productId = req.params.productId;
+    const { variantId, size, quantity } = req.body;
+
+    await cartService.addToCart({
+      userId,
+      productId,
+      variantId,
+      size,
+      quantity,
+    });
 
     res.json({
       success: true,
       message: MESSAGES.CART.ADDED,
     });
   } catch (error) {
-    console.error("Add to cart error:", error);
-    res.status(error.statusCode || 500).json({
+    console.error("Add to cart error:", error.message);
+    res.status(error.statusCode || 400).json({
       success: false,
       message: error.message || MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
@@ -29,11 +42,16 @@ export const addToCart = async (req, res) => {
 export const loadCart = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { cart, total } = await cartService.getUserCart(userId);
+    const cartData = await cartService.getUserCart(userId);
 
     res.render("user/cart", {
-      cart,
-      total,
+      cart: cartData.cart,
+      items: cartData.items,
+      total: cartData.total,
+      validTotal: cartData.validTotal,
+      hasUnavailableItems: cartData.hasUnavailableItems,
+      maxQuantity: cartData.maxQuantity,
+      user: req.session.user,
     });
   } catch (error) {
     console.error("Load cart error:", error);
@@ -45,25 +63,20 @@ export const loadCart = async (req, res) => {
 export const updateCartQuantity = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { productId, action } = req.body;
-    const size = (req.body.size || "M").toUpperCase();
+    const { itemId, productId, size, action } = req.body;
 
     const result = await cartService.updateCartQuantity({
       userId,
+      itemId,
       productId,
       size,
       action,
     });
 
-    res.json({
-      success: true,
-      quantity: result.quantity,
-      subtotal: result.subtotal,
-      grandTotal: result.grandTotal,
-    });
+    res.json(result);
   } catch (error) {
-    console.error("Update cart quantity error:", error);
-    res.status(error.statusCode || 500).json({
+    console.error("Update cart quantity error:", error.message);
+    res.status(error.statusCode || 400).json({
       success: false,
       message: error.message || MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
@@ -75,33 +88,34 @@ export const removeCartItem = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const productId = req.params.productId;
-    const size = (req.query.size || "M").toUpperCase();
+    const itemId = req.params.itemId || req.body.itemId || req.query.itemId;
+    const size = req.query.size || req.body.size;
 
     const result = await cartService.removeCartItem({
       userId,
+      itemId,
       productId,
       size,
     });
 
-    res.json({
-      success: true,
-      message: MESSAGES.CART.ITEM_REMOVED,
-      grandTotal: result.grandTotal,
-      cartEmpty: result.cartEmpty,
-    });
+    res.json(result);
   } catch (error) {
-    console.error("Remove cart item error:", error);
-    res.status(error.statusCode || 500).json({
+    console.error("Remove cart item error:", error.message);
+    res.status(error.statusCode || 400).json({
       success: false,
       message: error.message || MESSAGES.COMMON.SOMETHING_WENT_WRONG,
     });
   }
 };
 
-// LOAD CHECKOUT PAGE
+// LOAD CHECKOUT PAGE (Preserved for upcoming checkout milestone)
 export const loadCheckout = async (req, res) => {
   try {
     const userId = req.session.user.id;
+
+    // Check for unavailable items before allowing checkout
+    await cartService.validateCartForCheckout(userId);
+
     const data = await checkoutService.getCheckoutData(userId);
 
     res.render("user/checkout", {
@@ -110,7 +124,8 @@ export const loadCheckout = async (req, res) => {
       total: data.total,
     });
   } catch (error) {
-    console.error("Load checkout error:", error);
+    console.error("Load checkout error:", error.message);
+    req.session.error = error.message;
     res.redirect("/cart");
   }
 };

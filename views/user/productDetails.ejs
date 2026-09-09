@@ -6,7 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= product.name %> - HeadShield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    /* Custom SweetAlert2 Dark Theme */
+    .swal2-popup.headshield-swal {
+      background: #13131a !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 1rem !important;
+      color: #e5e7eb !important;
+    }
+    .headshield-swal .swal2-title {
+      color: #ffffff !important;
+      font-size: 1.25rem !important;
+    }
+    .headshield-swal .swal2-html-container {
+      color: #9ca3af !important;
+      font-size: 0.875rem !important;
+    }
+    .headshield-swal .swal2-confirm {
+      background: #ea580c !important;
+      border-radius: 0.5rem !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 600 !important;
+    }
+    .headshield-swal .swal2-cancel {
+      background: #27272a !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 0.5rem !important;
+      color: #d1d5db !important;
+      padding: 0.6rem 1.5rem !important;
+    }
     /* Styling for dynamic mouse pan/zoom container */
     .zoom-container {
       position: relative;
@@ -132,6 +161,7 @@
                   <% product.variants.forEach((variant, index) => { %>
                     <option 
                       value="<%= variant.size %>" 
+                      data-variant-id="<%= variant._id %>"
                       data-price="<%= variant.price %>" 
                       data-stock="<%= variant.stock %>"
                       <%= index === 0 ? 'selected' : '' %>
@@ -140,7 +170,7 @@
                     </option>
                   <% }) %>
                 <% } else { %>
-                  <option value="M" data-price="<%= product.salePrice %>" data-stock="<%= product.quantity %>">M</option>
+                  <option value="M" data-variant-id="" data-price="<%= product.salePrice %>" data-stock="<%= product.quantity %>">M</option>
                 <% } %>
               </select>
             </div>
@@ -374,17 +404,47 @@
   <!-- Include Footer -->
   <%- include("../partials/user/footer") %>
 
-  <!-- Javascript functionalities (Quantity count, tab toggles, mouse-move zoom) -->
+  <!-- Javascript functionalities (Quantity count, tab toggles, mouse-move zoom, SweetAlert2) -->
   <script>
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      customClass: {
+        popup: 'headshield-swal'
+      }
+    });
+
+    const sizeSelector = document.getElementById("sizeSelector");
+    const displayedPrice = document.getElementById("displayedPrice");
+    const stockBadge = document.getElementById("stockBadge");
+    const addToCartBtn = document.getElementById("addToCartBtn");
+    const buyNowBtn = document.getElementById("buyNowBtn");
+
     // Quantity control handler
     function adjustQty(amount) {
       const input = document.getElementById("qtyInput");
       let currentVal = parseInt(input.value);
       if (isNaN(currentVal)) currentVal = 1;
-      
+
+      const selectedOption = sizeSelector ? sizeSelector.options[sizeSelector.selectedIndex] : null;
+      const stock = selectedOption ? parseInt(selectedOption.dataset.stock) : 5;
+      const maxAllowed = Math.min(5, !isNaN(stock) ? stock : 5);
+
       currentVal += amount;
       if (currentVal < 1) currentVal = 1;
-      
+      if (currentVal > maxAllowed) {
+        currentVal = maxAllowed;
+        if (amount > 0) {
+          Toast.fire({
+            icon: 'warning',
+            title: stock < 5 ? `Only ${stock} items available in stock` : 'Maximum 5 items allowed'
+          });
+        }
+      }
+
       input.value = currentVal;
     }
 
@@ -392,7 +452,7 @@
     function switchTab(tabId) {
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      
+
       document.getElementById(`tabPanel-${tabId}`).classList.remove("hidden");
       document.getElementById(`tabBtn-${tabId}`).classList.add("active");
     }
@@ -401,30 +461,26 @@
     const zoomContainer = document.getElementById("zoomContainer");
     const mainImage = document.getElementById("mainImage");
 
-    zoomContainer.addEventListener("mousemove", (e) => {
-      const rect = zoomContainer.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    if (zoomContainer && mainImage) {
+      zoomContainer.addEventListener("mousemove", (e) => {
+        const rect = zoomContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-      const xPercent = (x / rect.width) * 100;
-      const yPercent = (y / rect.height) * 100;
+        const xPercent = (x / rect.width) * 100;
+        const yPercent = (y / rect.height) * 100;
 
-      mainImage.style.transformOrigin = `${xPercent}% ${yPercent}%`;
-      mainImage.style.transform = "scale(2)";
-    });
+        mainImage.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+        mainImage.style.transform = "scale(2)";
+      });
 
-    zoomContainer.addEventListener("mouseleave", () => {
-      mainImage.style.transform = "scale(1)";
-      mainImage.style.transformOrigin = "center center";
-    });
+      zoomContainer.addEventListener("mouseleave", () => {
+        mainImage.style.transform = "scale(1)";
+        mainImage.style.transformOrigin = "center center";
+      });
+    }
 
     // Dynamic variant price & stock update
-    const sizeSelector = document.getElementById("sizeSelector");
-    const displayedPrice = document.getElementById("displayedPrice");
-    const stockBadge = document.getElementById("stockBadge");
-    const addToCartBtn = document.getElementById("addToCartBtn");
-    const buyNowBtn = document.getElementById("buyNowBtn");
-
     function updateVariantDetails() {
       if (!sizeSelector) return;
       const selectedOption = sizeSelector.options[sizeSelector.selectedIndex];
@@ -471,44 +527,89 @@
           buyNowBtn.style.display = "none";
         }
       }
+
+      // Reset qty input if it exceeds newly selected variant's stock
+      const qtyInput = document.getElementById("qtyInput");
+      if (qtyInput && !isNaN(stock) && stock > 0) {
+        if (parseInt(qtyInput.value) > stock) {
+          qtyInput.value = stock;
+        }
+      }
     }
 
     if (sizeSelector) {
       sizeSelector.addEventListener("change", updateVariantDetails);
-      // Run once on load
       updateVariantDetails();
     }
 
     // AJAX cart submission and guest checks
     async function addToCart(productId, redirect = false) {
       if (!window.isLoggedIn) {
-        alert("Please login to continue");
-        window.location.href = "/login";
+        Swal.fire({
+          title: 'Login Required',
+          text: 'Please sign in to add items to your cart.',
+          icon: 'info',
+          iconColor: '#f97316',
+          showCancelButton: true,
+          confirmButtonText: 'Login Now',
+          cancelButtonText: 'Cancel',
+          customClass: { popup: 'headshield-swal' }
+        }).then((res) => {
+          if (res.isConfirmed) {
+            window.location.href = "/login";
+          }
+        });
         return;
       }
-      
+
       try {
         const qty = parseInt(document.getElementById("qtyInput").value) || 1;
-        const size = sizeSelector ? sizeSelector.value : "M";
+        const selectedOption = sizeSelector ? sizeSelector.options[sizeSelector.selectedIndex] : null;
+        const size = selectedOption ? selectedOption.value : "M";
+        const variantId = selectedOption ? selectedOption.dataset.variantId : null;
+
         const response = await fetch(`/cart/add/${productId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: qty, size: size })
+          body: JSON.stringify({ quantity: qty, size: size, variantId: variantId })
         });
-        
+
         const data = await response.json();
         if (data.success) {
           if (redirect) {
             window.location.href = "/cart";
           } else {
-            alert(data.message);
+            Swal.fire({
+              title: 'Added to Cart!',
+              text: `Size ${size} (${qty} ${qty === 1 ? 'unit' : 'units'}) added to your cart.`,
+              icon: 'success',
+              iconColor: '#f97316',
+              showCancelButton: true,
+              confirmButtonText: 'View Cart',
+              cancelButtonText: 'Continue Shopping',
+              customClass: { popup: 'headshield-swal' }
+            }).then((res) => {
+              if (res.isConfirmed) {
+                window.location.href = "/cart";
+              }
+            });
           }
         } else {
-          alert(data.message || "Failed to add to cart");
+          Swal.fire({
+            title: 'Notice',
+            text: data.message || 'Failed to add product to cart',
+            icon: 'warning',
+            iconColor: '#f97316',
+            confirmButtonText: 'Understood',
+            customClass: { popup: 'headshield-swal' }
+          });
         }
       } catch (error) {
         console.error("Cart error:", error);
-        alert("Something went wrong");
+        Toast.fire({
+          icon: 'error',
+          title: 'Network error. Please try again.'
+        });
       }
     }
 

@@ -1,257 +1,490 @@
+<% const currentUser = (typeof user !== 'undefined' && user) ? user : null; %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Shopping Cart - HeadShield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* Custom SweetAlert2 Dark Theme */
+    .swal2-popup.headshield-swal {
+      background: #13131a !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 1rem !important;
+      color: #e5e7eb !important;
+    }
+    .headshield-swal .swal2-title {
+      color: #ffffff !important;
+      font-size: 1.25rem !important;
+    }
+    .headshield-swal .swal2-html-container {
+      color: #9ca3af !important;
+      font-size: 0.875rem !important;
+    }
+    .headshield-swal .swal2-confirm {
+      background: #ea580c !important; /* bg-orange-600 */
+      border-radius: 0.5rem !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 600 !important;
+    }
+    .headshield-swal .swal2-cancel {
+      background: #27272a !important; /* bg-zinc-800 */
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 0.5rem !important;
+      color: #d1d5db !important;
+      padding: 0.6rem 1.5rem !important;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-[#0a0a0f] text-gray-200 min-h-screen flex flex-col font-sans">
 
-<div class="max-w-7xl mx-auto px-6 py-10">
+  <!-- Include Header -->
+  <%- include("../partials/user/header", { user: currentUser }) %>
 
-  <!-- TITLE -->
-  <h1 class="text-4xl font-bold text-gray-800 mb-10">
-    Shopping Cart
-  </h1>
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto px-6 py-10 w-full flex-1 flex flex-col gap-8">
 
+    <!-- BREADCRUMBS -->
+    <div class="text-xs text-gray-500 flex items-center gap-2 uppercase tracking-wider">
+      <a href="/" class="hover:text-orange-500 transition text-gray-400 text-decoration-none">Home</a>
+      <span>/</span>
+      <a href="/products" class="hover:text-orange-500 transition text-gray-400 text-decoration-none">Shop</a>
+      <span>/</span>
+      <span class="text-gray-300 font-medium">Cart</span>
+    </div>
 
-  <% if (cart && cart.items.length > 0) { %>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-
-      <!-- CART ITEMS -->
-      <div class="lg:col-span-2 space-y-6">
-
-        <% cart.items.forEach(item => { %>
-
-          <div id="item-<%= item.product._id %>-<%= item.size %>" class="bg-white rounded-2xl shadow p-6 flex gap-6">
-
-            <!-- IMAGE -->
-            <img
-              src="<%= item.product.images[0] %>"
-              class="w-36 h-36 object-cover rounded-xl"
-            >
-
-            <!-- CONTENT -->
-            <div class="flex-1">
-
-              <!-- NAME -->
-              <h2 class="text-2xl font-semibold text-gray-800 mb-2">
-                <%= item.product.name %>
-              </h2>
-
-              <!-- BRAND -->
-              <p class="text-gray-500 mb-2">
-                <%= item.product.brand %>
-              </p>
-
-              <!-- SIZE -->
-              <p class="text-sm text-gray-500 mb-2">
-                Size: <span class="font-bold text-gray-800"><%= item.size %></span>
-              </p>
-
-              <%
-                const variant = item.product.variants ? item.product.variants.find(v => v.size === item.size) : null;
-                const itemUnitPrice = (variant && typeof variant.price === 'number') ? variant.price : (item.product.salePrice || 0);
-              %>
-              <!-- PRICE -->
-              <p class="text-xl font-bold text-orange-600 mb-4">
-                ₹<%= itemUnitPrice %>
-              </p>
-
-              <!-- QUANTITY -->
-              <div class="flex items-center gap-4">
-                <span class="font-medium">
-                  Quantity:
-                </span>
-                <button
-                  onclick="updateQuantity('<%= item.product._id %>', '<%= item.size %>', 'decrease')"
-                  class="px-4 py-2 bg-gray-200"
-                >
-                  -
-                </button>
-                <span
-                  id="qty-<%= item.product._id %>-<%= item.size %>"
-                  class="px-5 py-2"
-                >
-                  <%= item.quantity %>
-                </span>
-                <button
-                  onclick="updateQuantity('<%= item.product._id %>', '<%= item.size %>', 'increase')"
-                  class="px-4 py-2 bg-gray-200"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <!-- SUBTOTAL -->
-            <div class="text-right flex flex-col justify-between">
-              <div>
-                <p class="text-gray-500 mb-2">
-                  Subtotal
-                </p>
-                <h3 id="subtotal-<%= item.product._id %>-<%= item.size %>" class="text-2xl font-bold text-gray-800">
-                  ₹<%= itemUnitPrice * item.quantity %>
-                </h3>
-              </div>
-
-              <!-- REMOVE -->
-              <button
-                onclick="removeCartItem('<%= item.product._id %>', '<%= item.size %>')"
-                class="text-red-500 hover:text-red-700 font-medium"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        <% }) %>
-
+    <!-- PAGE HEADER -->
+    <div class="flex items-center justify-between border-b border-white/5 pb-4">
+      <div class="space-y-1">
+        <h1 class="text-3xl font-extrabold text-white tracking-wide">
+          Shopping Cart
+        </h1>
+        <p class="text-xs text-gray-400">
+          Review your selected items and size variants before proceeding to checkout.
+        </p>
       </div>
+      <% if (items && items.length > 0) { %>
+        <span class="bg-zinc-800/80 border border-white/10 text-orange-400 px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider uppercase">
+          <%= items.length %> <%= items.length === 1 ? 'Item' : 'Items' %>
+        </span>
+      <% } %>
+    </div>
 
+    <!-- UNAVAILABLE ITEMS WARNING BANNER -->
+    <div id="unavailableWarningBanner" class="<%= hasUnavailableItems ? '' : 'hidden' %> bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-start gap-4 text-red-400">
+      <span class="text-2xl mt-0.5">⚠️</span>
+      <div class="flex-1">
+        <p class="font-bold text-sm text-red-300">Action Required</p>
+        <p class="text-xs text-red-400/90 mt-0.5">
+          Some items or variants in your cart are currently out of stock or unavailable. Please remove or adjust them to proceed with checkout.
+        </p>
+      </div>
+    </div>
 
-      <!-- SUMMARY -->
-      <div>
+    <% if (items && items.length > 0) { %>
 
-        <div class="bg-white rounded-2xl shadow p-8 sticky top-10">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        <!-- CART ITEMS COLUMN -->
+        <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
 
-            Order Summary
+          <% items.forEach(item => { %>
+            <%
+              const product = item.product;
+              const itemId = item._id ? item._id.toString() : `${product?._id}-${item.size}`;
+              const isInvalid = item.isUnavailable || item.isOutOfStock || item.exceedsStock;
+            %>
 
-          </h2>
+            <div 
+              id="cart-item-<%= itemId %>" 
+              class="bg-[#13131a] border <%= isInvalid ? 'border-red-500/30 bg-red-950/10' : 'border-white/5' %> rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row gap-5 transition duration-200 hover:border-white/10 shadow-lg relative"
+            >
+              <!-- IMAGE -->
+              <div class="w-full sm:w-32 h-32 bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center p-3 shrink-0 border border-white/5">
+                <img
+                  src="<%= (product && product.images && product.images[0]) ? product.images[0] : '/img/targo-pro-biger.jpg' %>"
+                  alt="<%= product ? product.name : 'Product' %>"
+                  class="max-w-full max-h-full object-contain"
+                >
+              </div>
 
-          <!-- TOTAL -->
-          <div class="flex justify-between items-center mb-6">
+              <!-- CONTENT & DETAILS -->
+              <div class="flex-1 flex flex-col justify-between space-y-3">
+                
+                <div class="space-y-1.5">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <span class="text-[10px] font-bold text-orange-400 uppercase tracking-widest bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded">
+                        <%= product ? product.brand : 'HeadShield' %>
+                      </span>
+                      <h2 class="text-lg font-bold text-white tracking-wide mt-1 line-clamp-1">
+                        <% if (product && !product.isDeleted) { %>
+                          <a href="/products/<%= product._id %>" class="hover:text-orange-500 transition text-decoration-none text-white">
+                            <%= product.name %>
+                          </a>
+                        <% } else { %>
+                          <%= product ? product.name : 'Unavailable Product' %>
+                        <% } %>
+                      </h2>
+                    </div>
 
-            <span class="text-lg text-gray-600">
-              Total
-            </span>
+                    <!-- DESKTOP REMOVE BUTTON -->
+                    <button
+                      onclick="confirmRemoveItem('<%= itemId %>', '<%= product ? product._id : '' %>', '<%= item.size %>')"
+                      class="text-gray-500 hover:text-red-400 transition text-xs font-semibold uppercase tracking-wider flex items-center gap-1 border border-transparent hover:border-red-500/20 px-2 py-1 rounded"
+                      title="Remove item"
+                    >
+                      <span>✕</span>
+                      <span class="hidden sm:inline">Remove</span>
+                    </button>
+                  </div>
 
-            <span id="grandTotal" class="text-3xl font-bold text-orange-600">
-              ₹<%= total %>
-            </span>
+                  <!-- Variant & Stock info -->
+                  <div class="flex items-center gap-3 flex-wrap text-xs">
+                    <span class="text-gray-400">
+                      Size: <strong class="text-white font-mono bg-zinc-800 px-2 py-0.5 rounded border border-white/5"><%= item.size %></strong>
+                    </span>
+                    <span class="text-gray-600">•</span>
+                    <span class="text-gray-400">
+                      Unit Price: <strong class="text-orange-400">₹<%= item.unitPrice %></strong>
+                    </span>
+                    <span class="text-gray-600">•</span>
+                    
+                    <!-- Stock Badge -->
+                    <% if (item.isUnavailable || item.isOutOfStock) { %>
+                      <span class="text-red-400 font-bold bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wider text-[11px]">
+                        <%= item.unavailableReason || 'Out of Stock' %>
+                      </span>
+                    <% } else if (item.exceedsStock) { %>
+                      <span class="text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-[11px]">
+                        <%= item.unavailableReason %>
+                      </span>
+                    <% } else if (item.availableStock <= 3) { %>
+                      <span class="text-amber-400 font-semibold text-[11px]">
+                        Only <%= item.availableStock %> left in stock
+                      </span>
+                    <% } else { %>
+                      <span class="text-emerald-400 font-semibold text-[11px]">
+                        ✓ In Stock
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- CONTROLS & SUBTOTAL -->
+                <div class="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
+                  
+                  <!-- Quantity controls -->
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500 font-medium">Qty:</span>
+                    <div class="flex items-center border border-zinc-700 bg-zinc-800 rounded-xl overflow-hidden h-9">
+                      <button
+                        type="button"
+                        id="btn-dec-<%= itemId %>"
+                        onclick="updateCartQty('<%= itemId %>', '<%= product ? product._id : '' %>', '<%= item.size %>', 'decrease')"
+                        class="w-8 h-full text-gray-300 hover:text-white hover:bg-zinc-700 transition font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                        <%= item.quantity <= 1 || isInvalid ? 'disabled' : '' %>
+                      >
+                        -
+                      </button>
+                      <span
+                        id="qty-<%= itemId %>"
+                        class="w-10 text-center text-sm font-bold text-white font-mono"
+                      >
+                        <%= item.quantity %>
+                      </span>
+                      <button
+                        type="button"
+                        id="btn-inc-<%= itemId %>"
+                        onclick="updateCartQty('<%= itemId %>', '<%= product ? product._id : '' %>', '<%= item.size %>', 'increase')"
+                        class="w-8 h-full text-gray-300 hover:text-white hover:bg-zinc-700 transition font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                        <%= isInvalid || item.quantity >= (item.availableStock || 0) || item.quantity >= maxQuantity ? 'disabled' : '' %>
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-mono hidden sm:inline">(Max: <%= Math.min(maxQuantity, item.availableStock || maxQuantity) %>)</span>
+                  </div>
+
+                  <!-- Subtotal -->
+                  <div class="text-right">
+                    <p class="text-[11px] text-gray-500 uppercase tracking-wider">Subtotal</p>
+                    <p id="subtotal-<%= itemId %>" class="text-lg font-extrabold text-white">
+                      ₹<%= item.itemTotal %>
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          <% }) %>
+
+        </div>
+
+        <!-- ORDER SUMMARY COLUMN (STICKY) -->
+        <div>
+          <div class="bg-[#13131a] border border-white/5 rounded-2xl p-6 sticky top-24 space-y-6 shadow-2xl">
+            
+            <h2 class="text-lg font-bold text-white tracking-wide border-b border-white/5 pb-3">
+              Order Summary
+            </h2>
+
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between items-center text-gray-400">
+                <span>Subtotal</span>
+                <span id="summarySubtotal" class="font-bold text-white">₹<%= total %></span>
+              </div>
+              <div class="flex justify-between items-center text-gray-400">
+                <span>Estimated Shipping</span>
+                <span class="text-emerald-400 font-semibold text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">FREE</span>
+              </div>
+              <div class="flex justify-between items-center text-gray-400">
+                <span>Estimated Taxes</span>
+                <span class="text-gray-500 text-xs">Included</span>
+              </div>
+            </div>
+
+            <div class="border-t border-white/5 pt-4">
+              <div class="flex justify-between items-baseline">
+                <span class="text-base font-bold text-gray-300">Total Amount</span>
+                <span id="grandTotal" class="text-2xl font-extrabold text-orange-500">
+                  ₹<%= total %>
+                </span>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">Final amount payable at checkout.</p>
+            </div>
+
+            <!-- CHECKOUT CTA BUTTON -->
+            <div>
+              <a
+                id="checkoutBtn"
+                href="/checkout"
+                class="<%= hasUnavailableItems ? 'opacity-40 cursor-not-allowed pointer-events-none' : '' %> block text-center w-full bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition duration-200 shadow-lg shadow-orange-500/20 text-decoration-none"
+              >
+                Proceed To Checkout
+              </a>
+              <% if (hasUnavailableItems) { %>
+                <p id="checkoutBlockedMsg" class="text-xs text-red-400 text-center mt-2">
+                  Remove out-of-stock items to proceed.
+                </p>
+              <% } %>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="pt-4 border-t border-white/5 grid grid-cols-2 gap-3 text-center text-[11px] text-gray-400">
+              <div class="bg-zinc-900/60 p-2.5 rounded-xl border border-white/5">
+                <span class="text-orange-400 text-sm block mb-1">🛡️</span>
+                <span>Genuine Helmets</span>
+              </div>
+              <div class="bg-zinc-900/60 p-2.5 rounded-xl border border-white/5">
+                <span class="text-orange-400 text-sm block mb-1">⚡</span>
+                <span>Fast Dispatch</span>
+              </div>
+            </div>
 
           </div>
-
-          <!-- CHECKOUT -->
-          <a
-            href="/checkout"
-            class="block text-center w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg"
-          >
-            Proceed To Checkout
-          </a>
-
         </div>
 
       </div>
 
-    </div>
+    <% } else { %>
 
-  <% } else { %>
+      <!-- EMPTY CART STATE -->
+      <div class="bg-[#13131a] border border-white/5 rounded-3xl p-16 text-center max-w-xl mx-auto my-12 space-y-6 shadow-2xl">
+        <div class="w-24 h-24 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center mx-auto text-4xl text-orange-500 shadow-inner">
+          🛒
+        </div>
 
-    <!-- EMPTY CART -->
-    <div class="bg-white rounded-2xl shadow p-16 text-center">
+        <div class="space-y-2">
+          <h2 class="text-2xl font-bold text-white tracking-wide">
+            Your Cart is Empty
+          </h2>
+          <p class="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
+            Looks like you haven't added any helmets to your cart yet. Explore our top-rated collections and find your perfect ride protection.
+          </p>
+        </div>
 
-      <h2 class="text-3xl font-bold text-gray-700 mb-4">
+        <div>
+          <a
+            href="/products"
+            class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm uppercase tracking-wider px-8 py-3.5 rounded-xl transition duration-200 shadow-lg shadow-orange-500/20 text-decoration-none"
+          >
+            Explore Helmets
+          </a>
+        </div>
+      </div>
 
-        Your Cart Is Empty
+    <% } %>
 
-      </h2>
+  </div>
 
-      <p class="text-gray-500 mb-8">
+  <!-- Include Footer -->
+  <%- include("../partials/user/footer") %>
 
-        Add products to continue shopping
-
-      </p>
-
-      <a
-        href="/products"
-        class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl"
-      >
-        Continue Shopping
-      </a>
-
-    </div>
-
-  <% } %>
-
-</div>
-
-<script>
-
-async function removeCartItem(productId, size) {
-  try {
-    const confirmDelete = confirm("Remove this product from cart?");
-    if (!confirmDelete) return;
-
-    const response = await fetch(
-      `/cart/remove/${productId}?size=${encodeURIComponent(size)}`,
-      { method: "DELETE" }
-    );
-
-    const data = await response.json();
-
-    if (data.success) {
-      // Remove item row from DOM
-      const itemEl = document.getElementById(`item-${productId}-${size}`);
-      if (itemEl) itemEl.remove();
-
-      // Update grand total
-      const grandTotalEl = document.getElementById("grandTotal");
-      if (grandTotalEl) grandTotalEl.innerText = `₹${data.grandTotal}`;
-
-      // If cart is empty, reload to show empty state
-      if (data.cartEmpty) {
-        location.reload();
+  <!-- FRONTEND AJAX & SWEETALERT2 LOGIC -->
+  <script>
+    // SweetAlert2 Toast helper
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      customClass: {
+        popup: 'headshield-swal'
       }
-    } else {
-      alert(data.message);
-    }
-  } catch (error) {
-    console.log(error);
-    alert("Something went wrong");
-  }
-}
-
-async function updateQuantity(productId, size, action) {
-  try {
-    const response = await fetch("/cart/update-quantity", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        productId,
-        size,
-        action
-      })
     });
 
-    const data = await response.json();
+    // Remove Item with SweetAlert2 Confirmation
+    async function confirmRemoveItem(itemId, productId, size) {
+      const result = await Swal.fire({
+        title: 'Remove Item?',
+        text: 'Are you sure you want to remove this helmet from your cart?',
+        icon: 'warning',
+        iconColor: '#f97316',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Remove',
+        cancelButtonText: 'Keep Item',
+        customClass: {
+          popup: 'headshield-swal'
+        }
+      });
 
-    if (data.success) {
-      // Update quantity display
-      const qtyEl = document.getElementById(`qty-${productId}-${size}`);
-      if (qtyEl) qtyEl.innerText = data.quantity;
+      if (!result.isConfirmed) return;
 
-      // Update subtotal display
-      const subtotalEl = document.getElementById(`subtotal-${productId}-${size}`);
-      if (subtotalEl) subtotalEl.innerText = `₹${data.subtotal}`;
+      try {
+        const response = await fetch(`/cart/remove/${productId}?size=${encodeURIComponent(size)}&itemId=${encodeURIComponent(itemId)}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
 
-      // Update grand total
-      const grandTotalEl = document.getElementById("grandTotal");
-      if (grandTotalEl) grandTotalEl.innerText = `₹${data.grandTotal}`;
-    } else {
-      alert(data.message);
+        const data = await response.json();
+
+        if (data.success) {
+          Toast.fire({
+            icon: 'success',
+            title: data.message || 'Item removed'
+          });
+
+          // Animate and remove DOM row
+          const itemElement = document.getElementById(`cart-item-${itemId}`);
+          if (itemElement) {
+            itemElement.style.opacity = '0';
+            itemElement.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+              itemElement.remove();
+              if (data.cartEmpty) {
+                location.reload();
+              }
+            }, 200);
+          }
+
+          // Update summary totals
+          const grandTotalEl = document.getElementById('grandTotal');
+          const summarySubtotalEl = document.getElementById('summarySubtotal');
+          if (grandTotalEl) grandTotalEl.textContent = `₹${data.grandTotal}`;
+          if (summarySubtotalEl) summarySubtotalEl.textContent = `₹${data.grandTotal}`;
+
+          // Update checkout button availability state
+          if (!data.hasUnavailableItems) {
+            const banner = document.getElementById('unavailableWarningBanner');
+            if (banner) banner.classList.add('hidden');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+              checkoutBtn.classList.remove('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+            }
+            const blockedMsg = document.getElementById('checkoutBlockedMsg');
+            if (blockedMsg) blockedMsg.remove();
+          }
+
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Remove',
+            text: data.message || 'Something went wrong.',
+            customClass: { popup: 'headshield-swal' }
+          });
+        }
+      } catch (err) {
+        console.error('Remove item error:', err);
+        Toast.fire({
+          icon: 'error',
+          title: 'Network error. Please try again.'
+        });
+      }
     }
-  } catch (error) {
-    console.log(error);
-    alert("Something went wrong");
-  }
-}
 
-</script>
+    // Update Quantity with dynamic limits & live updates
+    async function updateCartQty(itemId, productId, size, action) {
+      const decBtn = document.getElementById(`btn-dec-${itemId}`);
+      const incBtn = document.getElementById(`btn-inc-${itemId}`);
+      
+      // Temporarily disable buttons while request processes
+      if (decBtn) decBtn.disabled = true;
+      if (incBtn) incBtn.disabled = true;
+
+      try {
+        const response = await fetch('/cart/update-quantity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            itemId,
+            productId,
+            size,
+            action
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update live quantity in DOM
+          const qtyEl = document.getElementById(`qty-${itemId}`);
+          if (qtyEl) qtyEl.textContent = data.quantity;
+
+          // Update live subtotal in DOM
+          const subtotalEl = document.getElementById(`subtotal-${itemId}`);
+          if (subtotalEl) subtotalEl.textContent = `₹${data.subtotal}`;
+
+          // Update live grand total
+          const grandTotalEl = document.getElementById('grandTotal');
+          const summarySubtotalEl = document.getElementById('summarySubtotal');
+          if (grandTotalEl) grandTotalEl.textContent = `₹${data.grandTotal}`;
+          if (summarySubtotalEl) summarySubtotalEl.textContent = `₹${data.grandTotal}`;
+
+          // Update button states
+          if (decBtn) decBtn.disabled = data.quantity <= 1;
+          if (incBtn) {
+            const maxAllowed = Math.min(data.maxQuantity || 5, data.availableStock || 5);
+            incBtn.disabled = data.quantity >= maxAllowed;
+          }
+
+        } else {
+          // Show user-friendly error
+          Toast.fire({
+            icon: 'warning',
+            title: data.message || 'Cannot update quantity'
+          });
+
+          // Re-enable decBtn if applicable
+          const currentQty = parseInt(document.getElementById(`qty-${itemId}`)?.textContent || '1');
+          if (decBtn) decBtn.disabled = currentQty <= 1;
+          if (incBtn) incBtn.disabled = false;
+        }
+
+      } catch (err) {
+        console.error('Quantity update error:', err);
+        Toast.fire({
+          icon: 'error',
+          title: 'Failed to update quantity'
+        });
+      }
+    }
+  </script>
+
 </body>
 </html>

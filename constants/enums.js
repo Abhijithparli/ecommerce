@@ -17,3 +17,8 @@ export const PAYMENT_STATUS = Object.freeze({
   PAID: "Paid",
   FAILED: "Failed"
 });
+
+export const CART_CONSTANTS = Object.freeze({
+  MAX_QUANTITY_PER_ITEM: 5,
+  MIN_QUANTITY_PER_ITEM: 1
+});

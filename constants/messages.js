@@ -39,9 +39,16 @@ export const MESSAGES = Object.freeze({
 
   CART: Object.freeze({
     NOT_FOUND: "Cart not found",
-    ADDED: "Product added to cart",
-    ITEM_REMOVED: "Item removed",
-    EMPTY: "Your cart is empty"
+    ADDED: "Product added to cart successfully",
+    ITEM_REMOVED: "Item removed from cart",
+    EMPTY: "Your cart is empty",
+    MAX_QUANTITY_REACHED: "Maximum quantity limit of 5 reached for this item",
+    OUT_OF_STOCK: "This item/variant is currently out of stock",
+    INSUFFICIENT_STOCK: "Requested quantity exceeds available stock",
+    PRODUCT_UNAVAILABLE: "This product is no longer available",
+    VARIANT_UNAVAILABLE: "Selected size variant is not available",
+    MIN_QUANTITY_REACHED: "Minimum quantity is 1",
+    HAS_UNAVAILABLE_ITEMS: "Please remove unavailable or out-of-stock items before checkout"
   }),
 
   USER: Object.freeze({

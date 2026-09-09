@@ -127,9 +127,14 @@ router.post(
   updateCartQuantity
 );
 
-//remove cart item
+// REMOVE CART ITEM (by productId + size query or by cart itemId)
 router.delete(
   "/cart/remove/:productId",
+  isAuthenticated,
+  removeCartItem
+);
+router.delete(
+  "/cart/item/:itemId",
   isAuthenticated,
   removeCartItem
 );

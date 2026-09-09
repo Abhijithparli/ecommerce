@@ -1,12 +1,31 @@
 <% const currentUser = (typeof user !== 'undefined' && user) ? user : null; %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   window.isLoggedIn = <%= currentUser ? 'true' : 'false' %>;
   
   function handleGuestAction(event, actionName) {
     if (!window.isLoggedIn) {
       event.preventDefault();
-      alert("Please login to continue");
-      window.location.href = "/login";
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Login Required',
+          text: `Please sign in to access ${actionName || 'this feature'}.`,
+          icon: 'info',
+          iconColor: '#f97316',
+          showCancelButton: true,
+          confirmButtonText: 'Login Now',
+          cancelButtonText: 'Cancel',
+          customClass: {
+            popup: 'headshield-swal'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/login";
+          }
+        });
+      } else {
+        window.location.href = "/login";
+      }
     }
   }
 </script>
