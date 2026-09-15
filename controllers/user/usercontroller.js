@@ -388,14 +388,33 @@ export const loadAddresses = async (req, res) => {
 };
 
 export const addAddress = async (req, res) => {
+  // Detect whether this is an AJAX request (e.g. from the checkout modal)
+  // or a regular HTML form POST (from the profile/addresses page).
+  // Content-Type: application/json signals a fetch() call.
+  const isAjax = req.headers["content-type"]?.includes("application/json");
+
   try {
     const userId = req.session.user.id;
     await userService.addUserAddress(userId, req.body);
+
+    if (isAjax) {
+      // Checkout modal: return JSON so the modal can reload the page
+      return res.json({ success: true, message: "Address added successfully" });
+    }
 
     req.session.addressSuccess = "Address added successfully";
     res.redirect("/profile/addresses");
   } catch (error) {
     console.error("Add address error:", error);
+
+    if (isAjax) {
+      // Checkout modal: return JSON error so SweetAlert2 can display it
+      return res.status(400).json({
+        success: false,
+        message: error.message || "Something went wrong"
+      });
+    }
+
     req.session.error = error.message || "Something went wrong";
     res.redirect("/profile/addresses");
   }

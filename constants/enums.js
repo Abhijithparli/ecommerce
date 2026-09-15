@@ -22,3 +22,8 @@ export const CART_CONSTANTS = Object.freeze({
   MAX_QUANTITY_PER_ITEM: 5,
   MIN_QUANTITY_PER_ITEM: 1
 });
+
+export const CHECKOUT_CONSTANTS = Object.freeze({
+  SHIPPING_FEE: 0,   // Free shipping (update here when shipping is added)
+  TAX_RATE: 0        // 0% tax (update here when tax is implemented)
+});

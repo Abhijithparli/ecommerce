@@ -1,104 +1,176 @@
+<%
+  /**
+   * orderSuccess.ejs
+   *
+   * Variables passed from orderController.loadOrderSuccess:
+   *   order  — the Order document (orderId, status, paymentMethod, deliveryAddress,
+   *             items, totalPrice, discount, finalPrice)
+   *   user   — session user object (for header partial)
+   */
+  const currentUser = (typeof user !== 'undefined' && user) ? user : null;
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Confirmed - HeadShield</title>
+  <meta name="description" content="Your HeadShield helmet order has been placed successfully.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+    * { font-family: 'DM Sans', sans-serif; }
+    h1, .brand { font-family: 'Rajdhani', sans-serif; }
+    body { background: #0a0a0f; color: #e5e5e5; }
+
+    /* Animated checkmark bounce */
+    @keyframes popIn {
+      0%   { transform: scale(0.5); opacity: 0; }
+      70%  { transform: scale(1.1); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    .pop-in { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    /* Success ring pulse */
+    @keyframes ringPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+      70%  { box-shadow: 0 0 0 20px rgba(249, 115, 22, 0);  }
+      100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);     }
+    }
+    .ring-pulse { animation: ringPulse 1.5s ease-out 0.5s; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col font-sans">
 
-  <!-- HEADER -->
-  <%- include('../partials/user/header') %>
+<body class="bg-[#0a0a0f] text-gray-200 min-h-screen flex flex-col font-sans">
 
-  <!-- MAIN SUCCESS CARD -->
-  <div class="flex-grow max-w-3xl w-full mx-auto px-6 py-12">
-    <div class="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
-      
-      <!-- Banner / Checkmark -->
-      <div class="bg-orange-500 py-12 text-center text-white relative">
-        <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 animate-bounce">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h1 class="text-3xl font-extrabold tracking-tight">Thank You For Your Order!</h1>
-        <p class="text-orange-100 mt-2 text-lg">Your helmet is secured and on its way.</p>
-      </div>
+  <%- include('../partials/user/header', { user: currentUser }) %>
 
-      <!-- Order Details Summary -->
-      <div class="p-8 space-y-6">
-        
-        <!-- ID & Status -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-gray-100 gap-4">
-          <div>
-            <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Order Identifier</span>
-            <h3 class="text-lg font-bold text-gray-800"><%= order.orderId %></h3>
-          </div>
-          <div class="flex gap-3">
-            <span class="px-4 py-2 bg-orange-100 text-orange-800 font-bold rounded-lg text-sm">
-              <%= order.status %>
-            </span>
-            <span class="px-4 py-2 bg-gray-100 text-gray-600 font-bold rounded-lg text-sm">
-              <%= order.paymentMethod %>
-            </span>
+  <!-- Main Content -->
+  <div class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-2xl">
+
+      <!-- Success Card -->
+      <div class="bg-[#13131a] border border-white/7 rounded-3xl overflow-hidden shadow-2xl">
+
+        <!-- ── TOP BANNER ─────────────────────────────────────── -->
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 py-12 text-center relative overflow-hidden">
+
+          <!-- Decorative background circles -->
+          <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full"></div>
+          <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+
+          <!-- Animated checkmark -->
+          <div class="relative z-10">
+            <div class="w-24 h-24 bg-white/15 ring-pulse rounded-full flex items-center justify-center mx-auto mb-5 border-2 border-white/30 pop-in">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Thank You For Your Order!</h1>
+            <p class="text-orange-100 mt-2">Your helmet is on its way to you. 🏍️</p>
           </div>
         </div>
 
-        <!-- Address & Pricing -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 py-2">
-          
-          <!-- Shipping Address info -->
-          <div>
-            <h4 class="font-bold text-gray-800 text-base mb-3">Shipping Address</h4>
-            <div class="text-sm text-gray-600 space-y-1">
-              <p class="font-semibold text-gray-800"><%= order.deliveryAddress.name %></p>
-              <p><%= order.deliveryAddress.street %></p>
-              <p><%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %> - <%= order.deliveryAddress.pincode %></p>
-              <p class="pt-2 text-gray-500">📞 Phone: <%= order.deliveryAddress.phone %></p>
+        <!-- ── ORDER BODY ──────────────────────────────────────── -->
+        <div class="p-8 space-y-6">
+
+          <!-- Order ID + Status row -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-white/5">
+            <div>
+              <span class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Order ID</span>
+              <h3 class="text-lg font-bold text-white mt-0.5 font-mono"><%= order.orderId %></h3>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <span class="px-3 py-1.5 bg-blue-500/15 text-blue-400 font-bold rounded-lg text-xs uppercase tracking-wider">
+                <%= order.status %>
+              </span>
+              <span class="px-3 py-1.5 bg-white/8 text-gray-300 font-bold rounded-lg text-xs uppercase tracking-wider">
+                <%= order.paymentMethod %>
+              </span>
             </div>
           </div>
 
-          <!-- Price Summary info -->
-          <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-3 h-fit">
-            <h4 class="font-bold text-gray-800 text-base mb-2">Order Price</h4>
-            <div class="flex justify-between text-sm text-gray-600">
-              <span>Items Total</span>
-              <span>₹<%= order.totalPrice %></span>
-            </div>
-            <% if (order.discount > 0) { %>
-              <div class="flex justify-between text-sm text-red-600">
-                <span>Coupon Discount</span>
-                <span>- ₹<%= order.discount %></span>
+          <!-- Address + Pricing grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Shipping Address -->
+            <div>
+              <h4 class="font-bold text-white text-sm mb-3 uppercase tracking-wider text-gray-400">Shipping To</h4>
+              <div class="bg-white/4 border border-white/6 rounded-xl p-4 text-sm text-gray-400 space-y-1">
+                <p class="font-bold text-white"><%= order.deliveryAddress.name %></p>
+                <p><%= order.deliveryAddress.street %></p>
+                <p><%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %> - <span class="text-gray-300 font-semibold"><%= order.deliveryAddress.pincode %></span></p>
+                <p class="pt-1 text-gray-500">📞 <span class="text-gray-300"><%= order.deliveryAddress.phone %></span></p>
               </div>
-            <% } %>
-            <div class="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-200">
-              <span>Delivery Charges</span>
-              <span class="text-green-600 font-semibold uppercase">Free</span>
             </div>
-            <div class="flex justify-between text-lg font-extrabold text-gray-900 pt-1">
-              <span>Grand Total</span>
-              <span class="text-xl text-orange-600">₹<%= order.finalPrice %></span>
+
+            <!-- Order Price -->
+            <div>
+              <h4 class="font-bold text-white text-sm mb-3 uppercase tracking-wider text-gray-400">Payment Summary</h4>
+              <div class="bg-white/4 border border-white/6 rounded-xl p-4 space-y-2.5 text-sm">
+                <div class="flex justify-between text-gray-400">
+                  <span>Items Total</span>
+                  <span class="text-gray-200">₹<%= order.totalPrice.toLocaleString('en-IN') %></span>
+                </div>
+                <% if (order.discount > 0) { %>
+                  <div class="flex justify-between text-green-400">
+                    <span>Discount</span>
+                    <span>- ₹<%= order.discount.toLocaleString('en-IN') %></span>
+                  </div>
+                <% } %>
+                <div class="flex justify-between text-gray-400">
+                  <span>Delivery</span>
+                  <span class="text-green-400 text-xs font-bold uppercase">Free</span>
+                </div>
+                <div class="flex justify-between items-center pt-2.5 border-t border-white/5">
+                  <span class="font-bold text-white">Grand Total</span>
+                  <span class="text-xl font-extrabold text-orange-500">₹<%= order.finalPrice.toLocaleString('en-IN') %></span>
+                </div>
+                <div class="text-xs text-gray-600 pt-1">
+                  Payment: <span class="text-yellow-400 font-semibold"><%= order.paymentStatus %></span>
+                  (pay on delivery)
+                </div>
+              </div>
             </div>
+
+          </div>
+
+          <!-- ── Action Buttons ─────────────────────────────── -->
+          <!--
+            "View Order Details" links to /profile/orders/:order._id
+            which is protected by isAuthenticated + ownership check.
+            order._id is MongoDB's internal ObjectId — the controller validates
+            that the order belongs to the session user before showing details.
+          -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-white/5">
+            <a
+              href="/profile/orders/<%= order._id %>"
+              id="viewOrderDetailsBtn"
+              class="flex-1 text-center bg-[#1c1c26] hover:bg-[#22222e] border border-white/10 hover:border-orange-500/40 text-white font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              View Order Details
+            </a>
+            <a
+              href="/products"
+              id="continueShoppingBtn"
+              class="flex-1 text-center bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              Continue Shopping
+            </a>
           </div>
 
         </div>
-
-        <!-- Buttons navigation -->
-        <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-100">
-          <a href="/profile/orders" class="flex-1 text-center bg-gray-950 hover:bg-gray-900 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-md">
-            View My Orders
-          </a>
-          <a href="/products" class="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-md">
-            Continue Shopping
-          </a>
-        </div>
-
       </div>
 
     </div>
   </div>
 
-  <!-- FOOTER -->
   <%- include('../partials/user/footer') %>
 
 </body>

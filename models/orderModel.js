@@ -24,6 +24,10 @@ const orderSchema = new mongoose.Schema(
           ref: "Product",
           required: true,
         },
+        variantId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: false,   // optional: links back to the exact variant at purchase time
+        },
         name: {
           type: String,
           required: true,

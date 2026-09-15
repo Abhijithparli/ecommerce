@@ -1,206 +1,610 @@
+<%
+  /**
+   * checkout.ejs
+   *
+   * Variables passed from cartController.loadCheckout:
+   *   processedItems   — Array of validated cart items with live prices
+   *   addresses        — Array of user's saved addresses (from User.addresses[])
+   *   defaultAddressId — _id string of the pre-selected default address (or null)
+   *   subtotal         — sum of all itemTotals (calculated server-side)
+   *   tax              — tax amount (₹0 currently)
+   *   shipping         — shipping fee (₹0 = free currently)
+   *   grandTotal       — subtotal + tax + shipping
+   *   user             — session user object (for header partial)
+   */
+  const currentUser = (typeof user !== 'undefined' && user) ? user : null;
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout - HeadShield</title>
+  <meta name="description" content="Complete your HeadShield helmet order. Select delivery address and place your order.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+    * { font-family: 'DM Sans', sans-serif; }
+    h1, h2, .brand { font-family: 'Rajdhani', sans-serif; }
+    body { background: #0a0a0f; color: #e5e5e5; }
+
+    /* SweetAlert2 Dark Theme (matches cart.ejs) */
+    .swal2-popup.headshield-swal {
+      background: #13131a !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 1rem !important;
+      color: #e5e7eb !important;
+    }
+    .headshield-swal .swal2-title { color: #ffffff !important; font-size: 1.2rem !important; }
+    .headshield-swal .swal2-html-container { color: #9ca3af !important; font-size: 0.875rem !important; }
+    .headshield-swal .swal2-confirm {
+      background: #ea580c !important;
+      border-radius: 0.5rem !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 600 !important;
+    }
+    .headshield-swal .swal2-cancel {
+      background: #27272a !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 0.5rem !important;
+      color: #d1d5db !important;
+      padding: 0.6rem 1.5rem !important;
+    }
+
+    /* Address card selection styles */
+    .address-card input[type="radio"]:checked + .address-card-inner {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.06);
+    }
+    .address-card-inner {
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .address-card-inner:hover { border-color: rgba(249, 115, 22, 0.4); }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-box {
+      background: #13131a;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1rem;
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 2rem;
+    }
+
+    /* Form inputs */
+    .form-input {
+      width: 100%;
+      background: #1c1c26;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.85rem;
+      color: #e5e5e5;
+      font-size: 0.875rem;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { outline: none; border-color: #f97316; }
+    .form-input.error { border-color: #ef4444; }
+    .form-label { display: block; font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.3rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-error { color: #f87171; font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+    .field-error.visible { display: block; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
 
-  <!-- HEADER -->
-  <%- include('../partials/user/header') %>
+<body class="bg-[#0a0a0f] text-gray-200 min-h-screen flex flex-col font-sans">
 
-  <div class="max-w-7xl mx-auto px-6 py-10">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-10">Checkout</h1>
+  <%- include('../partials/user/header', { user: currentUser }) %>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-      
-      <!-- LEFT COLUMN: ADDRESS & PAYMENT -->
-      <div class="lg:col-span-2 space-y-8">
-        
-        <!-- ADDRESS SECTION -->
-        <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-200">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Select Delivery Address</h2>
-            <a href="/profile/addresses" class="text-orange-500 hover:text-orange-600 font-semibold transition text-sm">
-              + Manage Addresses
-            </a>
+  <div class="max-w-7xl mx-auto px-6 py-10 w-full flex-1">
+
+    <!-- BREADCRUMBS -->
+    <div class="text-xs text-gray-500 flex items-center gap-2 uppercase tracking-wider mb-6">
+      <a href="/" class="hover:text-orange-500 transition text-gray-400">Home</a>
+      <span>/</span>
+      <a href="/cart" class="hover:text-orange-500 transition text-gray-400">Cart</a>
+      <span>/</span>
+      <span class="text-gray-300 font-medium">Checkout</span>
+    </div>
+
+    <!-- PAGE TITLE -->
+    <div class="border-b border-white/5 pb-5 mb-8">
+      <h1 class="text-3xl font-bold text-white tracking-wide">Checkout</h1>
+      <p class="text-xs text-gray-400 mt-1">Review your order and select a delivery address</p>
+    </div>
+
+    <!-- TWO-COLUMN LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- ═══════════════════════════════════════════════════════
+           LEFT COLUMN: ADDRESS + PAYMENT
+      ════════════════════════════════════════════════════════ -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- ── ADDRESS SECTION ───────────────────────────── -->
+        <div class="bg-[#13131a] border border-white/7 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xl font-bold text-white">Delivery Address</h2>
+            <button
+              id="openAddAddressBtn"
+              onclick="openAddAddressModal()"
+              class="text-xs font-semibold text-orange-400 hover:text-orange-300 border border-orange-500/30 hover:border-orange-400 px-3 py-1.5 rounded-lg transition"
+            >
+              + Add New Address
+            </button>
           </div>
 
           <% if (addresses && addresses.length > 0) { %>
-            <div class="space-y-4">
-              <% addresses.forEach((addr, index) => { %>
-                <label class="block cursor-pointer">
-                  <input type="radio" name="selectedAddress" value="<%= addr._id %>" class="sr-only peer" <%= addr.isDefault ? 'checked' : '' %>>
-                  <div class="p-5 rounded-xl border-2 border-gray-200 peer-checked:border-orange-500 peer-checked:bg-orange-50/30 hover:border-gray-300 transition duration-150 relative">
-                    
-                    <!-- Checked Indicator -->
-                    <div class="absolute top-4 right-4 text-orange-500 hidden peer-checked:block">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <div class="space-y-3" id="addressList">
+              <% addresses.forEach((addr) => { %>
+                <%
+                  const isPreSelected = defaultAddressId
+                    ? addr._id.toString() === defaultAddressId
+                    : false;
+                %>
+                <label class="address-card block cursor-pointer">
+                  <input
+                    type="radio"
+                    name="selectedAddress"
+                    value="<%= addr._id %>"
+                    class="sr-only"
+                    <%= isPreSelected ? 'checked' : '' %>
+                  >
+                  <div class="address-card-inner rounded-xl p-4 relative <%= isPreSelected ? 'border-orange-500 bg-orange-500/5' : '' %>">
+
+                    <!-- Selected indicator -->
+                    <div class="selected-check absolute top-3.5 right-3.5 text-orange-500 <%= isPreSelected ? '' : 'hidden' %>">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
 
-                    <div class="flex items-center gap-3 mb-2">
-                      <span class="px-2.5 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-semibold uppercase tracking-wider">
-                        <%= addr.type || 'Address' %>
+                    <!-- Address type + default badge -->
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/10 text-gray-300 rounded">
+                        <%= addr.type || 'Home' %>
                       </span>
                       <% if (addr.isDefault) { %>
-                        <span class="px-2.5 py-1 bg-orange-100 text-orange-800 rounded-md text-xs font-semibold">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded">
                           Default
                         </span>
                       <% } %>
                     </div>
-                    
-                    <h3 class="font-bold text-gray-800 text-lg mb-1"><%= addr.name %></h3>
-                    <p class="text-gray-600 leading-relaxed text-sm">
-                      <%= addr.street %>, <%= addr.city %>, <%= addr.state %> - <strong class="text-gray-900"><%= addr.pincode %></strong>
+
+                    <!-- Name -->
+                    <p class="font-bold text-white text-sm"><%= addr.name %></p>
+
+                    <!-- Street + City + State + PIN -->
+                    <p class="text-gray-400 text-xs mt-0.5 leading-relaxed">
+                      <%= addr.street %>, <%= addr.city %>,
+                      <%= addr.state %> - <span class="text-gray-300 font-semibold"><%= addr.pincode %></span>
                     </p>
-                    <p class="text-gray-500 text-sm mt-2">
-                      📞 Phone: <span class="font-medium text-gray-700"><%= addr.phone %></span>
-                      <% if (addr.altphone) { %> | Alt: <%= addr.altphone %> <% } %>
+
+                    <!-- Phone -->
+                    <p class="text-gray-500 text-xs mt-1">
+                      📞 <span class="text-gray-300"><%= addr.phone %></span>
                     </p>
+
+                    <!-- Edit link -->
+                    <a
+                      href="/profile/addresses/<%= addr._id %>/edit"
+                      class="absolute bottom-3.5 right-4 text-[11px] text-orange-400 hover:text-orange-300 font-semibold transition"
+                    >
+                      Edit
+                    </a>
+
                   </div>
                 </label>
               <% }) %>
             </div>
           <% } else { %>
-            <div class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-              <p class="text-gray-500 mb-4">No shipping addresses found in your profile.</p>
-              <a href="/profile/addresses" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition shadow-md">
-                Add New Address
-              </a>
+            <!-- No addresses state -->
+            <div class="text-center py-10 border border-dashed border-white/10 rounded-xl">
+              <div class="text-4xl mb-3">📍</div>
+              <p class="text-gray-400 text-sm mb-4">No delivery address found. Please add an address to continue.</p>
+              <button
+                onclick="openAddAddressModal()"
+                class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2 rounded-xl transition text-sm"
+              >
+                + Add Your First Address
+              </button>
             </div>
           <% } %>
         </div>
 
-        <!-- PAYMENT METHOD SECTION -->
-        <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-200">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6">Payment Method</h2>
-          
-          <div class="space-y-4">
-            
-            <!-- Cash on Delivery (COD) -->
-            <label class="block cursor-pointer">
-              <input type="radio" name="paymentMethod" value="COD" checked class="sr-only peer">
-              <div class="p-5 rounded-xl border-2 border-orange-500 bg-orange-50/30 hover:border-orange-600 transition flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                  <div class="p-3 bg-orange-100 text-orange-600 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Cash on Delivery (COD)</h3>
-                    <p class="text-gray-500 text-sm">Pay in cash when your helmet is delivered.</p>
-                  </div>
-                </div>
-                <div class="text-orange-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </label>
+        <!-- ── PAYMENT METHOD SECTION ──────────────────── -->
+        <div class="bg-[#13131a] border border-white/7 rounded-2xl p-6">
+          <h2 class="text-xl font-bold text-white mb-4">Payment Method</h2>
 
-            <!-- Razorpay (Placeholder/Disabled) -->
-            <div class="p-5 rounded-xl border-2 border-gray-100 bg-gray-50/50 opacity-60 flex items-center justify-between cursor-not-allowed">
+          <!-- COD Option (selected by default) -->
+          <label class="block cursor-pointer">
+            <input type="radio" name="paymentMethod" value="COD" id="codRadio" checked class="sr-only">
+            <div class="border-2 border-orange-500 bg-orange-500/5 rounded-xl p-4 flex items-center justify-between">
               <div class="flex items-center gap-4">
-                <div class="p-3 bg-gray-200 text-gray-500 rounded-xl">
+                <div class="p-2.5 bg-orange-500/20 text-orange-400 rounded-xl">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 class="font-bold text-gray-700 text-lg">Online Payment (Razorpay)</h3>
-                  <p class="text-gray-400 text-sm">Coming soon in next module.</p>
+                  <h3 class="font-bold text-white">Cash on Delivery (COD)</h3>
+                  <p class="text-gray-400 text-xs mt-0.5">Pay in cash when your helmet is delivered.</p>
                 </div>
               </div>
+              <div class="text-orange-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
             </div>
+          </label>
 
+          <!-- Online Payment (disabled / coming soon) -->
+          <div class="mt-3 border border-white/5 bg-white/2 rounded-xl p-4 flex items-center gap-4 opacity-50 cursor-not-allowed">
+            <div class="p-2.5 bg-white/5 text-gray-500 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-500">Online Payment (Razorpay)</h3>
+              <p class="text-gray-600 text-xs">Coming soon in next module.</p>
+            </div>
           </div>
         </div>
 
-      </div>
+      </div><!-- end left column -->
 
-      <!-- RIGHT COLUMN: ORDER SUMMARY -->
-      <div>
-        <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-200 sticky top-28 space-y-6">
-          <h2 class="text-2xl font-bold text-gray-800 pb-4 border-b border-gray-100">Order Summary</h2>
+      <!-- ═══════════════════════════════════════════════════════
+           RIGHT COLUMN: ORDER SUMMARY + PLACE ORDER
+      ════════════════════════════════════════════════════════ -->
+      <div class="lg:col-span-1">
+        <div class="bg-[#13131a] border border-white/7 rounded-2xl p-6 sticky top-28">
+          <h2 class="text-xl font-bold text-white pb-4 border-b border-white/5">Order Summary</h2>
 
-          <!-- ITEMS SUMMARY LIST -->
-          <div class="max-h-60 overflow-y-auto divide-y divide-gray-100 pr-2">
-            <% cart.items.forEach(item => { %>
-              <%
-                const variant = item.product.variants ? item.product.variants.find(v => v.size === item.size) : null;
-                const itemUnitPrice = (variant && typeof variant.price === 'number') ? variant.price : (item.product.salePrice || 0);
-              %>
-              <div class="flex gap-4 py-4 first:pt-0 last:pb-0">
-                <img src="<%= item.product.images[0] %>" class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+          <!-- PRODUCT ITEMS LIST -->
+          <div class="mt-4 divide-y divide-white/5 max-h-72 overflow-y-auto pr-1">
+            <% processedItems.forEach(item => { %>
+              <div class="flex gap-3 py-4 first:pt-0">
+
+                <!-- Product Image -->
+                <img
+                  src="<%= item.productImage %>"
+                  alt="<%= item.productName %>"
+                  class="w-14 h-14 object-cover rounded-lg border border-white/10 shrink-0"
+                  onerror="this.src='/img/placeholder.jpg'"
+                >
+
+                <!-- Product Info -->
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-semibold text-gray-800 text-sm truncate"><%= item.product.name %></h4>
-                  <p class="text-gray-500 text-xs mt-1">Size: <span class="font-semibold text-gray-700"><%= item.size %></span> | Qty: <span class="font-semibold"><%= item.quantity %></span></p>
+                  <h4 class="font-semibold text-white text-xs leading-tight truncate"><%= item.productName %></h4>
+                  <p class="text-gray-400 text-xs mt-1">
+                    Size: <span class="text-gray-300 font-semibold"><%= item.size %></span>
+                    &nbsp;|&nbsp; Qty: <span class="text-gray-300 font-semibold"><%= item.quantity %></span>
+                  </p>
+                  <p class="text-gray-500 text-xs mt-0.5">₹<%= item.unitPrice.toLocaleString('en-IN') %> × <%= item.quantity %></p>
                 </div>
-                <div class="text-right">
-                  <span class="font-bold text-gray-900 text-sm">₹<%= itemUnitPrice * item.quantity %></span>
+
+                <!-- Item Total -->
+                <div class="text-right shrink-0">
+                  <span class="font-bold text-white text-sm">₹<%= item.itemTotal.toLocaleString('en-IN') %></span>
                 </div>
+
               </div>
             <% }) %>
           </div>
 
-          <!-- BREAKDOWN -->
-          <div class="space-y-3 pt-4 border-t border-gray-100 text-sm text-gray-600">
-            <div class="flex justify-between">
+          <!-- PRICE BREAKDOWN -->
+          <div class="mt-4 pt-4 border-t border-white/5 space-y-2.5 text-sm">
+            <div class="flex justify-between text-gray-400">
               <span>Subtotal</span>
-              <span class="font-semibold text-gray-800">₹<%= total %></span>
+              <span class="text-gray-200">₹<%= subtotal.toLocaleString('en-IN') %></span>
             </div>
-            <div class="flex justify-between">
-              <span>Delivery Fee</span>
-              <span class="text-green-600 font-semibold uppercase text-xs">Free</span>
+
+            <% if (tax > 0) { %>
+              <div class="flex justify-between text-gray-400">
+                <span>Tax</span>
+                <span class="text-gray-200">₹<%= tax.toLocaleString('en-IN') %></span>
+              </div>
+            <% } else { %>
+              <div class="flex justify-between text-gray-400">
+                <span>Tax</span>
+                <span class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Included</span>
+              </div>
+            <% } %>
+
+            <div class="flex justify-between text-gray-400">
+              <span>Delivery</span>
+              <% if (shipping === 0) { %>
+                <span class="text-green-400 text-xs font-bold uppercase tracking-wide">Free</span>
+              <% } else { %>
+                <span class="text-gray-200">₹<%= shipping.toLocaleString('en-IN') %></span>
+              <% } %>
             </div>
-            
-            <div class="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-100">
-              <span>Grand Total</span>
-              <span class="text-2xl text-orange-600">₹<%= total %></span>
+
+            <!-- Grand Total -->
+            <div class="flex justify-between items-center pt-3 border-t border-white/5">
+              <span class="font-bold text-white text-base">Grand Total</span>
+              <span class="text-2xl font-extrabold text-orange-500">₹<%= grandTotal.toLocaleString('en-IN') %></span>
             </div>
           </div>
 
           <!-- PLACE ORDER BUTTON -->
-          <button id="placeOrderBtn" onclick="submitOrder()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2">
+          <button
+            id="placeOrderBtn"
+            onclick="submitOrder()"
+            class="w-full mt-6 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-500/20 transition duration-200 flex items-center justify-center gap-2 text-sm tracking-wide"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
             Place Order (COD)
           </button>
+
+          <p class="text-center text-xs text-gray-600 mt-3">
+            By placing your order you agree to our terms.
+          </p>
+
         </div>
-      </div>
+      </div><!-- end right column -->
 
-    </div>
-  </div>
+    </div><!-- end grid -->
+  </div><!-- end main container -->
 
-  <!-- FOOTER -->
   <%- include('../partials/user/footer') %>
 
-  <!-- JAVASCRIPT FOR SUBMITTING ORDER -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       ADD ADDRESS MODAL
+       This is an inline modal so the user doesn't leave the checkout page.
+       It POSTs to the existing /profile/addresses/add route.
+       After save, the page reloads and the new address appears.
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div id="addAddressModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Add New Address">
+    <div class="modal-box">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-white">Add New Address</h3>
+        <button onclick="closeAddAddressModal()" class="text-gray-500 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      <!--
+        Form POSTs to the EXISTING address add route.
+        After submit, the server saves the address and redirects.
+        We use a hidden field "returnTo" so the controller knows to redirect back to /checkout.
+        Since the existing addAddress controller always redirects to /profile/addresses,
+        we POST via AJAX below and reload the checkout page after success.
+      -->
+      <form id="addAddressForm" novalidate>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- Full Name -->
+          <div class="sm:col-span-2">
+            <label for="modal_name" class="form-label">Full Name *</label>
+            <input
+              id="modal_name" name="name" type="text"
+              class="form-input" placeholder="e.g. Rahul Sharma"
+              pattern="^[A-Za-z\s]{3,50}$"
+            >
+            <p class="field-error" id="err_name">Name must be 3–50 letters only</p>
+          </div>
+
+          <!-- Phone -->
+          <div>
+            <label for="modal_phone" class="form-label">Phone *</label>
+            <input
+              id="modal_phone" name="phone" type="tel"
+              class="form-input" placeholder="10-digit mobile number"
+              maxlength="10"
+            >
+            <p class="field-error" id="err_phone">Enter a valid 10-digit Indian mobile number</p>
+          </div>
+
+          <!-- Address Type -->
+          <div>
+            <label for="modal_type" class="form-label">Address Type</label>
+            <select id="modal_type" name="type" class="form-input">
+              <option value="Home">Home</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Street / House / Building -->
+          <div class="sm:col-span-2">
+            <label for="modal_street" class="form-label">Street / House / Building *</label>
+            <input
+              id="modal_street" name="street" type="text"
+              class="form-input" placeholder="e.g. 42, MG Road, Near Metro Station"
+              minlength="5" maxlength="150"
+            >
+            <p class="field-error" id="err_street">Street address must be at least 5 characters</p>
+          </div>
+
+          <!-- City -->
+          <div>
+            <label for="modal_city" class="form-label">City *</label>
+            <input
+              id="modal_city" name="city" type="text"
+              class="form-input" placeholder="e.g. Bangalore"
+              pattern="^[A-Za-z\s]{3,50}$"
+            >
+            <p class="field-error" id="err_city">Enter a valid city name</p>
+          </div>
+
+          <!-- State -->
+          <div>
+            <label for="modal_state" class="form-label">State *</label>
+            <input
+              id="modal_state" name="state" type="text"
+              class="form-input" placeholder="e.g. Karnataka"
+              pattern="^[A-Za-z\s]{3,50}$"
+            >
+            <p class="field-error" id="err_state">Enter a valid state name</p>
+          </div>
+
+          <!-- Pincode -->
+          <div>
+            <label for="modal_pincode" class="form-label">Pincode *</label>
+            <input
+              id="modal_pincode" name="pincode" type="text"
+              class="form-input" placeholder="6-digit pincode"
+              pattern="^[1-9][0-9]{5}$" maxlength="6"
+            >
+            <p class="field-error" id="err_pincode">Enter a valid 6-digit pincode</p>
+          </div>
+
+          <!-- Set as Default -->
+          <div class="flex items-center gap-2 sm:col-span-2">
+            <input type="checkbox" id="modal_isDefault" name="isDefault" value="on" class="w-4 h-4 accent-orange-500">
+            <label for="modal_isDefault" class="text-sm text-gray-300 cursor-pointer">Set as default address</label>
+          </div>
+
+        </div><!-- end grid -->
+
+        <!-- Modal Actions -->
+        <div class="flex gap-3 mt-6">
+          <button
+            type="button"
+            onclick="closeAddAddressModal()"
+            class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-semibold py-2.5 rounded-xl transition text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="saveAddressBtn"
+            onclick="saveAddressFromModal()"
+            class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl transition text-sm"
+          >
+            Save Address
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div><!-- end modal -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════════════════════════════════════════════ -->
   <script>
+
+    // ─── ADDRESS CARD RADIO SELECTION ──────────────────────────────────────────
+    //
+    // When the user clicks an address card, we update the visual state
+    // (border color + checkmark) to match the selected radio button.
+    //
+    // Why custom JS? Because <input type="radio" class="sr-only"> hides the native
+    // radio button, so we use CSS peer selectors AND JS to sync the card border.
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const addressCards = document.querySelectorAll(".address-card");
+
+      addressCards.forEach((card) => {
+        const radio = card.querySelector("input[type='radio']");
+        const inner = card.querySelector(".address-card-inner");
+        const check = card.querySelector(".selected-check");
+
+        // Sync on click
+        card.addEventListener("click", () => {
+          // First, reset ALL cards
+          addressCards.forEach((c) => {
+            const ci = c.querySelector(".address-card-inner");
+            const cc = c.querySelector(".selected-check");
+            if (ci) {
+              ci.style.borderColor = "";
+              ci.style.background = "";
+            }
+            if (cc) cc.classList.add("hidden");
+          });
+
+          // Activate clicked card
+          if (inner) {
+            inner.style.borderColor = "#f97316";
+            inner.style.background = "rgba(249, 115, 22, 0.06)";
+          }
+          if (check) check.classList.remove("hidden");
+        });
+      });
+    });
+
+    // ─── PLACE ORDER ───────────────────────────────────────────────────────────
+    //
+    // Flow:
+    // 1. Check an address is selected (frontend validation)
+    // 2. Show SweetAlert2 confirmation
+    // 3. POST /checkout/place-order with { addressId, paymentMethod }
+    // 4. On success: redirect to /checkout/order-success/:orderId
+    // 5. On failure: show SweetAlert2 error (no alert())
+
     async function submitOrder() {
-      const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
-      if (!selectedAddressRadio) {
-        alert("Please select a delivery address to place your order.");
+      // ── 1. Frontend: Check address selected ──────────────────────────────────
+      const selectedAddressInput = document.querySelector('input[name="selectedAddress"]:checked');
+      if (!selectedAddressInput) {
+        Swal.fire({
+          title: "Select Address",
+          text: "Please select a delivery address to place your order.",
+          icon: "warning",
+          iconColor: "#f97316",
+          confirmButtonText: "OK",
+          customClass: { popup: "headshield-swal" }
+        });
         return;
       }
 
-      const addressId = selectedAddressRadio.value;
-      const placeOrderBtn = document.getElementById("placeOrderBtn");
+      const addressId = selectedAddressInput.value;
 
+      // ── 2. Confirmation dialog ────────────────────────────────────────────────
+      const confirmResult = await Swal.fire({
+        title: "Place Order?",
+        html: `
+          <div style="text-align:left; font-size: 0.875rem; color: #9ca3af; line-height: 1.6;">
+            <p>Payment method: <strong style="color:#e5e5e5;">Cash on Delivery</strong></p>
+            <p>Grand Total: <strong style="color:#f97316; font-size: 1.1rem;">₹<%= grandTotal.toLocaleString('en-IN') %></strong></p>
+          </div>
+        `,
+        icon: "question",
+        iconColor: "#f97316",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Place Order",
+        cancelButtonText: "Review Order",
+        customClass: { popup: "headshield-swal" }
+      });
+
+      if (!confirmResult.isConfirmed) return;
+
+      // ── 3. Disable button + show loading ─────────────────────────────────────
+      const btn = document.getElementById("placeOrderBtn");
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Processing...
+      `;
+      btn.classList.add("opacity-75", "cursor-not-allowed");
+
+      // ── 4. POST to backend ────────────────────────────────────────────────────
       try {
-        // Disable button & show loading state
-        placeOrderBtn.disabled = true;
-        placeOrderBtn.classList.add("opacity-60", "cursor-not-allowed");
-        placeOrderBtn.innerText = "Processing Order...";
-
         const response = await fetch("/checkout/place-order", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             addressId,
             paymentMethod: "COD"
@@ -210,23 +614,234 @@
         const data = await response.json();
 
         if (data.success) {
+          // ── 5. Success: redirect to order success page ──────────────────────
           window.location.href = `/checkout/order-success/${data.orderId}`;
         } else {
-          alert(data.message || "Failed to place order.");
-          // Enable button back
-          placeOrderBtn.disabled = false;
-          placeOrderBtn.classList.remove("opacity-60", "cursor-not-allowed");
-          placeOrderBtn.innerText = "Place Order (COD)";
+          // ── 6. Backend error: show SweetAlert2 ─────────────────────────────
+          Swal.fire({
+            title: "Order Failed",
+            text: data.message || "Something went wrong. Please try again.",
+            icon: "error",
+            iconColor: "#ef4444",
+            confirmButtonText: "OK",
+            customClass: { popup: "headshield-swal" }
+          });
+          resetPlaceOrderButton();
         }
-      } catch (error) {
-        console.error(error);
-        alert("Something went wrong. Please try again.");
-        // Enable button back
-        placeOrderBtn.disabled = false;
-        placeOrderBtn.classList.remove("opacity-60", "cursor-not-allowed");
-        placeOrderBtn.innerText = "Place Order (COD)";
+      } catch (err) {
+        console.error("Place order network error:", err);
+        Swal.fire({
+          title: "Connection Error",
+          text: "Network error. Please check your connection and try again.",
+          icon: "error",
+          iconColor: "#ef4444",
+          confirmButtonText: "OK",
+          customClass: { popup: "headshield-swal" }
+        });
+        resetPlaceOrderButton();
       }
     }
+
+    function resetPlaceOrderButton() {
+      const btn = document.getElementById("placeOrderBtn");
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        Place Order (COD)
+      `;
+      btn.classList.remove("opacity-75", "cursor-not-allowed");
+    }
+
+
+    // ─── ADD ADDRESS MODAL ──────────────────────────────────────────────────────
+
+    function openAddAddressModal() {
+      document.getElementById("addAddressModal").classList.remove("hidden");
+      document.body.style.overflow = "hidden";  // prevent background scroll
+    }
+
+    function closeAddAddressModal() {
+      document.getElementById("addAddressModal").classList.add("hidden");
+      document.body.style.overflow = "";
+      clearAddressFormErrors();
+    }
+
+    // Close modal when clicking the overlay (outside the box)
+    document.getElementById("addAddressModal").addEventListener("click", function(e) {
+      if (e.target === this) closeAddAddressModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeAddAddressModal();
+    });
+
+
+    // ─── SAVE ADDRESS FROM MODAL (AJAX) ────────────────────────────────────────
+    //
+    // We POST to the EXISTING /profile/addresses/add route via AJAX (fetch).
+    // The existing userService.addUserAddress() handles all validation server-side.
+    // On success: reload the checkout page (new address will appear in the list).
+    // On failure: show SweetAlert2 with the server error message.
+    //
+    // WHY AJAX instead of a form POST?
+    // Because a form POST would redirect to /profile/addresses (that's what the route does).
+    // AJAX lets us stay on the checkout page and reload after success.
+
+    async function saveAddressFromModal() {
+      // ── Client-side field validation ────────────────────────────────────────
+      const isValid = validateAddressForm();
+      if (!isValid) return;
+
+      // ── Collect form data ────────────────────────────────────────────────────
+      const form = document.getElementById("addAddressForm");
+      const formData = new FormData(form);
+
+      // FormData from checkboxes: if unchecked, it won't be in FormData.
+      // We handle this by always sending the isDefault key.
+      const payload = {
+        name:      formData.get("name")?.trim(),
+        phone:     formData.get("phone")?.trim(),
+        street:    formData.get("street")?.trim(),
+        city:      formData.get("city")?.trim(),
+        state:     formData.get("state")?.trim(),
+        pincode:   formData.get("pincode")?.trim(),
+        type:      formData.get("type") || "Home",
+        isDefault: formData.get("isDefault") === "on" ? "on" : "off",
+      };
+
+      // ── Disable button during request ────────────────────────────────────────
+      const saveBtn = document.getElementById("saveAddressBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
+      try {
+        const response = await fetch("/profile/addresses/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          closeAddAddressModal();
+          // Reload checkout page — the new address will appear in the list
+          window.location.reload();
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: data.message || "Failed to save address. Please try again.",
+            icon: "error",
+            iconColor: "#ef4444",
+            confirmButtonText: "OK",
+            customClass: { popup: "headshield-swal" }
+          });
+        }
+      } catch (networkErr) {
+        console.error("Save address error:", networkErr);
+        Swal.fire({
+          title: "Connection Error",
+          text: "Could not save address. Please check your connection.",
+          icon: "error",
+          iconColor: "#ef4444",
+          confirmButtonText: "OK",
+          customClass: { popup: "headshield-swal" }
+        });
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Address";
+      }
+    }
+
+
+    // ─── ADDRESS FORM VALIDATION ────────────────────────────────────────────────
+    //
+    // Validates the modal form fields before sending to the server.
+    // Returns true if all fields pass, false if any fail.
+    // Shows inline field errors (not SweetAlert2) for a smooth UX.
+
+    function validateAddressForm() {
+      let isValid = true;
+
+      const fields = [
+        {
+          id: "modal_name",
+          errId: "err_name",
+          validate: (v) => /^[A-Za-z\s]{3,50}$/.test(v),
+          message: "Name must be 3–50 letters only"
+        },
+        {
+          id: "modal_phone",
+          errId: "err_phone",
+          validate: (v) => /^[6-9]\d{9}$/.test(v),
+          message: "Enter a valid 10-digit Indian mobile number"
+        },
+        {
+          id: "modal_street",
+          errId: "err_street",
+          validate: (v) => v.length >= 5,
+          message: "Street address must be at least 5 characters"
+        },
+        {
+          id: "modal_city",
+          errId: "err_city",
+          validate: (v) => /^[A-Za-z\s]{3,50}$/.test(v),
+          message: "Enter a valid city name"
+        },
+        {
+          id: "modal_state",
+          errId: "err_state",
+          validate: (v) => /^[A-Za-z\s]{3,50}$/.test(v),
+          message: "Enter a valid state name"
+        },
+        {
+          id: "modal_pincode",
+          errId: "err_pincode",
+          validate: (v) => /^[1-9][0-9]{5}$/.test(v),
+          message: "Enter a valid 6-digit pincode"
+        },
+      ];
+
+      fields.forEach(({ id, errId, validate, message }) => {
+        const input = document.getElementById(id);
+        const errEl = document.getElementById(errId);
+        const value = input.value.trim();
+
+        if (!value || !validate(value)) {
+          input.classList.add("error");
+          errEl.textContent = message;
+          errEl.classList.add("visible");
+          isValid = false;
+        } else {
+          input.classList.remove("error");
+          errEl.classList.remove("visible");
+        }
+      });
+
+      return isValid;
+    }
+
+    // Clear all validation errors (called when modal is closed)
+    function clearAddressFormErrors() {
+      document.querySelectorAll(".form-input").forEach((el) => el.classList.remove("error"));
+      document.querySelectorAll(".field-error").forEach((el) => el.classList.remove("visible"));
+      document.getElementById("addAddressForm").reset();
+    }
+
+    // Clear individual field error on input
+    document.querySelectorAll("#addAddressForm .form-input").forEach((input) => {
+      input.addEventListener("input", function() {
+        this.classList.remove("error");
+        const errId = "err_" + this.name;
+        const errEl = document.getElementById(errId);
+        if (errEl) errEl.classList.remove("visible");
+      });
+    });
+
   </script>
+
 </body>
 </html>

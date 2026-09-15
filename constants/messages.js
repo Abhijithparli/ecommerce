@@ -37,6 +37,15 @@ export const MESSAGES = Object.freeze({
     CANCELLED: "Order cancelled successfully!"
   }),
 
+  CHECKOUT: Object.freeze({
+    ADDRESS_REQUIRED: "Please select a delivery address to place your order.",
+    PAYMENT_REQUIRED: "Please select a payment method.",
+    NO_ADDRESS: "No delivery address found. Please add an address to continue.",
+    INVALID_ADDRESS: "Selected address is not valid. Please choose another.",
+    CART_CHANGED: "Some items in your cart have changed. Please review your cart.",
+    ORDER_FAILED: "Failed to place order. Your cart has been preserved."
+  }),
+
   CART: Object.freeze({
     NOT_FOUND: "Cart not found",
     ADDED: "Product added to cart successfully",

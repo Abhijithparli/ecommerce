@@ -108,24 +108,40 @@ export const removeCartItem = async (req, res) => {
   }
 };
 
-// LOAD CHECKOUT PAGE (Preserved for upcoming checkout milestone)
+// LOAD CHECKOUT PAGE
 export const loadCheckout = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // Check for unavailable items before allowing checkout
-    await cartService.validateCartForCheckout(userId);
-
+    // checkoutService does ALL validation:
+    // - cart not empty
+    // - products not blocked/deleted
+    // - variants exist
+    // - stock sufficient
+    // - live variant prices calculated
     const data = await checkoutService.getCheckoutData(userId);
 
     res.render("user/checkout", {
-      cart: data.cart,
+      processedItems: data.processedItems,
       addresses: data.addresses,
-      total: data.total,
+      defaultAddressId: data.defaultAddressId,
+      subtotal: data.subtotal,
+      tax: data.tax,
+      shipping: data.shipping,
+      grandTotal: data.grandTotal,
+      user: req.session.user,
     });
   } catch (error) {
     console.error("Load checkout error:", error.message);
-    req.session.error = error.message;
+
+    // If the error says to go back to cart (product unavailable etc.)
+    if (error.redirectToCart || error.isEmptyCart) {
+      req.session.cartError = error.message;
+      return res.redirect("/cart");
+    }
+
+    req.session.cartError = error.message || "Something went wrong";
     res.redirect("/cart");
   }
 };
+

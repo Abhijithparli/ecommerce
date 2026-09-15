@@ -227,30 +227,100 @@
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  .swal2-popup.headshield-swal {
+    background: #13131a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 1rem !important;
+    color: #e5e7eb !important;
+  }
+  .headshield-swal .swal2-title { color: #ffffff !important; font-size: 1.2rem !important; }
+  .headshield-swal .swal2-html-container { color: #9ca3af !important; font-size: 0.875rem !important; }
+  .headshield-swal .swal2-confirm {
+    background: #dc2626 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+  }
+  .headshield-swal .swal2-cancel {
+    background: #27272a !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 0.5rem !important;
+    color: #d1d5db !important;
+    padding: 0.6rem 1.5rem !important;
+  }
+</style>
 <script>
   async function cancelOrder(orderId) {
-    const confirmCancel = confirm("Are you sure you want to cancel this order?");
-    if (!confirmCancel) return;
+    // Step 1: Confirmation dialog (replaces native confirm())
+    const result = await Swal.fire({
+      title: "Cancel Order?",
+      text: "This action cannot be undone. Are you sure you want to cancel this order?",
+      icon: "warning",
+      iconColor: "#f97316",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Cancel Order",
+      cancelButtonText: "Keep Order",
+      customClass: { popup: "headshield-swal" }
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Step 2: Disable cancel button to prevent double-submit
+    const btn = document.getElementById("cancelOrderBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cancelling...";
+    }
 
     try {
       const response = await fetch(`/profile/orders/${orderId}/cancel`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" }
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message);
+        // Step 3: Success feedback, then reload
+        await Swal.fire({
+          title: "Order Cancelled",
+          text: data.message || "Your order has been cancelled successfully.",
+          icon: "success",
+          iconColor: "#10b981",
+          confirmButtonText: "OK",
+          customClass: { popup: "headshield-swal" }
+        });
         window.location.reload();
       } else {
-        alert(data.message || "Failed to cancel order.");
+        Swal.fire({
+          title: "Cannot Cancel",
+          text: data.message || "Failed to cancel the order.",
+          icon: "error",
+          iconColor: "#ef4444",
+          confirmButtonText: "OK",
+          customClass: { popup: "headshield-swal" }
+        });
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Cancel Order";
+        }
       }
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
+      console.error("Cancel order error:", error);
+      Swal.fire({
+        title: "Connection Error",
+        text: "Network error. Please try again.",
+        icon: "error",
+        iconColor: "#ef4444",
+        confirmButtonText: "OK",
+        customClass: { popup: "headshield-swal" }
+      });
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Cancel Order";
+      }
     }
   }
 </script>

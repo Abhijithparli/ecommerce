@@ -100,7 +100,7 @@ export const getUsersList = async ({ page = 1, limit = 5, searchQuery = "", filt
     totalUsers,
     totalPages,
     currentPage: page
-  };
+  }; 
 };
 
 export const blockUser = async (userId) => {

@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+// import  wishlistcontroller from ("../controllers/user/wishlistcontroller")
 
 // Controllers
 import {
@@ -231,4 +232,7 @@ router.get("/set-password", isAuthenticated, loadSetPassword);
 router.post("/set-password", isAuthenticated, savePassword);
 
 
-export default router;
+//wishlist  management
+// router.get("/wishlist",userAuth,wishlist), 
+
+export default router; 
