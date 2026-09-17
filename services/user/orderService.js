@@ -146,7 +146,7 @@ export const getOrderById = async (orderId) => {
   return order;
 };
 
-export const cancelOrder = async (orderId, userId) => {
+export const cancelOrder = async (orderId, userId, reason = "") => {
   const order = await Order.findOne({ _id: orderId, user: userId });
   if (!order) {
     throw new Error(MESSAGES.ORDER.NOT_FOUND);
@@ -157,6 +157,7 @@ export const cancelOrder = async (orderId, userId) => {
   }
 
   order.status = ORDER_STATUS.CANCELLED;
+    order.cancelReason = reason;
   order.statusHistory.push({ status: ORDER_STATUS.CANCELLED, updatedAt: new Date() });
   await order.save();
 
@@ -165,8 +166,87 @@ export const cancelOrder = async (orderId, userId) => {
     await Product.updateOne(
       { _id: item.product, "variants.size": item.size },
       { $inc: { "variants.$.stock": item.quantity } }
-    );
+    ); 
   }
 
   return order;
 };
+/**
+ * Cancel ONE specific item within an order (not the whole order).
+ *
+ * Only allowed when:
+ *  - The order belongs to this user
+ *  - The order status is PLACED or SHIPPED
+ *  - The specific item is not already cancelled
+ *
+ * After cancelling the item:
+ *  - Stock is restored for that item's variant only
+ *  - Order totalPrice/finalPrice is recalculated (excluding cancelled items)
+ *  - If this was the LAST active item, the whole order is marked CANCELLED too
+ *
+ * @param {string} orderId  - MongoDB _id of the order
+ * @param {string} userId   - must match order.user (ownership check)
+ * @param {string} itemId   - MongoDB _id of the specific item subdocument
+ * @param {string} reason   - optional cancellation reason
+ */
+export const cancelOrderItem = async (orderId, userId, itemId, reason = "") => {
+  // Ownership check built into the query, same pattern as cancelOrder
+  const order = await Order.findOne({ _id: orderId, user: userId });
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (
+    order.status !== ORDER_STATUS.PLACED &&
+    order.status !== ORDER_STATUS.SHIPPED
+  ) {
+    throw new Error(`Cannot cancel items in an order with status: ${order.status}`);
+  }
+
+  // Find the specific item subdocument by its _id
+  const item = order.items.id(itemId);
+  if (!item) {
+    throw new Error("Order item not found.");
+  }
+
+  if (item.status === "Cancelled") {
+    throw new Error("This item is already cancelled.");
+  }
+
+  // Mark just this item as cancelled
+  item.status = "Cancelled";
+  item.cancelReason = reason;
+
+  // Restore stock for this item's variant only
+  const updateQuery = item.variantId
+    ? { _id: item.product, "variants._id": item.variantId }
+    : { _id: item.product, "variants.size": item.size };
+
+  await Product.updateOne(
+    updateQuery,
+    { $inc: { "variants.$.stock": item.quantity } }
+  );
+
+  // Recalculate totals using only items that are still Active
+  const activeItems = order.items.filter((i) => i.status !== "Cancelled");
+  const newTotal = activeItems.reduce(
+    (sum, i) => sum + i.price * i.quantity,
+    0
+  );
+  order.totalPrice = newTotal;
+  order.finalPrice = newTotal - (order.discount || 0);
+
+  // If NO active items remain, cancel the whole order too
+  if (activeItems.length === 0) {
+    order.status = ORDER_STATUS.CANCELLED;
+    order.cancelReason = reason;
+    order.statusHistory.push({
+      status: ORDER_STATUS.CANCELLED,
+      updatedAt: new Date(),
+    });
+  }
+
+  await order.save();
+  return order;
+};
+

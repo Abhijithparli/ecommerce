@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 
-// Controllers
+// Controllers  
 import {
   loadHomepage,
   loadSignup,
@@ -59,7 +59,8 @@ import {
   loadOrderSuccess,
   loadOrders,
   loadOrderDetail,
-  cancelOrderAction
+  cancelOrderAction,
+  cancelOrderItemAction
 } from "../../controllers/user/orderController.js";
 
 const router = express.Router();
@@ -142,7 +143,7 @@ router.get("/checkout/order-success/:orderId", isAuthenticated, loadOrderSuccess
 router.get("/profile/orders", isAuthenticated, loadOrders);
 router.get("/profile/orders/:id", isAuthenticated, loadOrderDetail);
 router.post("/profile/orders/:id/cancel", isAuthenticated, cancelOrderAction);
-
+router.post("/profile/orders/:orderId/items/:itemId/cancel", isAuthenticated, cancelOrderItemAction);
 // ================= google auth =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })

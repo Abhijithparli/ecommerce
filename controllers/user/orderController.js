@@ -96,3 +96,27 @@ export const cancelOrderAction = async (req, res) => {
   }
 };
 
+/**
+ * Controller: Cancel a specific item within an order
+ * (POST /profile/orders/:orderId/items/:itemId/cancel)
+ */
+export const cancelOrderItemAction = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { orderId, itemId } = req.params;
+    const { reason } = req.body;
+
+    await orderService.cancelOrderItem(orderId, userId, itemId, reason);
+
+    res.json({
+      success: true,
+      message: "Item cancelled successfully.",
+    });
+  } catch (error) {
+    console.error("Cancel order item error:", error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to cancel item.",
+    });
+  }
+};
