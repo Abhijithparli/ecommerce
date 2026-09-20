@@ -2,6 +2,7 @@ import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
 import Cart from "../../models/cartModel.js";
+import PDFDocument from "pdfkit";
 import {
   ORDER_STATUS,
   PAYMENT_METHOD,
@@ -19,16 +20,22 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
   }
 
   // 1. Get Cart
-  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  const cart = await Cart.findOne({ user: userId }).populate({
+    path: "items.product",
+    populate: { path: "category" }
+  });
   if (!cart || cart.items.length === 0) {
     throw new Error(MESSAGES.CART.EMPTY);
   }
 
-  // 2. Validate Stock
+  // 2. Validate Stock & Product/Category Status
   for (const item of cart.items) {
     const product = item.product;
     if (!product || product.isDeleted || product.isBlocked) {
       throw new Error(`Product ${product ? product.name : 'Unknown'} is no longer available`);
+    }
+    if (product.category && product.category.isDeleted) {
+      throw new Error(`Category for ${product.name} is no longer active`);
     }
     const variant = product.variants?.find(
       (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
@@ -101,14 +108,47 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     statusHistory: [{ status: ORDER_STATUS.PLACED, updatedAt: new Date() }],
   });
 
-  // 7. Save Order and update variant stock
-  await order.save();
+  // 7. Atomically deduct variant stock (safe against concurrent race conditions)
+  const deductedItems = [];
+  try {
+    for (const item of cart.items) {
+      const res = await Product.updateOne(
+        {
+          _id: item.product._id,
+          variants: {
+            $elemMatch: {
+              size: item.size,
+              stock: { $gte: item.quantity },
+            },
+          },
+        },
+        { $inc: { "variants.$.stock": -item.quantity } }
+      );
 
-  for (const item of cart.items) {
-    await Product.updateOne(
-      { _id: item.product._id, "variants.size": item.size },
-      { $inc: { "variants.$.stock": -item.quantity } }
-    );
+      if (res.matchedCount === 0 || res.modifiedCount === 0) {
+        throw new Error(
+          `Insufficient stock for ${item.product.name} (Size: ${item.size}). Order could not be placed.`
+        );
+      }
+
+      deductedItems.push({
+        productId: item.product._id,
+        size: item.size,
+        quantity: item.quantity,
+      });
+    }
+
+    // Save order
+    await order.save();
+  } catch (err) {
+    // Rollback any stock deducted so far
+    for (const dItem of deductedItems) {
+      await Product.updateOne(
+        { _id: dItem.productId, "variants.size": dItem.size },
+        { $inc: { "variants.$.stock": dItem.quantity } }
+      );
+    }
+    throw err;
   }
 
   // 8. Clear Cart
@@ -117,9 +157,13 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
 
   return order;
 };
-
-export const getUserOrders = async (userId, page = 1, limit = 5) => {
+export const getUserOrders = async (userId, search = "", page = 1, limit = 5) => {
   const query = { user: userId };
+
+  if (search && search.trim() !== "") {
+    query.orderId = { $regex: search.trim(), $options: "i" };
+  }
+
   const skip = (page - 1) * limit;
 
   const totalOrders = await Order.countDocuments(query);
@@ -157,18 +201,22 @@ export const cancelOrder = async (orderId, userId, reason = "") => {
   }
 
   order.status = ORDER_STATUS.CANCELLED;
-    order.cancelReason = reason;
+  order.cancelReason = reason;
   order.statusHistory.push({ status: ORDER_STATUS.CANCELLED, updatedAt: new Date() });
-  await order.save();
 
-  // Restore variant stock
+  // Restore variant stock ONLY for items that have not been cancelled already
   for (const item of order.items) {
-    await Product.updateOne(
-      { _id: item.product, "variants.size": item.size },
-      { $inc: { "variants.$.stock": item.quantity } }
-    ); 
+    if (item.status !== "Cancelled") {
+      item.status = "Cancelled";
+      if (!item.cancelReason) item.cancelReason = reason;
+      await Product.updateOne(
+        { _id: item.product, "variants.size": item.size },
+        { $inc: { "variants.$.stock": item.quantity } }
+      );
+    }
   }
 
+  await order.save();
   return order;
 };
 /**
@@ -250,3 +298,97 @@ export const cancelOrderItem = async (orderId, userId, itemId, reason = "") => {
   return order;
 };
 
+/**
+ * Request a return for a delivered order.
+ *
+ * Only allowed when order status is exactly DELIVERED.
+ * Reason is MANDATORY — unlike cancellation, which is optional.
+ *
+ * NOTE: Stock is NOT restored here. Stock only gets restored once
+ * an admin approves the return (the product physically comes back).
+ * That approval flow is a separate future step, not part of this function.
+ *
+ * @param {string} orderId  - MongoDB _id of the order
+ * @param {string} userId   - must match order.user (ownership check)
+ * @param {string} reason   - REQUIRED, cannot be empty
+ */
+export const requestReturn = async (orderId, userId, reason) => {
+  // Reason is mandatory — check this FIRST, before touching the database
+  if (!reason || reason.trim() === "") {
+    throw new Error("A reason is required to request a return.");
+  }
+
+  const order = await Order.findOne({ _id: orderId, user: userId });
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (order.status !== ORDER_STATUS.DELIVERED) {
+    throw new Error("Only delivered orders can be returned.");
+  }
+
+  order.status = ORDER_STATUS.RETURN_REQUESTED;
+  order.returnReason = reason.trim();
+  order.statusHistory.push({
+    status: ORDER_STATUS.RETURN_REQUESTED,
+    updatedAt: new Date(),
+  });
+
+  await order.save();
+  return order;
+};
+
+/**
+ * generate a pdf invoice for an order and stream it directly to the response.
+ 
+ * @param {Object} order - the order document (already fetched, already ownership-checked)
+ * @param {Object} res   - Express response object
+ */
+export const generateInvoicePDF = (order, res) => {
+  const doc = new PDFDocument({ margin: 50 });
+
+  // Tell the browser this is a downloadable PDF file, not a page to display
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename=invoice-${order.orderId}.pdf`);
+
+  // Pipe the PDF output directly into the response stream
+  doc.pipe(res);
+
+  // ── Header ──────────────────────────────────────────────
+  doc.fontSize(20).text("HeadShield - Invoice", { align: "center" });
+  doc.moveDown();
+
+  // ── Order Info ──────────────────────────────────────────
+  doc.fontSize(12).text(`Order ID: ${order.orderId}`);
+  doc.text(`Order Date: ${new Date(order.createdAt).toDateString()}`);
+  doc.text(`Status: ${order.status}`);
+  doc.moveDown();
+
+  // ── Delivery Address ────────────────────────────────────
+  doc.fontSize(14).text("Delivery Address", { underline: true });
+  doc.fontSize(12).text(order.deliveryAddress.name);
+  doc.text(order.deliveryAddress.street);
+  doc.text(`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`);
+  doc.text(order.deliveryAddress.phone);
+  doc.moveDown();
+
+  // ── Items Table (simple version) ────────────────────────
+  doc.fontSize(14).text("Items", { underline: true });
+  doc.moveDown(0.5);
+
+  order.items.forEach((item) => {
+    doc.fontSize(11).text(
+      `${item.name} (Size: ${item.size}) x${item.quantity} - Rs.${item.price} each - [${item.status}]`
+    );
+  });
+
+  doc.moveDown();
+
+  // ── Totals ───────────────────────────────────────────────
+  doc.fontSize(12).text(`Total: Rs.${order.totalPrice}`);
+  doc.text(`Discount: Rs.${order.discount}`);
+  doc.fontSize(14).text(`Final Price: Rs.${order.finalPrice}`, { underline: true });
+
+  // Finalize the PDF — this actually sends it
+  doc.end();
+};

@@ -374,11 +374,13 @@ export const loadAddresses = async (req, res) => {
     const user = await userService.getUserById(req.session.user.id);
     const success = req.session.addressSuccess || null;
     req.session.addressSuccess = null;
+    const error = req.session.error || null;
+    req.session.error = null;
 
     res.render("user/addresses", {
       user,
       addresses: user.addresses || [],
-      error: null,
+      error,
       success
     });
   } catch (error) {

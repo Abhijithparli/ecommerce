@@ -53,6 +53,10 @@ const orderSchema = new mongoose.Schema(
           type: String,
           default: "",
         },
+     returnReason: {
+      type: String,
+      default: "",
+    },
       },
     ],
     deliveryAddress: {

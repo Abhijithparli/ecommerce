@@ -2,192 +2,246 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>My Addresses</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Addresses - HeadShield</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  * { font-family: 'DM Sans', sans-serif; }
+  h1, h2 { font-family: 'Rajdhani', sans-serif; }
+</style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen p-10">
+<body class="bg-[#0a0a0f] text-gray-200 min-h-screen p-6 sm:p-10">
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto space-y-6">
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">My Addresses</h1>
+  <!-- TOP NAVIGATION & HEADER -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-white/10">
+    <div>
+      <a href="/profile" class="text-sm text-gray-400 hover:text-orange-400 transition mb-1 inline-flex items-center gap-1.5 font-medium">
+        ← Back to Profile
+      </a>
+      <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-wide mt-1">My Addresses</h1>
+    </div>
 
-    <button onclick="toggleForm()"
-      class="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600">
-      + Add Address
+    <button type="button" onclick="toggleForm()"
+      id="addAddressBtn"
+      class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-md flex items-center gap-2 text-sm">
+      <span id="addBtnIcon">+</span>
+      <span id="addBtnText">Add Address</span>
     </button>
-    
   </div>
 
-  <!-- SUCCESS / ERROR -->
+  <!-- FLASH MESSAGES -->
   <% if (success) { %>
-    <p class="text-green-400 mb-4"><%= success %></p>
+    <div class="p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
+      <span>✓</span> <span><%= success %></span>
+    </div>
   <% } %>
 
   <% if (error) { %>
-    <p class="text-red-400 mb-4"><%= error %></p>
+    <div class="p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center gap-2">
+      <span>⚠️</span> <span><%= error %></span>
+    </div>
   <% } %>
 
-  <!-- ADD FORM (HIDDEN) -->
-<div id="addressForm" class="<%= error ? '' : 'hidden' %>">
-
-<form method="POST" action="/profile/addresses/add" novalidate>
-
-  <!-- NAME -->
- <div class="mb-3">
-  <label class="text-sm">Full Name</label>
-  <input name="name"
-    required
-    pattern="^[A-Za-z\s]{3,50}$"
-    title="Name must be 3–50 letters only"
-    class="w-full p-2 bg-gray-700 rounded">
-  
-  <p class="text-red-400 text-sm hidden"></p>
-</div>
-   
-
-  <!-- PHONE -->
- <div class="mb-3">
-  <label class="text-sm">Phone</label>
-  <input name="phone"
-    required
-    pattern="^[6-9]\d{9}$"
-    class="w-full p-2 bg-gray-700 rounded">
-
-  <p class="text-red-400 text-sm hidden"></p>
-</div>
-
-  <!-- STREET -->
-   <div class="mb-3">
-  <label class="text-sm">Street</label>
-  <input name="street"
-    required
-    minlength="5"
-    maxlength="100"
-    title="Minimum 5 characters"
-    class="w-full p-2 mb-2 bg-gray-700 rounded">
-    <p class="text-red-400 text-sm hidden"></p>
-</div>
-  <!-- CITY -->
-   <div class="mb-3">
-  <label class="text-sm">City</label>
-  <input name="city"
-    required
-    pattern="^[A-Za-z\s]{3,50}$"
-    title="City must contain only letters"
-    class="w-full p-2 mb-2 bg-gray-700 rounded">
-    <p class="text-red-400 text-sm hidden"></p>
+  <!-- ADD ADDRESS FORM (COLLAPSIBLE) -->
+  <div id="addressForm" class="<%= error ? '' : 'hidden' %> bg-[#13131a] p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl">
+    <div class="flex justify-between items-center mb-6 pb-3 border-b border-white/5">
+      <h2 class="text-xl font-bold text-white">Add Delivery Address</h2>
+      <button type="button" onclick="toggleForm()" class="text-gray-400 hover:text-white text-lg">✕</button>
     </div>
 
-  <!-- STATE -->
-   <div class="mb-3">
-  <label class="text-sm">State</label>
-  <input name="state"
-    required
-    pattern="^[A-Za-z\s]{3,50}$"
-    title="State must contain only letters"
-    class="w-full p-2 mb-2 bg-gray-700 rounded">
-    <p class="text-red-400 text-sm hidden"></p>
-    </div>
+    <form method="POST" action="/profile/addresses/add" novalidate class="space-y-4">
+      
+      <!-- NAME & PHONE -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Full Name</label>
+          <input name="name"
+            placeholder="John Doe"
+            required
+            pattern="^[A-Za-z\s]{3,50}$"
+            title="Name must be 3–50 letters only"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+          <p class="text-red-400 text-xs mt-1 hidden"></p>
+        </div>
 
-
-  <!-- PINCODE -->
-   <div class="mb-3">
-  <label class="text-sm">Pincode</label>
-  <input name="pincode"
-    required
-    pattern="^[1-9][0-9]{5}$"
-    maxlength="6"
-    title="Enter valid 6-digit pincode"
-    class="w-full p-2 mb-2 bg-gray-700 rounded">
-    <p class="text-red-400 text-sm hidden"></p>
-    </div>
-
-  <!-- DEFAULT -->
-  <label class="text-sm">
-    <input type="checkbox" name="isDefault"> Set as default
-  </label>
-
-  <!-- BUTTON -->
-  <button class="bg-orange-500 px-4 py-2 rounded mt-3 w-full">
-    Save Address
-  </button>
-
-</form>
-  </div>
-  <!-- ADDRESS LIST -->
-  <div class="space-y-4">
-<% if (addresses && addresses.length > 0) { %>
-
-      <% addresses.forEach(addr => { %>
-
-        <div class="bg-gray-800 p-4 rounded">
-
-          <p class="font-bold"><%= addr.name %>
-            <% if (addr.isDefault) { %>
-              <span class="text-green-400 text-sm">(Default)</span>
-            <% } %>
-          </p>
-
-          <p><%= addr.street %>, <%= addr.city %></p>
-          <p><%= addr.state %> - <%= addr.pincode %></p>
-          <p><%= addr.phone %></p>
-
-      <div class="mt-3 flex gap-4 text-sm">
-
-  <!-- edit -->
-  <a href="/profile/addresses/<%= addr._id %>/edit"
-     class="text-yellow-400 hover:text-yellow-300">
-     Edit
-  </a>
-
-   <!-- delete -->
-  <form action="/profile/addresses/<%= addr._id %>/delete"
-        method="POST" class="inline">
-    <button class="text-red-400">Delete</button>
-  </form>
+        <div class="form-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone Number</label>
+          <input name="phone"
+            placeholder="10-digit mobile number"
+            required
+            pattern="^[6-9]\d{9}$"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+          <p class="text-red-400 text-xs mt-1 hidden"></p>
+        </div>
       </div>
 
-  <!--   set default  -->
-  <% if (!addr.isDefault) { %>
-    <form action="/profile/addresses/<%= addr._id %>/default"
-          method="POST" class="inline">
-      <button class="text-blue-400">Set Default</button>
+      <!-- STREET -->
+      <div class="form-group">
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Street Address</label>
+        <input name="street"
+          placeholder="House/Flat number, building, street, area"
+          required
+          minlength="5"
+          maxlength="100"
+          title="Minimum 5 characters"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+        <p class="text-red-400 text-xs mt-1 hidden"></p>
+      </div>
+
+      <!-- CITY, STATE, PINCODE -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">City</label>
+          <input name="city"
+            placeholder="City"
+            required
+            pattern="^[A-Za-z\s]{3,50}$"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+          <p class="text-red-400 text-xs mt-1 hidden"></p>
+        </div>
+
+        <div class="form-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">State</label>
+          <input name="state"
+            placeholder="State"
+            required
+            pattern="^[A-Za-z\s]{3,50}$"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+          <p class="text-red-400 text-xs mt-1 hidden"></p>
+        </div>
+
+        <div class="form-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Pincode</label>
+          <input name="pincode"
+            placeholder="6-digit PIN"
+            required
+            pattern="^[1-9][0-9]{5}$"
+            maxlength="6"
+            title="Enter valid 6-digit pincode"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm">
+          <p class="text-red-400 text-xs mt-1 hidden"></p>
+        </div>
+      </div>
+
+      <!-- SET DEFAULT CHECKBOX -->
+      <div class="pt-1">
+        <label class="inline-flex items-center gap-2.5 text-sm text-gray-300 cursor-pointer select-none">
+          <input type="checkbox" name="isDefault" class="w-4 h-4 rounded bg-white/10 border-white/20 text-orange-500 focus:ring-0 cursor-pointer">
+          <span>Set as default delivery address</span>
+        </label>
+      </div>
+
+      <!-- FORM ACTION BUTTONS: SAVE & CANCEL -->
+      <div class="flex items-center gap-3 pt-3">
+        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2.5 rounded-xl transition shadow text-sm">
+          Save Address
+        </button>
+        <button type="button" onclick="toggleForm()" class="bg-white/10 hover:bg-white/15 text-gray-300 hover:text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">
+          Cancel
+        </button>
+      </div>
+
     </form>
-        </div>
-  <% } %>
-
-</div>
-
-        </div>
-
-      <% }) %>
-
-    <% } else { %>
-
-      <p class="text-gray-400">No addresses added yet.</p>
-
-    <% } %>
-
   </div>
 
-<button type="button"
-  onclick="window.location.href='/profile'"
-  class="flex-1 bg-gray-700 py-3 rounded hover:bg-gray-600">
-  Cancel
-</button>
+  <!-- ADDRESS LIST -->
+  <div>
+    <% if (addresses && addresses.length > 0) { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <% addresses.forEach(addr => { %>
+          <div class="bg-[#13131a] border border-white/10 hover:border-white/20 p-5 rounded-2xl flex flex-col justify-between transition duration-200">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <span class="font-bold text-white text-base truncate"><%= addr.name %></span>
+                <% if (addr.isDefault) { %>
+                  <span class="px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider rounded-full shrink-0">
+                    Default
+                  </span>
+                <% } %>
+              </div>
+
+              <p class="text-gray-400 text-sm leading-relaxed">
+                <%= addr.street %><br>
+                <%= addr.city %>, <%= addr.state %> - <strong class="text-gray-200"><%= addr.pincode %></strong>
+              </p>
+              <p class="text-gray-400 text-xs mt-3">📞 <%= addr.phone %></p>
+            </div>
+
+            <!-- CARD ACTIONS ROW -->
+            <div class="mt-5 pt-3 border-t border-white/5 flex items-center gap-4 text-sm">
+              <a href="/profile/addresses/<%= addr._id %>/edit"
+                 class="text-yellow-400 hover:text-yellow-300 font-medium transition">
+                Edit
+              </a>
+
+              <form action="/profile/addresses/<%= addr._id %>/delete"
+                    method="POST"
+                    class="inline m-0 delete-addr-form"
+                    onsubmit="return confirmAddressDelete(event)">
+                <button type="submit" class="text-red-400 hover:text-red-300 font-medium bg-transparent border-0 cursor-pointer p-0 transition">
+                  Delete
+                </button>
+              </form>
+
+              <% if (!addr.isDefault) { %>
+                <form action="/profile/addresses/<%= addr._id %>/default"
+                      method="POST"
+                      class="inline m-0 ml-auto">
+                  <button type="submit" class="text-blue-400 hover:text-blue-300 font-medium bg-transparent border-0 cursor-pointer p-0 transition">
+                    Set Default
+                  </button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="bg-[#13131a] border border-dashed border-white/10 rounded-2xl p-12 text-center text-gray-400">
+        <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+          📍
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">No Addresses Saved</h3>
+        <p class="text-sm text-gray-500 mb-5">You have not added any delivery addresses yet.</p>
+        <button onclick="toggleForm()" class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow">
+          + Add First Address
+        </button>
+      </div>
+    <% } %>
+  </div>
 
 </div>
 
 <script>
- 
-const form = document.querySelector("#addressForm form");
+// Toggle Form Visibility
+function toggleForm() {
+  const formDiv = document.getElementById("addressForm");
+  const addBtnIcon = document.getElementById("addBtnIcon");
+  const addBtnText = document.getElementById("addBtnText");
+  if (!formDiv) return;
 
+  const isHidden = formDiv.classList.contains("hidden");
+  if (isHidden) {
+    formDiv.classList.remove("hidden");
+    if (addBtnIcon) addBtnIcon.textContent = "✕";
+    if (addBtnText) addBtnText.textContent = "Close Form";
+    formDiv.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else {
+    formDiv.classList.add("hidden");
+    if (addBtnIcon) addBtnIcon.textContent = "+";
+    if (addBtnText) addBtnText.textContent = "Add Address";
+  }
+}
+
+// Client-side Form Validation
+const form = document.querySelector("#addressForm form");
 if (form) {
   form.addEventListener("submit", function(e) {
-
     let valid = true;
 
     const inputs = {
@@ -199,9 +253,9 @@ if (form) {
       pincode: form.querySelector("[name='pincode']")
     };
 
-    // EMPTY CHECK
+    // Empty check
     for (let key in inputs) {
-      if (!inputs[key].value.trim()) {
+      if (!inputs[key] || !inputs[key].value.trim()) {
         showError(inputs[key], "This field is required");
         valid = false;
       } else {
@@ -209,71 +263,93 @@ if (form) {
       }
     }
 
-    // PATTERN VALIDATION
+    if (!valid) {
+      e.preventDefault();
+      return;
+    }
+
+    // Pattern checks
     if (!/^[A-Za-z\s]{3,50}$/.test(inputs.name.value.trim())) {
-      console.log("waht is thei s")
-      showError(inputs.name, "Invalid name");
+      showError(inputs.name, "Name must be 3-50 letters only");
       valid = false;
     }
 
     if (!/^[6-9]\d{9}$/.test(inputs.phone.value.trim())) {
-      showError(inputs.phone, "Invalid phone");
+      showError(inputs.phone, "Phone must be a valid 10-digit number starting with 6-9");
       valid = false;
     }
 
     if (inputs.street.value.trim().length < 5) {
-      console.log("my love is gone")
-      showError(inputs.street, "Street too short");
+      showError(inputs.street, "Street must be at least 5 characters");
       valid = false;
     }
 
     if (!/^[A-Za-z\s]{3,50}$/.test(inputs.city.value.trim())) {
-      showError(inputs.city, "Invalid city");
+      showError(inputs.city, "City must contain only letters");
       valid = false;
     }
 
     if (!/^[A-Za-z\s]{3,50}$/.test(inputs.state.value.trim())) {
-      showError(inputs.state, "Invalid state");
+      showError(inputs.state, "State must contain only letters");
       valid = false;
     }
 
     if (!/^[1-9][0-9]{5}$/.test(inputs.pincode.value.trim())) {
-      showError(inputs.pincode, "Invalid pincode");
+      showError(inputs.pincode, "Enter a valid 6-digit pincode");
       valid = false;
     }
 
     if (!valid) {
-      e.preventDefault();   
+      e.preventDefault();
     }
   });
 }
 
-// ERROR UI
 function showError(input, message) {
+  if (!input) return;
   input.classList.add("border-red-500");
-  
-  const container = input.closest(".mb-3");
-  if(!container) return; //now
-  
+  const container = input.closest(".form-group");
+  if (!container) return;
   const err = container.querySelector("p");
-
-  err.textContent = message;
-  err.classList.remove("hidden");
+  if (err) {
+    err.textContent = message;
+    err.classList.remove("hidden");
+  }
 }
 
 function clearError(input) {
+  if (!input) return;
   input.classList.remove("border-red-500");
-
-  const container = input.closest(".mb-3");
+  const container = input.closest(".form-group");
+  if (!container) return;
   const err = container.querySelector("p");
-
-  err.classList.add("hidden");
+  if (err) {
+    err.classList.add("hidden");
+  }
 }
-</script>
-<script>
-function toggleForm() {
-  const formDiv = document.getElementById("addressForm");
-  if (formDiv) formDiv.classList.toggle("hidden");
+
+// Delete Confirmation via SweetAlert2
+async function confirmAddressDelete(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  const result = await Swal.fire({
+    title: "Delete Address?",
+    text: "Are you sure you want to remove this address?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#4b5563",
+    confirmButtonText: "Yes, Delete",
+    cancelButtonText: "Cancel",
+    background: "#13131a",
+    color: "#ffffff"
+  });
+
+  if (result.isConfirmed) {
+    form.submit();
+  }
+  return false;
 }
 </script>
 

@@ -6,17 +6,32 @@ import { MESSAGES } from "../../constants/messages.js";
  * Service to handle Cart business logic (User)
  */
 
+export const MAX_QTY_PER_ITEM = 5;
+
 export const addToCart = async ({ userId, productId, size = "M", quantity = 1 }) => {
   const normalizedSize = size.toUpperCase();
   const qty = parseInt(quantity) || 1;
 
-  // Check product
+  if (qty < 1) {
+    const error = new Error("Quantity must be at least 1");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (qty > MAX_QTY_PER_ITEM) {
+    const error = new Error(`Maximum limit is ${MAX_QTY_PER_ITEM} units per item`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Check product (must not be deleted, not blocked, and category must not be deleted)
   const product = await Product.findOne({
     _id: productId,
     isDeleted: false,
-  });
+    isBlocked: false,
+  }).populate("category");
 
-  if (!product) {
+  if (!product || (product.category && product.category.isDeleted)) {
     const error = new Error(MESSAGES.PRODUCT.NOT_FOUND);
     error.statusCode = 404;
     throw error;
@@ -74,6 +89,11 @@ export const addToCart = async ({ userId, productId, size = "M", quantity = 1 })
   );
 
   if (existingItem) {
+    if (existingItem.quantity + qty > MAX_QTY_PER_ITEM) {
+      const error = new Error(`Maximum ${MAX_QTY_PER_ITEM} units allowed per item.`);
+      error.statusCode = 400;
+      throw error;
+    }
     if (existingItem.quantity + qty > variant.stock) {
       const error = new Error(`Cannot add more. Only ${variant.stock} item(s) available in stock.`);
       error.statusCode = 400;
@@ -133,8 +153,13 @@ export const updateCartQuantity = async ({ userId, productId, size = "M", action
     throw error;
   }
 
-  const product = await Product.findById(productId);
-  if (!product) {
+  const product = await Product.findOne({
+    _id: productId,
+    isDeleted: false,
+    isBlocked: false,
+  }).populate("category");
+
+  if (!product || (product.category && product.category.isDeleted)) {
     const error = new Error(MESSAGES.PRODUCT.NOT_FOUND);
     error.statusCode = 404;
     throw error;
@@ -151,6 +176,11 @@ export const updateCartQuantity = async ({ userId, productId, size = "M", action
   }
 
   if (action === "increase") {
+    if (item.quantity >= MAX_QTY_PER_ITEM) {
+      const error = new Error(`Maximum limit is ${MAX_QTY_PER_ITEM} units per item.`);
+      error.statusCode = 400;
+      throw error;
+    }
     if (item.quantity >= variant.stock) {
       const error = new Error(`Only ${variant.stock} item(s) available in stock.`);
       error.statusCode = 400;

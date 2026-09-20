@@ -135,19 +135,23 @@ export const addUserAddress = async (userId, addressData) => {
   }
 
   if (!/^[6-9]\d{9}$/.test(phone.trim())) {
-    throw new Error("invalid phone number");
+    throw new Error("Invalid phone number");
   }
 
   if (street.trim().length < 5) {
-    throw new Error("street must be at least 5 characters");
+    throw new Error("Street must be at least 5 characters");
   }
 
   if (!/^[A-Za-z\s]{3,50}$/.test(city.trim())) {
-    throw new Error("invalid city");
+    throw new Error("Invalid city");
   }
 
   if (!/^[A-Za-z\s]{3,50}$/.test(state.trim())) {
     throw new Error("Invalid state");
+  }
+
+  if (!/^[1-9][0-9]{5}$/.test(String(pincode).trim())) {
+    throw new Error("Invalid pincode. Must be a valid 6-digit PIN code.");
   }
 
   const user = await User.findById(userId);
@@ -161,10 +165,10 @@ export const addUserAddress = async (userId, addressData) => {
     street: street.trim(),
     city: city.trim(),
     state: state.trim(),
-    pincode: pincode.trim(),
+    pincode: String(pincode).trim(),
     country: country || "India",
     type: type || "Home",
-    isDefault: isDefault === "on"
+    isDefault: isDefault === "on" || isDefault === true
   };
 
   if (newAddr.isDefault) {
@@ -182,6 +186,34 @@ export const addUserAddress = async (userId, addressData) => {
 export const updateUserAddress = async (userId, addressId, addressData) => {
   const { name, phone, street, city, state, pincode, country, type, isDefault } = addressData;
 
+  if (!name || !phone || !street || !city || !state || !pincode) {
+    throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
+  }
+
+  if (!/^[A-Za-z\s]{3,50}$/.test(name.trim())) {
+    throw new Error("Name must contain only letters (3-50 chars)");
+  }
+
+  if (!/^[6-9]\d{9}$/.test(phone.trim())) {
+    throw new Error("Invalid phone number");
+  }
+
+  if (street.trim().length < 5) {
+    throw new Error("Street must be at least 5 characters");
+  }
+
+  if (!/^[A-Za-z\s]{3,50}$/.test(city.trim())) {
+    throw new Error("Invalid city");
+  }
+
+  if (!/^[A-Za-z\s]{3,50}$/.test(state.trim())) {
+    throw new Error("Invalid state");
+  }
+
+  if (!/^[1-9][0-9]{5}$/.test(String(pincode).trim())) {
+    throw new Error("Invalid pincode. Must be a valid 6-digit PIN code.");
+  }
+
   const user = await User.findById(userId);
   if (!user) {
     throw new Error(MESSAGES.USER.NOT_FOUND);
@@ -197,11 +229,11 @@ export const updateUserAddress = async (userId, addressId, addressData) => {
   addr.street = street.trim();
   addr.city = city.trim();
   addr.state = state.trim();
-  addr.pincode = pincode.trim();
+  addr.pincode = String(pincode).trim();
   addr.country = country || "India";
   addr.type = type || "Home";
 
-  if (isDefault === "on") {
+  if (isDefault === "on" || isDefault === true) {
     user.addresses.forEach((a) => (a.isDefault = false));
     addr.isDefault = true;
   }

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Order Details - Headshield</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
   * { font-family: 'DM Sans', sans-serif; }
@@ -111,17 +112,25 @@
           <p class="text-sm text-gray-400 mt-1">Placed on: <%= new Date(order.createdAt).toLocaleString('en-IN', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></p>
         </div>
 
-        <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3">
           <span id="orderStatusBadge" class="px-4 py-2 text-sm font-bold rounded-lg uppercase tracking-wider badge-<%= order.status.toLowerCase() %>">
             <%= order.status %>
           </span>
+          <a href="/profile/orders/<%= order._id %>/invoice" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white font-bold rounded-lg text-sm transition inline-block">
+            Download Invoice
+          </a>
           <% if (order.status === 'Placed' || order.status === 'Shipped') { %>
             <button id="cancelOrderBtn" onclick="cancelOrder('<%= order._id %>')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm transition">
               Cancel Order
             </button>
           <% } %>
-        </div>
-      </div>
+          <% if (order.status === 'Delivered') { %>
+            <button id="returnOrderBtn" onclick="returnOrder('<%= order._id %>')" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg text-sm transition">
+              Request Return
+            </button>
+          <% } %>
+         </div>
+     </div>
 
       <!-- PROGRESS TRACKER STEPPER -->
       <% if (order.status !== 'Cancelled') { %>
@@ -204,7 +213,7 @@
       </div>
 
       <!-- ORDER ITEMS LIST -->
-      <div>
+           <div>
         <h4 class="font-bold text-white text-base mb-4">Ordered Items</h4>
         <div class="border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 bg-white/5">
           <% order.items.forEach(item => { %>
@@ -213,10 +222,18 @@
               <div class="flex-grow min-w-0">
                 <h5 class="font-bold text-white text-sm truncate"><%= item.name %></h5>
                 <p class="text-xs text-gray-400 mt-1"><% if (item.size) { %>Size: <strong class="text-gray-300"><%= item.size %></strong> • <% } %>Price per unit: <strong class="text-gray-300">₹<%= item.price %></strong></p>
+                <% if (item.status === 'Cancelled') { %>
+                  <span class="inline-block mt-2 px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-bold uppercase rounded">Cancelled</span>
+                <% } %>
               </div>
               <div class="text-right shrink-0">
                 <p class="text-xs text-gray-400">Qty: <span class="font-bold text-white"><%= item.quantity %></span></p>
                 <p class="font-bold text-orange-500 text-base mt-1">₹<%= item.price * item.quantity %></p>
+                <% if (item.status !== 'Cancelled' && (order.status === 'Placed' || order.status === 'Shipped')) { %>
+                  <button onclick="cancelOrderItem('<%= order._id %>', '<%= item._id %>')" class="mt-2 text-xs text-red-400 hover:text-red-300 underline bg-transparent border-0 cursor-pointer">
+                    Cancel this item
+                  </button>
+                <% } %>
               </div>
             </div>
           <% }) %>
@@ -229,28 +246,187 @@
 
 <script>
   async function cancelOrder(orderId) {
-    const confirmCancel = confirm("Are you sure you want to cancel this order?");
-    if (!confirmCancel) return;
+    const { value: reason, isConfirmed } = await Swal.fire({
+      title: "Cancel Entire Order?",
+      text: "Are you sure you want to cancel this order? This action cannot be undone.",
+      input: "text",
+      inputPlaceholder: "Reason for cancellation (optional)",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#4b5563",
+      confirmButtonText: "Yes, Cancel Order",
+      cancelButtonText: "Keep Order",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+
+    if (!isConfirmed) return;
 
     try {
       const response = await fetch(`/profile/orders/${orderId}/cancel`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason || "" })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message);
+        await Swal.fire({
+          icon: "success",
+          title: "Order Cancelled",
+          text: data.message || "Your order has been cancelled.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
         window.location.reload();
       } else {
-        alert(data.message || "Failed to cancel order.");
+        Swal.fire({
+          icon: "error",
+          title: "Cancellation Failed",
+          text: data.message || "Failed to cancel order.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
       }
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
+      console.error("Cancel order error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#f97316",
+        background: "#13131a",
+        color: "#ffffff"
+      });
+    }
+  }
+
+  async function cancelOrderItem(orderId, itemId) {
+    const { value: reason, isConfirmed } = await Swal.fire({
+      title: "Cancel Item?",
+      text: "Cancel this item from the order?",
+      input: "text",
+      inputPlaceholder: "Reason for cancellation (optional)",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#4b5563",
+      confirmButtonText: "Yes, Cancel Item",
+      cancelButtonText: "Keep Item",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      const response = await fetch(`/profile/orders/${orderId}/items/${itemId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason || "" })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Item Cancelled",
+          text: data.message || "Item cancelled successfully.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
+        window.location.reload();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed",
+          text: data.message || "Failed to cancel item.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
+      }
+    } catch (error) {
+      console.error("Cancel item error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#f97316",
+        background: "#13131a",
+        color: "#ffffff"
+      });
+    }
+  }
+
+  async function returnOrder(orderId) {
+    const { value: reason, isConfirmed } = await Swal.fire({
+      title: "Request Return",
+      text: "Please provide the reason for returning this delivered order:",
+      input: "textarea",
+      inputPlaceholder: "Explain why you are returning this item (required)",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#ca8a04",
+      cancelButtonColor: "#4b5563",
+      confirmButtonText: "Submit Return Request",
+      cancelButtonText: "Cancel",
+      background: "#13131a",
+      color: "#ffffff",
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return "A reason is required to request a return!";
+        }
+      }
+    });
+
+    if (!isConfirmed || !reason) return;
+
+    try {
+      const response = await fetch(`/profile/orders/${orderId}/return`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason.trim() })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Return Requested",
+          text: data.message || "Return request submitted successfully.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
+        window.location.reload();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Request Failed",
+          text: data.message || "Failed to request return.",
+          confirmButtonColor: "#f97316",
+          background: "#13131a",
+          color: "#ffffff"
+        });
+      }
+    } catch (error) {
+      console.error("Return order error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#f97316",
+        background: "#13131a",
+        color: "#ffffff"
+      });
     }
   }
 </script>

@@ -2,129 +2,220 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Edit Address</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Address - HeadShield</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  * { font-family: 'DM Sans', sans-serif; }
+  h2 { font-family: 'Rajdhani', sans-serif; }
+</style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+<body class="bg-[#0a0a0f] text-gray-200 min-h-screen flex items-center justify-center p-4 sm:p-8">
 
-<div class="bg-gray-800 p-8 rounded-lg w-full max-w-lg">
+<div class="bg-[#13131a] border border-white/10 p-6 sm:p-8 rounded-2xl w-full max-w-xl shadow-2xl space-y-6">
 
-  <h2 class="text-2xl font-bold mb-6 text-center">Edit Address</h2>
+  <div class="flex justify-between items-center pb-4 border-b border-white/10">
+    <h2 class="text-2xl font-bold text-white tracking-wide">Edit Address</h2>
+    <a href="/profile/addresses" class="text-gray-400 hover:text-white transition text-sm">
+      ✕ Cancel
+    </a>
+  </div>
 
-<form method="POST" action="/profile/addresses/<%= address._id %>/edit" novalidate>
+  <form method="POST" action="/profile/addresses/<%= address._id %>/edit" novalidate class="space-y-4" id="editAddressForm">
 
-    
-<label class="block mb-1 text-sm font-medium">Full Name</label>
-<input 
-  name="name"
-  value="<%= address.name %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-  pattern="^[A-Za-z][A-Za-z\s]{2,49}$"
-/>
+    <!-- FULL NAME & PHONE -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Full Name</label>
+        <input 
+          name="name"
+          value="<%= address.name %>"
+          required
+          pattern="^[A-Za-z\s]{3,50}$"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+        />
+      </div>
 
-    
-<label class="block mb-1 text-sm font-medium">Phone Number</label>
-<input 
-  name="phone"
-  value="<%= address.phone %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-  pattern="^[6-9]\d{9}$"
-/>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone Number</label>
+        <input 
+          name="phone"
+          value="<%= address.phone %>"
+          required
+          pattern="^[6-9]\d{9}$"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+        />
+      </div>
+    </div>
 
-<label class="block mb-1 text-sm font-medium">Street Address</label>
-<input 
-  name="street"
-  value="<%= address.street %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-/>
-<label class="block mb-1 text-sm font-medium">City</label>
-<input 
-  name="city"
-  value="<%= address.city %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-/>
+    <!-- STREET -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Street Address</label>
+      <input 
+        name="street"
+        value="<%= address.street %>"
+        required
+        minlength="5"
+        class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+      />
+    </div>
 
-<label class="block mb-1 text-sm font-medium">State</label>
-<input 
-  name="state"
-  value="<%= address.state %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-/>
+    <!-- CITY, STATE, PINCODE -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">City</label>
+        <input 
+          name="city"
+          value="<%= address.city %>"
+          required
+          pattern="^[A-Za-z\s]{3,50}$"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+        />
+      </div>
 
-  <label class="block mb-1 text-sm font-medium">Pincode</label>
-<input 
-  name="pincode"
-  value="<%= address.pincode %>"
-  class="w-full p-3 mb-3 bg-gray-700 rounded"
-  required
-/>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">State</label>
+        <input 
+          name="state"
+          value="<%= address.state %>"
+          required
+          pattern="^[A-Za-z\s]{3,50}$"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+        />
+      </div>
 
-    <!-- default -->
-    <label class="text-sm flex items-center gap-2 mt-2">
-      <input type="checkbox" name="isDefault"
-        <%= address.isDefault ? "checked" : "" %>
-      >
-      Set as Default
-    </label>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Pincode</label>
+        <input 
+          name="pincode"
+          value="<%= address.pincode %>"
+          required
+          pattern="^[1-9][0-9]{5}$"
+          maxlength="6"
+          class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition text-sm"
+        />
+      </div>
+    </div>
 
-    <!-- button -->
-    <div class="flex gap-4 mt-6">
+    <!-- DEFAULT CHECKBOX -->
+    <div class="pt-2">
+      <label class="inline-flex items-center gap-2.5 text-sm text-gray-300 cursor-pointer select-none">
+        <input type="checkbox" name="isDefault" <%= address.isDefault ? "checked" : "" %> class="w-4 h-4 rounded bg-white/10 border-white/20 text-orange-500 focus:ring-0 cursor-pointer">
+        <span>Set as default address</span>
+      </label>
+    </div>
 
+    <!-- BUTTONS -->
+    <div class="flex gap-4 pt-4 border-t border-white/10">
       <button 
         type="submit"
-        class="flex-1 bg-orange-500 py-3 rounded hover:bg-orange-600">
+        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition shadow text-sm">
         Update Address
       </button>
 
       <button 
         type="button"
         onclick="window.location.href='/profile/addresses'"
-        class="flex-1 bg-gray-600 py-3 rounded hover:bg-gray-500">
+        class="flex-1 bg-white/10 hover:bg-white/15 text-gray-300 hover:text-white font-semibold py-3 rounded-xl transition text-sm">
         Cancel
       </button>
-
     </div>
-    <script>
-document.querySelector("form").addEventListener("submit", function(e) {
-
-  const name = document.querySelector("[name='name']").value.trim();
-  const phone = document.querySelector("[name='phone']").value.trim();
-  const city = document.querySelector("[name='city']").value.trim();
-  const state = document.querySelector("[name='state']").value.trim();
-
-  // Name check
-  if (!/^[A-Za-z\s]{3,50}$/.test(name)) {
-    alert("Invalid name (only letters, min 3 chars)");
-    e.preventDefault();
-    return;
-  }
-
-  // Phone check
-  if (!/^[6-9]\d{9}$/.test(phone)) {
-    alert("Invalid phone number");
-    e.preventDefault();
-    return;
-  }
-
-  // City / State
-  if (!/^[A-Za-z\s]{3,50}$/.test(city) || !/^[A-Za-z\s]{3,50}$/.test(state)) {
-    alert("City/State must be valid letters only");
-    e.preventDefault();
-    return;
-  }
-
-});
-</script>
 
   </form>
 
 </div>
+
+<script>
+document.getElementById("editAddressForm").addEventListener("submit", function(e) {
+  const name = document.querySelector("[name='name']").value.trim();
+  const phone = document.querySelector("[name='phone']").value.trim();
+  const street = document.querySelector("[name='street']").value.trim();
+  const city = document.querySelector("[name='city']").value.trim();
+  const state = document.querySelector("[name='state']").value.trim();
+  const pincode = document.querySelector("[name='pincode']").value.trim();
+
+  if (!name || !phone || !street || !city || !state || !pincode) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Fields",
+      text: "All fields are required.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+
+  if (!/^[A-Za-z\s]{3,50}$/.test(name)) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Name",
+      text: "Name must be 3-50 letters only.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+
+  if (!/^[6-9]\d{9}$/.test(phone)) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Phone Number",
+      text: "Phone number must be a valid 10-digit number.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+
+  if (street.length < 5) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Street Address Too Short",
+      text: "Street address must be at least 5 characters.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+
+  if (!/^[A-Za-z\s]{3,50}$/.test(city) || !/^[A-Za-z\s]{3,50}$/.test(state)) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid City/State",
+      text: "City and State must contain only letters.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+
+  if (!/^[1-9][0-9]{5}$/.test(pincode)) {
+    e.preventDefault();
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Pincode",
+      text: "Please enter a valid 6-digit PIN code.",
+      confirmButtonColor: "#f97316",
+      background: "#13131a",
+      color: "#ffffff"
+    });
+    return;
+  }
+});
+</script>
 
 </body>
 </html>

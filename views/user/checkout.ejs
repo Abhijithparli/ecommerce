@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Checkout - HeadShield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
 
@@ -183,7 +184,12 @@
     async function submitOrder() {
       const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
       if (!selectedAddressRadio) {
-        alert("Please select a delivery address to place your order.");
+        Swal.fire({
+          icon: "warning",
+          title: "Select Address",
+          text: "Please select a delivery address to place your order.",
+          confirmButtonColor: "#f97316"
+        });
         return;
       }
 
@@ -212,7 +218,12 @@
         if (data.success) {
           window.location.href = `/checkout/order-success/${data.orderId}`;
         } else {
-          alert(data.message || "Failed to place order.");
+          Swal.fire({
+            icon: "error",
+            title: "Order Failed",
+            text: data.message || "Failed to place order.",
+            confirmButtonColor: "#f97316"
+          });
           // Enable button back
           placeOrderBtn.disabled = false;
           placeOrderBtn.classList.remove("opacity-60", "cursor-not-allowed");
@@ -220,7 +231,12 @@
         }
       } catch (error) {
         console.error(error);
-        alert("Something went wrong. Please try again.");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong. Please try again.",
+          confirmButtonColor: "#f97316"
+        });
         // Enable button back
         placeOrderBtn.disabled = false;
         placeOrderBtn.classList.remove("opacity-60", "cursor-not-allowed");

@@ -30,10 +30,13 @@ export const loadCart = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { cart, total } = await cartService.getUserCart(userId);
+    const error = req.session.error || null;
+    req.session.error = null;
 
     res.render("user/cart", {
       cart,
       total,
+      error
     });
   } catch (error) {
     console.error("Load cart error:", error);
@@ -111,6 +114,7 @@ export const loadCheckout = async (req, res) => {
     });
   } catch (error) {
     console.error("Load checkout error:", error);
+    req.session.error = error.message;
     res.redirect("/cart");
   }
 };

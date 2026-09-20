@@ -2,6 +2,7 @@ export const ORDER_STATUS = Object.freeze({
   PLACED: "Placed",
   SHIPPED: "Shipped",
   DELIVERED: "Delivered",
+   RETURN_REQUESTED: "Return Requested",
   CANCELLED: "Cancelled",
   RETURNED: "Returned"
 });

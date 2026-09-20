@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= product.name %> - HeadShield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     /* Styling for dynamic mouse pan/zoom container */
     .zoom-container {
@@ -482,8 +483,14 @@
     // AJAX cart submission and guest checks
     async function addToCart(productId, redirect = false) {
       if (!window.isLoggedIn) {
-        alert("Please login to continue");
-        window.location.href = "/login";
+        Swal.fire({
+          icon: "info",
+          title: "Login Required",
+          text: "Please login to add items to your cart.",
+          confirmButtonColor: "#f97316"
+        }).then(() => {
+          window.location.href = "/login";
+        });
         return;
       }
       
@@ -501,14 +508,37 @@
           if (redirect) {
             window.location.href = "/cart";
           } else {
-            alert(data.message);
+            Swal.fire({
+              icon: "success",
+              title: "Added to Cart",
+              text: data.message || "Product added to cart successfully!",
+              showCancelButton: true,
+              confirmButtonText: "Go to Cart",
+              cancelButtonText: "Continue Shopping",
+              confirmButtonColor: "#f97316",
+              cancelButtonColor: "#374151"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = "/cart";
+              }
+            });
           }
         } else {
-          alert(data.message || "Failed to add to cart");
+          Swal.fire({
+            icon: "warning",
+            title: "Cannot Add Item",
+            text: data.message || "Failed to add to cart.",
+            confirmButtonColor: "#f97316"
+          });
         }
       } catch (error) {
         console.error("Cart error:", error);
-        alert("Something went wrong");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong. Please try again.",
+          confirmButtonColor: "#f97316"
+        });
       }
     }
 

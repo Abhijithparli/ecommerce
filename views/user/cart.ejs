@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cart</title>
+  <title>Cart - HeadShield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
@@ -11,9 +12,15 @@
 <div class="max-w-7xl mx-auto px-6 py-10">
 
   <!-- TITLE -->
-  <h1 class="text-4xl font-bold text-gray-800 mb-10">
+  <h1 class="text-4xl font-bold text-gray-800 mb-6">
     Shopping Cart
   </h1>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="mb-6 p-4 bg-red-100 border border-red-300 rounded-xl text-red-700 text-sm flex items-center gap-2">
+      <span>⚠️</span> <span><%= error %></span>
+    </div>
+  <% } %>
 
 
   <% if (cart && cart.items.length > 0) { %>
@@ -183,8 +190,18 @@
 
 async function removeCartItem(productId, size) {
   try {
-    const confirmDelete = confirm("Remove this product from cart?");
-    if (!confirmDelete) return;
+    const result = await Swal.fire({
+      title: "Remove Item?",
+      text: "Do you want to remove this product from your cart?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#f97316",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Remove",
+      cancelButtonText: "Cancel"
+    });
+
+    if (!result.isConfirmed) return;
 
     const response = await fetch(
       `/cart/remove/${productId}?size=${encodeURIComponent(size)}`,
@@ -207,11 +224,21 @@ async function removeCartItem(productId, size) {
         location.reload();
       }
     } else {
-      alert(data.message);
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: data.message || "Failed to remove item",
+        confirmButtonColor: "#f97316"
+      });
     }
   } catch (error) {
-    console.log(error);
-    alert("Something went wrong");
+    console.error(error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong. Please try again.",
+      confirmButtonColor: "#f97316"
+    });
   }
 }
 
@@ -244,11 +271,21 @@ async function updateQuantity(productId, size, action) {
       const grandTotalEl = document.getElementById("grandTotal");
       if (grandTotalEl) grandTotalEl.innerText = `₹${data.grandTotal}`;
     } else {
-      alert(data.message);
+      Swal.fire({
+        icon: "warning",
+        title: "Notice",
+        text: data.message,
+        confirmButtonColor: "#f97316"
+      });
     }
   } catch (error) {
-    console.log(error);
-    alert("Something went wrong");
+    console.error(error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong. Please try again.",
+      confirmButtonColor: "#f97316"
+    });
   }
 }
 

@@ -60,7 +60,9 @@ import {
   loadOrders,
   loadOrderDetail,
   cancelOrderAction,
-  cancelOrderItemAction
+  cancelOrderItemAction,
+  returnOrderAction,
+  downloadInvoice
 } from "../../controllers/user/orderController.js";
 
 const router = express.Router();
@@ -144,6 +146,8 @@ router.get("/profile/orders", isAuthenticated, loadOrders);
 router.get("/profile/orders/:id", isAuthenticated, loadOrderDetail);
 router.post("/profile/orders/:id/cancel", isAuthenticated, cancelOrderAction);
 router.post("/profile/orders/:orderId/items/:itemId/cancel", isAuthenticated, cancelOrderItemAction);
+router.post("/profile/orders/:id/return", isAuthenticated, returnOrderAction);
+router.get("/profile/orders/:id/invoice", isAuthenticated, downloadInvoice);
 // ================= google auth =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
