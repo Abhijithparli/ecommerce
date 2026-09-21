@@ -1,3 +1,4 @@
+import * as inventoryController from "../../controllers/admin/inventoryController.js";
 // routes/admin/adminRouter.js
 import express from "express";
 import {
@@ -146,4 +147,6 @@ router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
 router.get("/orders", isAdminAuth, listAdminOrders);
 router.get("/orders/:id", isAdminAuth, loadAdminOrderDetail);
 router.post("/orders/:id/status", isAdminAuth, updateAdminOrderStatus);
+router.get("/inventory", isAdminAuth, inventoryController.loadInventoryPage);
+router.post("/inventory/:productId/update-stock", isAdminAuth, inventoryController.updateStockAction);
 export default router;

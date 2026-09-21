@@ -15,12 +15,18 @@
        <%= currentPage === 'products' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
       Products
     </a>
-    <a href="/admin/orders"
+       <a href="/admin/orders"
        class="block px-4 py-2.5 rounded-lg text-sm font-medium
        <%= currentPage === 'orders' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
       Order Lists
     </a>
+    <a href="/admin/inventory"
+       class="block px-4 py-2.5 rounded-lg text-sm font-medium
+       <%= currentPage === 'inventory' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
+      Inventory
+    </a>
     <a href="/admin/users"
+    
        class="block px-4 py-2.5 rounded-lg text-sm font-medium
        <%= currentPage === 'users' ? 'text-white bg-indigo-600' : 'text-gray-700 hover:bg-gray-100' %>">
       Users

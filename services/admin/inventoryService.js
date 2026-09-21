@@ -5,6 +5,38 @@ import { MESSAGES } from "../../constants/messages.js";
  * Service to handle Inventory and Stock operations (Admin)
  */
 
+/**
+ * Get all products with their variant stock levels, for the admin inventory page.
+ *
+ * @param {string} search - optional, filters by product name
+ * @param {number} page
+ * @param {number} limit
+ */
+export const getAllInventory = async (search = "", page = 1, limit = 10) => {
+  const query = { isDeleted: false };
+
+  if (search && search.trim() !== "") {
+    query.name = { $regex: search.trim(), $options: "i" };
+  }
+
+  const skip = (page - 1) * limit;
+  const totalProducts = await Product.countDocuments(query);
+  const totalPages = Math.ceil(totalProducts / limit);
+
+  const products = await Product.find(query)
+    .select("name brand images variants")
+    .sort({ name: 1 })
+    .skip(skip)
+    .limit(limit);
+
+  return {
+    products,
+    currentPage: page,
+    totalPages,
+    totalProducts,
+  };
+};
+
 export const getInventoryStock = async (productId) => {
   const product = await Product.findOne({ _id: productId, isDeleted: false });
   if (!product) {
