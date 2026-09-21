@@ -1,8 +1,9 @@
 export const ORDER_STATUS = Object.freeze({
   PLACED: "Placed",
   SHIPPED: "Shipped",
+  OUT_FOR_DELIVERY: "Out for Delivery",
   DELIVERED: "Delivered",
-   RETURN_REQUESTED: "Return Requested",
+  RETURN_REQUESTED: "Return Requested",
   CANCELLED: "Cancelled",
   RETURNED: "Returned"
 });

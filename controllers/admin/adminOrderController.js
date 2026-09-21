@@ -4,17 +4,20 @@ export const listAdminOrders = async (req, res) => {
   try {
     const search = req.query.search || "";
     const status = req.query.status || "";
+     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
-    const data = await orderService.getAdminOrders(search, status, page, limit);
+    const data = await orderService.getAdminOrders(search, status,sort, page, limit);
     res.render("admin/orders", {
       orders: data.orders,
       currentPage: "orders",
       currentPageNum: data.currentPage,
       totalPages: data.totalPages,
+      totalOrders:data.totalOrders,
       search,
       status,
+      sort,
       error: req.session.error || null,
       success: req.session.success || null,
     });

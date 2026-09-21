@@ -11,7 +11,7 @@ import { MESSAGES } from "../../constants/messages.js";
  * Service to handle Order business logic (Admin)
  */
 
-export const getAdminOrders = async (search = "", status = "", page = 1, limit = 10) => {
+export const getAdminOrders = async (search = "", status = "", sort = "", page = 1, limit = 10) => {
   const query = {};
 
   if (status && status.trim() !== "") {
@@ -22,13 +22,23 @@ export const getAdminOrders = async (search = "", status = "", page = 1, limit =
     query.orderId = { $regex: search.trim(), $options: "i" };
   }
 
+  // Sort options — default to newest first if nothing selected
+  let sortOption = { createdAt: -1 };
+  if (sort === "oldest") {
+    sortOption = { createdAt: 1 };
+  } else if (sort === "price-high") {
+    sortOption = { finalPrice: -1 };
+  } else if (sort === "price-low") {
+    sortOption = { finalPrice: 1 };
+  }
+
   const skip = (page - 1) * limit;
   const totalOrders = await Order.countDocuments(query);
   const totalPages = Math.ceil(totalOrders / limit);
 
   const orders = await Order.find(query)
     .populate("user", "name email")
-    .sort({ createdAt: -1 })
+    .sort(sortOption)
     .skip(skip)
     .limit(limit);
 
