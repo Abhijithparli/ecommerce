@@ -2,9 +2,7 @@ import User from "../../models/userModel.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 
-/**
- * Transporter & Mail Helper
- */
+//mail 
 function createTransporter() {
   return nodemailer.createTransport({
     service: "gmail",
@@ -25,9 +23,6 @@ export const sendAdminMail = async (to, subject, html) => {
   });
 };
 
-/**
- * Admin Business Logic
- */
 
 export const validateAdminLogin = async (email, password) => {
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";

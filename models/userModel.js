@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      default: null,          // null for Google OAuth users
+      default: null,          
     },
     isBlocked: {
       type: Boolean,
@@ -44,10 +44,10 @@ const userSchema = new mongoose.Schema(
     },
     googleId: {
       type: String,
-      default: null,          // for Google OAuth
+      default: null,          
     },
 
-    // ── Extra profile fields ─────────────────────────────
+    // ── Extra profile fields 
     phone: {
       type: String,
       default: null,
@@ -63,10 +63,10 @@ const userSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,
-      default: null,          // stores image path like /uploads/profiles/xxx.jpg
+      default: null,          // for stores image path like /uploads/profiles/xxx.jpg
     },
 
-    // ── OTP fields ───────────────────────────────────────
+    // ── OTP fields 
     otp: {
       type: String,
       default: null,

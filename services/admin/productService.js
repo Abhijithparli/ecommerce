@@ -5,9 +5,8 @@ import sharp from "sharp";
 import path from "path";
 import { MESSAGES } from "../../constants/messages.js";
 
-/**
- * Service to handle Product business logic (Admin)
- */
+
+//handle product business lo
 
 export const getAdminProducts = async (search = "", page = 1, limit = 10) => {
   const query = { isDeleted: false };

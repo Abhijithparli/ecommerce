@@ -3,9 +3,7 @@ import Category from "../../models/categoryModel.js";
 import Product from "../../models/productModel.js";
 import { MESSAGES } from "../../constants/messages.js";
 
-/**
- * Service to handle Category business logic (Admin)
- */
+
 
 export const getCategories = async (search = "", page = 1, limit = 10) => {
   const skip = (page - 1) * limit;

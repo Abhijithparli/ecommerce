@@ -1,17 +1,14 @@
 import Product from "../../models/productModel.js";
 import { MESSAGES } from "../../constants/messages.js";
 
-/**
- * Service to handle Inventory and Stock operations (Admin)
- */
 
 /**
- * Get all products with their variant stock levels, for the admin inventory page.
+ * //Get all products  variant stock levelsfor the admin 
  *
  * @param {string} search - optional, filters by product name
  * @param {number} page
  * @param {number} limit
- */
+ **/
 export const getAllInventory = async (search = "", page = 1, limit = 10) => {
   const query = { isDeleted: false };
 
