@@ -36,7 +36,8 @@ export const loadCart = async (req, res) => {
     res.render("user/cart", {
       cart,
       total,
-      error
+      error,
+      user:req.session.user,
     });
   } catch (error) {
     console.error("Load cart error:", error);
@@ -111,6 +112,7 @@ export const loadCheckout = async (req, res) => {
       cart: data.cart,
       addresses: data.addresses,
       total: data.total,
+      user:req.session.user,
     });
   } catch (error) {
     console.error("Load checkout error:", error);

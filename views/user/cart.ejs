@@ -7,7 +7,10 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
+<% const currentUser = (typeof user !== 'undefined' && user) ? user : null; %>
 <body class="bg-gray-100 min-h-screen">
+
+<%- include("../partials/user/header", { user: currentUser }) %>
 
 <div class="max-w-7xl mx-auto px-6 py-10">
 
@@ -185,6 +188,7 @@
   <% } %>
 
 </div>
+<%- include("../partials/user/footer") %>
 
 <script>
 

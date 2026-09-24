@@ -344,51 +344,111 @@ export const requestReturn = async (orderId, userId, reason) => {
  * @param {Object} order - the order document (already fetched, already ownership-checked)
  * @param {Object} res   - Express response object
  */
-export const generateInvoicePDF = (order, res) => {
-  const doc = new PDFDocument({ margin: 50 });
 
-  // Tell the browser this is a downloadable PDF file, not a page to display
+
+ export const generateInvoicePDF = (order, res) => {
+  const doc = new PDFDocument({ margin: 50, size: "A4" });
+
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename=invoice-${order.orderId}.pdf`);
-
-  // Pipe the PDF output directly into the response stream
   doc.pipe(res);
 
-  // ── Header ──────────────────────────────────────────────
-  doc.fontSize(20).text("HeadShield - Invoice", { align: "center" });
-  doc.moveDown();
+  const primaryColor = "#f97316";
+  const darkColor = "#1f2937";
+  const grayColor = "#6b7280";
+  const lightGray = "#e5e7eb";
 
-  // ── Order Info ──────────────────────────────────────────
-  doc.fontSize(12).text(`Order ID: ${order.orderId}`);
-  doc.text(`Order Date: ${new Date(order.createdAt).toDateString()}`);
-  doc.text(`Status: ${order.status}`);
-  doc.moveDown();
+  // ── Header band ──────────────────────────────────────────
+  doc.rect(0, 0, doc.page.width, 100).fill(primaryColor);
+  doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(26).text("HEADSHIELD", 50, 32);
+  doc.font("Helvetica").fontSize(10).text("Premium Motorcycle Helmets", 50, 64);
+  doc.font("Helvetica-Bold").fontSize(20).text("INVOICE", 350, 32, { width: 195, align: "right" });
+  doc.font("Helvetica").fontSize(10).text(`#${order.orderId}`, 350, 58, { width: 195, align: "right" });
 
-  // ── Delivery Address ────────────────────────────────────
-  doc.fontSize(14).text("Delivery Address", { underline: true });
-  doc.fontSize(12).text(order.deliveryAddress.name);
-  doc.text(order.deliveryAddress.street);
-  doc.text(`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`);
-  doc.text(order.deliveryAddress.phone);
-  doc.moveDown();
+  // ── Bill To / Order Info (two columns) ──────────────────
+  let y = 130;
+  doc.fillColor(darkColor).font("Helvetica-Bold").fontSize(11);
+  doc.text("BILL TO", 50, y);
+  doc.text("ORDER INFO", 320, y);
 
-  // ── Items Table (simple version) ────────────────────────
-  doc.fontSize(14).text("Items", { underline: true });
-  doc.moveDown(0.5);
+  y += 18;
+  doc.font("Helvetica").fontSize(10).fillColor(grayColor);
+  doc.text(order.deliveryAddress.name, 50, y);
+  doc.text(`Date: ${new Date(order.createdAt).toDateString()}`, 320, y);
 
-  order.items.forEach((item) => {
-    doc.fontSize(11).text(
-      `${item.name} (Size: ${item.size}) x${item.quantity} - Rs.${item.price} each - [${item.status}]`
-    );
+  y += 15;
+  doc.text(order.deliveryAddress.street, 50, y);
+  doc.text(`Status: ${order.status}`, 320, y);
+
+  y += 15;
+  doc.text(`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`, 50, y);
+  doc.text(`Payment: ${order.paymentMethod} (${order.paymentStatus})`, 320, y);
+
+  y += 15;
+  doc.text(`Phone: ${order.deliveryAddress.phone}`, 50, y);
+
+  y += 35;
+
+  // ── Items table header ───────────────────────────────────
+  const tableTop = y;
+  doc.rect(50, tableTop, 495, 25).fill("#f3f4f6");
+  doc.fillColor(darkColor).font("Helvetica-Bold").fontSize(10);
+  doc.text("ITEM", 60, tableTop + 8);
+  doc.text("SIZE", 300, tableTop + 8);
+  doc.text("QTY", 350, tableTop + 8);
+  doc.text("PRICE", 400, tableTop + 8);
+  doc.text("TOTAL", 470, tableTop + 8, { width: 65, align: "right" });
+
+  y = tableTop + 25;
+  doc.font("Helvetica").fontSize(10);
+
+  order.items.forEach((item, i) => {
+    const rowY = y;
+    if (i % 2 === 1) {
+      doc.rect(50, rowY, 495, 22).fill("#fafafa");
+    }
+    const rowColor = item.status === "Cancelled" ? "#ef4444" : darkColor;
+    doc.fillColor(rowColor);
+    doc.text(item.name, 60, rowY + 6, { width: 230 });
+    doc.text(item.size, 300, rowY + 6);
+    doc.text(String(item.quantity), 350, rowY + 6);
+    doc.text(`Rs.${item.price}`, 400, rowY + 6);
+    doc.text(`Rs.${item.price * item.quantity}`, 470, rowY + 6, { width: 65, align: "right" });
+
+    y += 22;
+    if (item.status === "Cancelled") {
+      doc.fontSize(8).fillColor("#ef4444").text("(Cancelled)", 60, y - 4);
+      doc.fontSize(10);
+    }
   });
 
-  doc.moveDown();
+  doc.moveTo(50, y + 5).lineTo(545, y + 5).strokeColor(lightGray).stroke();
+  y += 25;
 
-  // ── Totals ───────────────────────────────────────────────
-  doc.fontSize(12).text(`Total: Rs.${order.totalPrice}`);
-  doc.text(`Discount: Rs.${order.discount}`);
-  doc.fontSize(14).text(`Final Price: Rs.${order.finalPrice}`, { underline: true });
+  // ── Totals (right-aligned) ────────────────────────────────
+  doc.fillColor(grayColor).fontSize(10);
+  doc.text("Subtotal", 400, y, { width: 70 });
+  doc.fillColor(darkColor).text(`Rs.${order.totalPrice}`, 470, y, { width: 65, align: "right" });
+  y += 18;
 
-  // Finalize the PDF — this actually sends it
+  if (order.discount > 0) {
+    doc.fillColor(grayColor).text("Discount", 400, y, { width: 70 });
+    doc.fillColor("#ef4444").text(`- Rs.${order.discount}`, 470, y, { width: 65, align: "right" });
+    y += 18;
+  }
+
+  doc.moveTo(400, y).lineTo(545, y).strokeColor(lightGray).stroke();
+  y += 10;
+
+  doc.fillColor(darkColor).font("Helvetica-Bold").fontSize(13);
+  doc.text("Grand Total", 400, y, { width: 70 });
+  doc.fillColor(primaryColor).text(`Rs.${order.finalPrice}`, 470, y, { width: 65, align: "right" });
+
+  // ── Footer ────────────────────────────────────────────────
+  y += 60;
+  doc.font("Helvetica").fontSize(9).fillColor(grayColor);
+  doc.text("Thank you for shopping with HeadShield!", 50, y, { align: "center", width: 495 });
+  doc.text("This is a computer-generated invoice and does not require a signature.", 50, y + 14, { align: "center", width: 495 });
+
   doc.end();
-};
+ };
