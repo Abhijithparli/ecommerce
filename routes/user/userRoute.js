@@ -65,8 +65,14 @@ import {
   downloadInvoice
 } from "../../controllers/user/orderController.js";
 
-const router = express.Router();
 
+import{
+  loadWishlistPage,
+  addToWishlistAction,
+  removeFromWishlistAction  
+}from "../../controllers/user/wishlistcontroller.js";
+
+const router = express.Router();
 
 // ================= public =================
 router.get("/", loadHomepage);
@@ -148,6 +154,10 @@ router.post("/profile/orders/:id/cancel", isAuthenticated, cancelOrderAction);
 router.post("/profile/orders/:orderId/items/:itemId/cancel", isAuthenticated, cancelOrderItemAction);
 router.post("/profile/orders/:id/return", isAuthenticated, returnOrderAction);
 router.get("/profile/orders/:id/invoice", isAuthenticated, downloadInvoice);
+
+router.get("/wishlist", isAuthenticated, loadWishlistPage);
+router.post("/wishlist/add/:productId", isAuthenticated, addToWishlistAction);
+router.delete("/wishlist/remove/:productId", isAuthenticated, removeFromWishlistAction);
 // ================= google auth =================
 router.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
