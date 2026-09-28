@@ -64,3 +64,21 @@ export const updateAdminOrderStatus = async (req, res) => {
     res.redirect(`/admin/orders/${req.params.id}`);
   }
 };
+
+export const getOrderStatusCounts = async (req,res)=>{
+  try{
+    const counts = await orderService.getOrderStatusCounts();
+
+    res.json({
+      success:true,
+      counts
+    });
+  }catch (error){
+console.error("Get order status counts error:",error);
+
+res.status(500).json({
+  success:false,
+  meassage:"Failed to get order status counts"
+});
+  }
+};

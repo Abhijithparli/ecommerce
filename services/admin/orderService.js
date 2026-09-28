@@ -82,6 +82,7 @@ export const updateOrderStatus = async (orderId, status) => {
     }
   }
 
+
   // If order is delivered, set payment status to Paid for COD
   if (status === ORDER_STATUS.DELIVERED && order.paymentMethod === PAYMENT_METHOD.COD) {
     order.paymentStatus = PAYMENT_STATUS.PAID;
@@ -90,3 +91,15 @@ export const updateOrderStatus = async (orderId, status) => {
   await order.save();
   return order;
 };
+
+export const getOrderStatusCounts = async()=>{
+  const statusCounts = await Order.aggregate([
+    {
+    $group:{
+    _id:"$status",
+    count:{$sum:1}
+    }
+  }
+  ]);
+  return statusCounts;
+}

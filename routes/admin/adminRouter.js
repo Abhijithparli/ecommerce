@@ -44,6 +44,7 @@ import {
   listAdminOrders,
   loadAdminOrderDetail,
   updateAdminOrderStatus,
+  getOrderStatusCounts,
 } from "../../controllers/admin/adminOrderController.js";
 
 const router = express.Router();
@@ -147,6 +148,7 @@ router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
 router.get("/orders", isAdminAuth, listAdminOrders);
 router.get("/orders/:id", isAdminAuth, loadAdminOrderDetail);
 router.post("/orders/:id/status", isAdminAuth, updateAdminOrderStatus);
+router.get("/orders/status-counts",isAdminAuth,getOrderStatusCounts);
 router.get("/inventory", isAdminAuth, inventoryController.loadInventoryPage);
 router.post("/inventory/:productId/update-stock", isAdminAuth, inventoryController.updateStockAction);
 export default router;
