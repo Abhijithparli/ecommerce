@@ -7,15 +7,12 @@ import {
 } from "../../constants/enums.js";
 import { MESSAGES } from "../../constants/messages.js";
 
-/**
- * Service to handle Order business logic (Admin)
- */
 
 export const getAdminOrders = async (search = "", status = "", sort = "", page = 1, limit = 10) => {
   const query = {};
 
   if (status && status.trim() !== "") {
-    query.status = status;
+    query.status = status;``
   }
 
   if (search && search.trim() !== "") {
@@ -91,7 +88,7 @@ export const updateOrderStatus = async (orderId, status) => {
   await order.save();
   return order;
 };
-
+////
 export const getOrderStatusCounts = async()=>{
   const statusCounts = await Order.aggregate([
     {
@@ -101,5 +98,7 @@ export const getOrderStatusCounts = async()=>{
     }
   }
   ]);
+  console.log("order status count:",statusCounts);
   return statusCounts;
 }
+

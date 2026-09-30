@@ -22,6 +22,20 @@ export const listAdminOrders = async (req, res) => {
       success: req.session.success || null,
     });
 
+    ////
+    // const statusCounts = await orderService.getOrderStatusCounts();
+
+    res.render("admin/orders", {
+      orders: data.orders,
+      currentPage: "orders",
+      currentPageNum: data.currentPage,
+      totalPages: data.totalPages,
+      totalOrders: data.totalOrders,   
+      search,
+      status,
+      sort
+    });
+
     // clear notifications
     delete req.session.error;
     delete req.session.success;
