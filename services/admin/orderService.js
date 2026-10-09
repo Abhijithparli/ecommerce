@@ -29,7 +29,7 @@ export const getAdminOrders = async (search = "", status = "", sort = "", page =
   } else if (sort === "price-high") {
     sortOption = { finalPrice: -1 };
   } else if (sort === "price-low") {
-    sortOption = { finalPrice: 1 };
+    sortOption = { finalPrice: 1 }; 
   }
 
   const skip = (page - 1) * limit;

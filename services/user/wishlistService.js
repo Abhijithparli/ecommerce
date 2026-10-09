@@ -15,7 +15,7 @@ const product = await Product.findOne({
         throw error;
         
     }
-    let wishlist = await Wishlist.findOne({ user: userId });
+    let wishlist = await Wishlist.findOne({ user: userId }); 
 
     if(!wishlist){
         wishlist = new Wishlist({
