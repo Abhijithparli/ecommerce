@@ -1,7 +1,7 @@
 import Cart from "../../models/cartModel.js";
 import User from "../../models/userModel.js";
 import { MESSAGES } from "../../constants/messages.js";
-import { getCartStockStatus } from "./cartService.js";
+import { getCartStockStatus, removeItemsWithoutSize } from "./cartService.js";
 
 /**
  * Service to handle Checkout business logic (User)
@@ -13,6 +13,9 @@ export const getCheckoutData = async (userId) => {
     path: "items.product",
     populate: { path: "category" }
   });
+  if (removeItemsWithoutSize(cart)) {
+    await cart.save();
+  }
   if (!cart || cart.items.length === 0) {
     const error = new Error(MESSAGES.CART.EMPTY);
     error.isEmptyCart = true;

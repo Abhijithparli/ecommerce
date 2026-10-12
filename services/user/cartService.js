@@ -8,6 +8,18 @@ import { MESSAGES } from "../../constants/messages.js";
 
 export const MAX_QTY_PER_ITEM = 5;
 
+// Carts created before `size` became required can still hold items without a size.
+// Mongoose re-validates every item on save(), so one such item blocks the whole cart
+// ("Cart validation failed: items.0.size: Path `size` is required").
+// They can't be priced or ordered without a size, so remove them.
+// Returns true if anything was removed (caller decides whether to save).
+export const removeItemsWithoutSize = (cart) => {
+  if (!cart) return false;
+  const before = cart.items.length;
+  cart.items = cart.items.filter((item) => item.size);
+  return cart.items.length !== before;
+};
+
 // Decide if a (populated) cart item can be purchased right now.
 // Returns { available: boolean, message: string } so views can explain *why*.
 export const getCartItemStatus = (item) => {
@@ -105,6 +117,7 @@ export const addToCart = async ({ userId, productId, size = "M", quantity = 1 })
 
   // Find user cart
   let cart = await Cart.findOne({ user: userId });
+  removeItemsWithoutSize(cart);
 
   // Create new cart if not exists
   if (!cart) {
@@ -160,6 +173,10 @@ export const getUserCart = async (userId) => {
     populate: { path: "category" }
   });
 
+  if (removeItemsWithoutSize(cart)) {
+    await cart.save();
+  }
+
   let total = 0;
   if (cart) {
     cart.items.forEach((item) => {
@@ -187,6 +204,7 @@ export const updateCartQuantity = async ({ userId, productId, size = "M", action
     error.statusCode = 404;
     throw error;
   }
+  removeItemsWithoutSize(cart);
 
   const item = cart.items.find(
     (item) =>
@@ -276,6 +294,7 @@ export const removeCartItem = async ({ userId, productId, size = "M" }) => {
     error.statusCode = 404;
     throw error;
   }
+  removeItemsWithoutSize(cart);
 
   cart.items = cart.items.filter(
     (item) =>
