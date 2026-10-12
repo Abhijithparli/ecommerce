@@ -34,13 +34,18 @@
       <div class="lg:col-span-2 space-y-6">
 
         <% cart.items.forEach(item => { %>
+          <% const status = itemStatus[item._id.toString()] || { available: true, message: "" }; %>
 
-          <div id="item-<%= item.product._id %>-<%= item.size %>" class="bg-white rounded-2xl shadow p-6 flex gap-6">
+          <div
+            id="item-<%= item.product._id %>-<%= item.size %>"
+            <%= status.available ? '' : 'data-unavailable' %>
+            class="bg-white rounded-2xl shadow p-6 flex gap-6 <%= status.available ? '' : 'border-2 border-red-400' %>"
+          >
 
             <!-- IMAGE -->
             <img
               src="<%= item.product.images[0] %>"
-              class="w-36 h-36 object-cover rounded-xl"
+              class="w-36 h-36 object-cover rounded-xl <%= status.available ? '' : 'opacity-50 grayscale' %>"
             >
 
             <!-- CONTENT -->
@@ -60,6 +65,12 @@
               <p class="text-sm text-gray-500 mb-2">
                 Size: <span class="font-bold text-gray-800"><%= item.size %></span>
               </p>
+
+              <% if (!status.available) { %>
+                <p class="inline-block mb-3 px-3 py-1 bg-red-100 text-red-700 text-sm font-semibold rounded-md">
+                  <%= status.message %>
+                </p>
+              <% } %>
 
               <%
                 const variant = item.product.variants ? item.product.variants.find(v => v.size === item.size) : null;
@@ -146,12 +157,25 @@
           </div>
 
           <!-- CHECKOUT -->
-          <a
-            href="/checkout"
-            class="block text-center w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg"
-          >
-            Proceed To Checkout
-          </a>
+          <% if (hasUnavailableItems) { %>
+            <p class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              Some items in your cart are out of stock or unavailable. Remove them or reduce the quantity to continue.
+            </p>
+            <button
+              type="button"
+              disabled
+              class="block text-center w-full bg-gray-300 text-gray-500 py-4 rounded-xl font-semibold text-lg cursor-not-allowed"
+            >
+              Proceed To Checkout
+            </button>
+          <% } else { %>
+            <a
+              href="/checkout"
+              class="block text-center w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg"
+            >
+              Proceed To Checkout
+            </a>
+          <% } %>
 
         </div>
 
@@ -215,8 +239,14 @@ async function removeCartItem(productId, size) {
     const data = await response.json();
 
     if (data.success) {
-      // Remove item row from DOM
+      // Removing an unavailable item may unlock checkout, so let the server re-check
       const itemEl = document.getElementById(`item-${productId}-${size}`);
+      if (itemEl && itemEl.hasAttribute("data-unavailable")) {
+        location.reload();
+        return;
+      }
+
+      // Remove item row from DOM
       if (itemEl) itemEl.remove();
 
       // Update grand total
@@ -263,6 +293,13 @@ async function updateQuantity(productId, size, action) {
     const data = await response.json();
 
     if (data.success) {
+      // Changing quantity of an unavailable item may fix it, so let the server re-check
+      const itemEl = document.getElementById(`item-${productId}-${size}`);
+      if (itemEl && itemEl.hasAttribute("data-unavailable")) {
+        location.reload();
+        return;
+      }
+
       // Update quantity display
       const qtyEl = document.getElementById(`qty-${productId}-${size}`);
       if (qtyEl) qtyEl.innerText = data.quantity;

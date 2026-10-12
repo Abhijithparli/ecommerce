@@ -29,13 +29,15 @@ export const addToCart = async (req, res) => {
 export const loadCart = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { cart, total } = await cartService.getUserCart(userId);
+    const { cart, total, itemStatus, hasUnavailableItems } = await cartService.getUserCart(userId);
     const error = req.session.error || null;
     req.session.error = null;
 
     res.render("user/cart", {
       cart,
       total,
+      itemStatus,
+      hasUnavailableItems,
       error,
       user:req.session.user,
     });
@@ -108,10 +110,20 @@ export const loadCheckout = async (req, res) => {
     const userId = req.session.user.id;
     const data = await checkoutService.getCheckoutData(userId);
 
+    // Messages from the address modal (add / edit redirects back here)
+    const success = req.session.addressSuccess || null;
+    const error = req.session.error || null;
+    req.session.addressSuccess = null;
+    req.session.error = null;
+
     res.render("user/checkout", {
+      success,
+      error,
       cart: data.cart,
       addresses: data.addresses,
       total: data.total,
+      itemStatus: data.itemStatus,
+      hasUnavailableItems: data.hasUnavailableItems,
       user:req.session.user,
     });
   } catch (error) {

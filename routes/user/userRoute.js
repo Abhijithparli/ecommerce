@@ -31,7 +31,6 @@ import {
   editAddress,
   deleteAddress,
   setDefaultAddress,
-  loadEditAddress,
   loadSetPassword,
   savePassword,
   loadAboutPage
@@ -224,9 +223,6 @@ router.get("/profile/addresses", isAuthenticated, loadAddresses);
 
 // Add address
 router.post("/profile/addresses/add", isAuthenticated, addAddress);
-
-// Load edit page
-router.get("/profile/addresses/:id/edit", isAuthenticated, loadEditAddress);
 
 // Update address
 router.post("/profile/addresses/:id/edit", isAuthenticated, editAddress);

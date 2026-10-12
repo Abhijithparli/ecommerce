@@ -369,6 +369,13 @@ export const changePassword = async (req, res) => {
 };
 
 // ================= ADDRESS MANAGEMENT =================
+
+// The address modal is used on the addresses page and on checkout.
+// Only allow known pages, so the form cannot redirect users to another site.
+const ADDRESS_REDIRECTS = ["/profile/addresses", "/checkout"];
+const getAddressRedirect = (req) =>
+  ADDRESS_REDIRECTS.includes(req.body.redirectTo) ? req.body.redirectTo : "/profile/addresses";
+
 export const loadAddresses = async (req, res) => {
   try {
     const user = await userService.getUserById(req.session.user.id);
@@ -391,44 +398,33 @@ export const loadAddresses = async (req, res) => {
 
 export const addAddress = async (req, res) => {
   try {
+    const backTo = getAddressRedirect(req);
     const userId = req.session.user.id;
     await userService.addUserAddress(userId, req.body);
 
     req.session.addressSuccess = "Address added successfully";
-    res.redirect("/profile/addresses");
+    res.redirect(backTo);
   } catch (error) {
     console.error("Add address error:", error);
     req.session.error = error.message || "Something went wrong";
-    res.redirect("/profile/addresses");
-  }
-};
-
-export const loadEditAddress = async (req, res) => {
-  try {
-    const user = await userService.getUserById(req.session.user.id);
-    const address = user.addresses.id(req.params.id);
-
-    if (!address) return res.redirect("/profile/addresses");
-
-    res.render("user/editAddress", { address });
-  } catch (error) {
-    res.redirect("/profile/addresses");
+    res.redirect(getAddressRedirect(req));
   }
 };
 
 export const editAddress = async (req, res) => {
   try {
+    const backTo = getAddressRedirect(req);
     const userId = req.session.user.id;
     const { id } = req.params;
 
     await userService.updateUserAddress(userId, id, req.body);
 
     req.session.addressSuccess = "Address updated";
-    res.redirect("/profile/addresses");
+    res.redirect(backTo);
   } catch (error) {
     console.error("Edit address controller error:", error);
     req.session.error = error.message || "Update failed";
-    res.redirect("/profile/addresses");
+    res.redirect(getAddressRedirect(req));
   }
 };
 

@@ -5,8 +5,8 @@ export const listAdminOrders = async (req, res) => {
     const search = req.query.search || "";
     const status = req.query.status || "";
      const sort = req.query.sort || "";
-     const fromDate = req.query.fromDate||"";
-     const toDate = req.query.toDate ||"";
+    //  const fromDate = req.query.fromDate||"";
+    //  const toDate = req.query.toDate ||"";
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
@@ -20,8 +20,8 @@ export const listAdminOrders = async (req, res) => {
       search,
       status,
       sort,
-      fromDate,
-      toDate,
+      // fromDate,
+      // toDate,
       error: req.session.error || null,
       success: req.session.success || null,
     });

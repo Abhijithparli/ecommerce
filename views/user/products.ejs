@@ -9,6 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HeadShield - Shop Helmets</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-[#0a0a0f] text-gray-200 min-h-screen flex flex-col">
 
@@ -225,6 +226,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <% if (products.length > 0) { %>
           <% products.forEach(product => { %>
+            <%
+              const inStockVariants = (product.variants || []).filter(v => v.stock > 0);
+              const isOutOfStock = product.quantity <= 0;
+            %>
             <div class="bg-[#13131a] border border-white/5 rounded-2xl overflow-hidden hover:scale-[1.02] transition duration-300 flex flex-col group relative">
               
               <!-- Wishlist icon placeholder -->
@@ -237,13 +242,18 @@
               </button>
 
               <!-- Image Container -->
-              <div class="w-full h-56 bg-zinc-950 overflow-hidden flex items-center justify-center p-4">
-                <img 
-                  src="<%= product.images && product.images[0] ? product.images[0] : '/img/targo-pro-biger.jpg' %>" 
+              <a href="/products/<%= product._id %>" class="relative w-full h-56 bg-zinc-950 overflow-hidden flex items-center justify-center p-4">
+                <% if (isOutOfStock) { %>
+                  <span class="absolute top-4 left-4 z-10 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+                    Out of Stock
+                  </span>
+                <% } %>
+                <img
+                  src="<%= product.images && product.images[0] ? product.images[0] : '/img/targo-pro-biger.jpg' %>"
                   alt="<%= product.name %>"
-                  class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-300"
+                  class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-300 <%= isOutOfStock ? 'opacity-40 grayscale' : '' %>"
                 >
-              </div>
+              </a>
 
               <!-- Product Info -->
               <div class="p-5 flex-1 flex flex-col justify-between">
@@ -288,12 +298,41 @@
                   <!-- Free Delivery Badge -->
                   <p class="text-[11px] text-emerald-400 font-semibold mt-1">Free Delivery</p>
 
-                  <!-- Button Link -->
-                  <a 
-                    href="/products/<%= product._id %>" 
-                    class="block text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm py-2.5 rounded-lg mt-4 transition duration-200 text-decoration-none"
+                  <!-- Size picker + Add to Cart -->
+                  <% if (isOutOfStock) { %>
+                    <button
+                      type="button"
+                      disabled
+                      class="w-full bg-zinc-800 border border-zinc-700 text-gray-500 font-semibold text-sm py-2.5 rounded-lg mt-4 cursor-not-allowed"
+                    >
+                      Out of Stock
+                    </button>
+                  <% } else { %>
+                    <div class="flex gap-2 mt-4">
+                      <select
+                        id="size-<%= product._id %>"
+                        aria-label="Select size"
+                        class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                      >
+                        <% inStockVariants.forEach(v => { %>
+                          <option value="<%= v.size %>"><%= v.size %></option>
+                        <% }) %>
+                      </select>
+                      <button
+                        type="button"
+                        onclick="addToCartFromList(this, '<%= product._id %>')"
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition duration-200"
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
+                  <% } %>
+
+                  <a
+                    href="/products/<%= product._id %>"
+                    class="block text-center text-gray-400 hover:text-orange-500 text-xs font-semibold mt-3 transition duration-200 text-decoration-none"
                   >
-                    View Product
+                    View Details
                   </a>
                 </div>
               </div>
@@ -358,6 +397,69 @@
 
   <!-- Include Footer -->
   <%- include("../partials/user/footer") %>
+
+  <script>
+    // Add to cart straight from the listing card (same endpoint as the product page)
+    async function addToCartFromList(button, productId) {
+      if (!window.isLoggedIn) {
+        Swal.fire({
+          icon: "info",
+          title: "Login Required",
+          text: "Please login to add items to your cart.",
+          confirmButtonColor: "#f97316"
+        }).then(() => {
+          window.location.href = "/login";
+        });
+        return;
+      }
+
+      const size = document.getElementById(`size-${productId}`).value;
+      button.disabled = true;
+      button.textContent = "Adding...";
+
+      try {
+        const response = await fetch(`/cart/add/${productId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: 1, size })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Added to Cart",
+            text: `Size ${size} added to your cart.`,
+            showCancelButton: true,
+            confirmButtonText: "Go to Cart",
+            cancelButtonText: "Continue Shopping",
+            confirmButtonColor: "#f97316",
+            cancelButtonColor: "#374151"
+          }).then((result) => {
+            if (result.isConfirmed) window.location.href = "/cart";
+          });
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "Cannot Add Item",
+            text: data.message || "Failed to add to cart.",
+            confirmButtonColor: "#f97316"
+          });
+        }
+      } catch (error) {
+        console.error("Cart error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong. Please try again.",
+          confirmButtonColor: "#f97316"
+        });
+      } finally {
+        button.disabled = false;
+        button.textContent = "Add to Cart";
+      }
+    }
+  </script>
 
   <!-- Styles to ensure Bootstrap-style classes map perfectly -->
   <style>

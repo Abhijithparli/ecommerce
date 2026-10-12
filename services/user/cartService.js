@@ -8,6 +8,48 @@ import { MESSAGES } from "../../constants/messages.js";
 
 export const MAX_QTY_PER_ITEM = 5;
 
+// Decide if a (populated) cart item can be purchased right now.
+// Returns { available: boolean, message: string } so views can explain *why*.
+export const getCartItemStatus = (item) => {
+  const product = item.product;
+
+  if (!product || product.isDeleted || product.isBlocked || (product.category && product.category.isDeleted)) {
+    return { available: false, message: "This product is no longer available" };
+  }
+
+  const variant = product.variants?.find(
+    (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+  );
+
+  if (!variant) {
+    return { available: false, message: `Size ${item.size} is no longer available` };
+  }
+
+  if (variant.stock <= 0) {
+    return { available: false, message: "Out of stock" };
+  }
+
+  if (item.quantity > variant.stock) {
+    return { available: false, message: `Only ${variant.stock} left in stock. Reduce quantity to continue.` };
+  }
+
+  return { available: true, message: "" };
+};
+
+// Attach a status to every cart item and report if any item blocks checkout
+export const getCartStockStatus = (cart) => {
+  const itemStatus = {};
+  let hasUnavailableItems = false;
+
+  (cart?.items || []).forEach((item) => {
+    const status = getCartItemStatus(item);
+    itemStatus[item._id.toString()] = status;
+    if (!status.available) hasUnavailableItems = true;
+  });
+
+  return { itemStatus, hasUnavailableItems };
+};
+
 export const addToCart = async ({ userId, productId, size = "M", quantity = 1 }) => {
   const normalizedSize = size.toUpperCase();
   const qty = parseInt(quantity) || 1;
@@ -113,7 +155,10 @@ export const addToCart = async ({ userId, productId, size = "M", quantity = 1 })
 };
 
 export const getUserCart = async (userId) => {
-  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  const cart = await Cart.findOne({ user: userId }).populate({
+    path: "items.product",
+    populate: { path: "category" }
+  });
 
   let total = 0;
   if (cart) {
@@ -128,7 +173,9 @@ export const getUserCart = async (userId) => {
     });
   }
 
-  return { cart, total };
+  const { itemStatus, hasUnavailableItems } = getCartStockStatus(cart);
+
+  return { cart, total, itemStatus, hasUnavailableItems };
 };
 
 export const updateCartQuantity = async ({ userId, productId, size = "M", action }) => {

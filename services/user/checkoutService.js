@@ -1,6 +1,7 @@
 import Cart from "../../models/cartModel.js";
 import User from "../../models/userModel.js";
 import { MESSAGES } from "../../constants/messages.js";
+import { getCartStockStatus } from "./cartService.js";
 
 /**
  * Service to handle Checkout business logic (User)
@@ -18,33 +19,9 @@ export const getCheckoutData = async (userId) => {
     throw error;
   }
 
-  // 2. Validate all cart items before proceeding to checkout
-  for (const item of cart.items) {
-    const product = item.product;
-    if (!product || product.isDeleted || product.isBlocked) {
-      throw new Error(`Item "${product ? product.name : 'Unknown'}" is currently unavailable`);
-    }
-
-    if (product.category && product.category.isDeleted) {
-      throw new Error(`Item "${product.name}" belongs to an inactive category`);
-    }
-
-    const variant = product.variants?.find(
-      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
-    );
-
-    if (!variant) {
-      throw new Error(`Size ${item.size} for "${product.name}" is no longer available`);
-    }
-
-    if (variant.stock <= 0) {
-      throw new Error(`Size ${item.size} for "${product.name}" is out of stock`);
-    }
-
-    if (item.quantity > variant.stock) {
-      throw new Error(`Only ${variant.stock} item(s) left in stock for "${product.name}" (${item.size})`);
-    }
-  }
+  // 2. Check every cart item. Unavailable items are shown on the page and
+  //    the Place Order button is disabled (createOrder re-validates on submit).
+  const { itemStatus, hasUnavailableItems } = getCartStockStatus(cart);
 
   // 3. Get User Addresses
   const user = await User.findById(userId);
@@ -67,6 +44,8 @@ export const getCheckoutData = async (userId) => {
   return {
     cart,
     addresses: user.addresses || [],
-    total
+    total,
+    itemStatus,
+    hasUnavailableItems
   };
 };
