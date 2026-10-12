@@ -34,7 +34,7 @@ export const getAdminOrders = async (search = "", status = "", sort = "", page =
   const totalPages = Math.ceil(totalOrders / limit);
 
   const orders = await Order.find(query)
-    .populate("user", "name email")
+    .populate("user", "name email")   
     .sort(sortOption)
     .skip(skip)
     .limit(limit);

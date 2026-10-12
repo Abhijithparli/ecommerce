@@ -225,6 +225,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <% if (products.length > 0) { %>
           <% products.forEach(product => { %>
+            <% const isOutOfStock = product.quantity <= 0; %>
             <div class="bg-[#13131a] border border-white/5 rounded-2xl overflow-hidden hover:scale-[1.02] transition duration-300 flex flex-col group relative">
               
               <!-- Wishlist icon placeholder -->
@@ -237,11 +238,16 @@
               </button>
 
               <!-- Image Container -->
-              <div class="w-full h-56 bg-zinc-950 overflow-hidden flex items-center justify-center p-4">
-                <img 
-                  src="<%= product.images && product.images[0] ? product.images[0] : '/img/targo-pro-biger.jpg' %>" 
+              <div class="relative w-full h-56 bg-zinc-950 overflow-hidden flex items-center justify-center p-4">
+                <% if (isOutOfStock) { %>
+                  <span class="absolute top-4 left-4 z-10 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+                    Out of Stock
+                  </span>
+                <% } %>
+                <img
+                  src="<%= product.images && product.images[0] ? product.images[0] : '/img/targo-pro-biger.jpg' %>"
                   alt="<%= product.name %>"
-                  class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-300"
+                  class="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-300 <%= isOutOfStock ? 'opacity-40 grayscale' : '' %>"
                 >
               </div>
 
