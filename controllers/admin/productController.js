@@ -111,7 +111,7 @@ export const editProduct = async (req, res) => {
     const parsedVariants = productService.parseVariants(req.body);
     const productObj = product.toObject ? product.toObject() : product;
 
-    return res.status(400).render("admin/editProduct", {
+    return res.status(400).render("admin/editProduct", {  
       product: {
         ...productObj,
         ...req.body,
@@ -164,3 +164,4 @@ export const unblockProduct = async (req, res) => {
     res.redirect("/admin/products");
   }
 };
+
