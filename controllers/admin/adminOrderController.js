@@ -96,3 +96,29 @@ res.status(500).json({
 });
   }
 };
+
+export const approveReturnAction = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    await orderService.approveReturn(orderId);
+    req.session.success = "Return approved successfully! Stock has been restored.";
+    res.redirect(`/admin/orders/${orderId}`);
+  } catch (error) {
+    console.error("Approve return error:", error);
+    req.session.error = error.message || "Failed to approve return.";
+    res.redirect(`/admin/orders/${req.params.id}`);
+  }
+};
+
+export const rejectReturnAction = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    await orderService.rejectReturn(orderId);
+    req.session.success = "Return request has been rejected.";
+    res.redirect(`/admin/orders/${orderId}`);
+  } catch (error) {
+    console.error("Reject return error:", error);
+    req.session.error = error.message || "Failed to reject return.";
+    res.redirect(`/admin/orders/${req.params.id}`);
+  }
+};

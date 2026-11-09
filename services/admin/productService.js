@@ -140,13 +140,13 @@ export const addProduct = async (fields, files) => {
     });
     if (existingProduct) {
       errors.name = MESSAGES.VALIDATION.PRODUCT.NAME_EXISTS;
-    }
+    } 
   }
 
   // 2. Brand validation
   if (!trimmedBrand) {
     errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_REQUIRED;
-  } else if (trimmedBrand.length < 2) {
+  } else if (trimmedBrand.length < 2) { 
     errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MIN;
   } else if (trimmedBrand.length > 50) {
     errors.brand = MESSAGES.VALIDATION.PRODUCT.BRAND_MAX;

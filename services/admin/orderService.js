@@ -62,7 +62,7 @@ export const updateOrderStatus = async (orderId, status) => {
   }
   
   const oldStatus = order.status;
-  if (oldStatus === ORDER_STATUS.CANCELLED || oldStatus === ORDER_STATUS.DELIVERED) {
+  if (oldStatus === ORDER_STATUS.CANCELLED || oldStatus === ORDER_STATUS.DELIVERED || oldStatus === ORDER_STATUS.RETURN_APPROVED || oldStatus === ORDER_STATUS.RETURN_REJECTED || oldStatus === ORDER_STATUS.RETURN_REQUESTED) {
     throw new Error(`Cannot change status of a ${oldStatus} order`);
   }
 
@@ -88,6 +88,69 @@ export const updateOrderStatus = async (orderId, status) => {
   await order.save();
   return order;
 };
+/**
+ * Approve a return request.
+ * - Only allowed when order status is RETURN_REQUESTED
+ * - Sets status to RETURN_APPROVED
+ * - Restores stock for each active item's variant
+ * - Uses returnStockRestored flag to prevent duplicate restoration
+ */
+export const approveReturn = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (order.status !== ORDER_STATUS.RETURN_REQUESTED) {
+    throw new Error("Only orders with 'Return Requested' status can be approved for return.");
+  }
+
+  // Prevent duplicate stock restoration
+  if (order.returnStockRestored) {
+    throw new Error("Return has already been processed. Stock was already restored.");
+  }
+
+  // Restore stock for each active item
+  for (const item of order.items) {
+    if (item.status !== "Cancelled") {
+      await Product.updateOne(
+        { _id: item.product, "variants.size": item.size },
+        { $inc: { "variants.$.stock": item.quantity } }
+      );
+    }
+  }
+
+  order.status = ORDER_STATUS.RETURN_APPROVED;
+  order.returnStockRestored = true;
+  order.statusHistory.push({ status: ORDER_STATUS.RETURN_APPROVED, updatedAt: new Date() });
+
+  await order.save();
+  return order;
+};
+
+/**
+ * Reject a return request.
+ * - Only allowed when order status is RETURN_REQUESTED
+ * - Sets status to RETURN_REJECTED
+ * - Does NOT restore stock
+ */
+export const rejectReturn = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (order.status !== ORDER_STATUS.RETURN_REQUESTED) {
+    throw new Error("Only orders with 'Return Requested' status can be rejected.");
+  }
+
+  order.status = ORDER_STATUS.RETURN_REJECTED;
+  order.statusHistory.push({ status: ORDER_STATUS.RETURN_REJECTED, updatedAt: new Date() });
+
+  await order.save();
+  return order;
+};
+
 ////
 export const getOrderStatusCounts = async()=>{
   const statusCounts = await Order.aggregate([

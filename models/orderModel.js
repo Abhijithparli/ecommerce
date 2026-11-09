@@ -59,6 +59,10 @@ const orderSchema = new mongoose.Schema(
     },
       },
     ],
+    returnStockRestored: {
+      type: Boolean,
+      default: false,
+    },
     deliveryAddress: {
       name: { type: String, required: true },
       phone: { type: String, required: true },

@@ -45,6 +45,8 @@ import {
   loadAdminOrderDetail,
   updateAdminOrderStatus,
   getOrderStatusCounts,
+  approveReturnAction,
+  rejectReturnAction,
 } from "../../controllers/admin/adminOrderController.js";
 
 const router = express.Router();
@@ -148,6 +150,8 @@ router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
 router.get("/orders", isAdminAuth, listAdminOrders);
 router.get("/orders/:id", isAdminAuth, loadAdminOrderDetail);
 router.post("/orders/:id/status", isAdminAuth, updateAdminOrderStatus);
+router.post("/orders/:id/approve-return", isAdminAuth, approveReturnAction);
+router.post("/orders/:id/reject-return", isAdminAuth, rejectReturnAction);
 router.get("/orders/status-counts",isAdminAuth,getOrderStatusCounts);
 router.get("/inventory", isAdminAuth, inventoryController.loadInventoryPage);
 router.post("/inventory/:productId/update-stock", isAdminAuth, inventoryController.updateStockAction);
