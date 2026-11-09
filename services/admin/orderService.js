@@ -60,7 +60,7 @@ export const updateOrderStatus = async (orderId, status) => {
   if (!order) {
     throw new Error(MESSAGES.ORDER.NOT_FOUND);
   }
-
+  
   const oldStatus = order.status;
   if (oldStatus === ORDER_STATUS.CANCELLED || oldStatus === ORDER_STATUS.DELIVERED) {
     throw new Error(`Cannot change status of a ${oldStatus} order`);

@@ -46,3 +46,4 @@ export const updateStockAction = async (req, res) => {
     res.redirect("/admin/inventory");
   }
 };
+
