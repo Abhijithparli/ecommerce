@@ -79,6 +79,19 @@ const orderSchema = new mongoose.Schema(
       enum: Object.values(PAYMENT_STATUS),
       default: PAYMENT_STATUS.PENDING,
     },
+      // Razorpay payment details
+razorpayOrderId: {
+    type: String,
+    default: null,
+},
+razorpayPaymentId: {
+    type: String,
+    default: null,
+},
+razorpaySignature: {
+    type: String,
+    default: null,
+},
     totalPrice: {
       type: Number,
       required: true,
@@ -112,6 +125,7 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

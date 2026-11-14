@@ -7,23 +7,38 @@ export const placeOrder = async (req, res) => {
     const userId = req.session.user.id;
     const { addressId, paymentMethod } = req.body;
 
-    if (paymentMethod !== PAYMENT_METHOD.COD) {
-      return res.status(400).json({
-        success: false,
-        message: "Only Cash on Delivery (COD) is supported at this time."
+    // Handle COD Flow (Existing logic preserved exactly as is)
+    if (paymentMethod === PAYMENT_METHOD.COD) {
+      const order = await orderService.createOrder({
+        userId,
+        addressId,
+        paymentMethod
+      });
+
+      return res.json({
+        success: true,
+        message: MESSAGES.ORDER.PLACED,
+        orderId: order._id
       });
     }
 
-    const order = await orderService.createOrder({
-      userId,
-      addressId,
-      paymentMethod
-    });
+    // Handle Razorpay Flow (New isolated branch)
+    if (paymentMethod === PAYMENT_METHOD.RAZORPAY) {
+      const rzpData = await orderService.createRazorpayOrder({
+        userId,
+        addressId
+      });
 
-    res.json({
-      success: true,
-      message: MESSAGES.ORDER.PLACED,
-      orderId: order._id
+      return res.json({
+        success: true,
+        paymentMethod: PAYMENT_METHOD.RAZORPAY,
+        ...rzpData
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Invalid payment method selected."
     });
   } catch (error) {
     console.error("Place order error:", error);

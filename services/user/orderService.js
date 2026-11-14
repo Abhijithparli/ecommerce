@@ -9,6 +9,7 @@ import {
   PAYMENT_STATUS
 } from "../../constants/enums.js";
 import { MESSAGES } from "../../constants/messages.js";
+import razorpayInstance from "../../config/razorpay.js";
 
 /**
  * Service to handle Order business logic (User)
@@ -157,6 +158,85 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
 
   return order;
 };
+
+/**
+ * Create Razorpay Gateway Order
+ * - Validates address, cart, and variant stock availability
+ * - Calculates total price strictly server-side using variant prices
+ * - Creates an order on Razorpay API (amount in paise)
+ * - DOES NOT deduct stock or clear cart (deferred until payment verification)
+ */
+export const createRazorpayOrder = async ({ userId, addressId }) => {
+  if (!addressId) {
+    throw new Error("Delivery address is required");
+  }
+
+  // 1. Get and validate Cart
+  const cart = await Cart.findOne({ user: userId }).populate({
+    path: "items.product",
+    populate: { path: "category" }
+  });
+  if (!cart || cart.items.length === 0) {
+    throw new Error(MESSAGES.CART.EMPTY);
+  }
+
+  // 2. Validate Stock & Product/Category Status
+  for (const item of cart.items) {
+    const product = item.product;
+    if (!product || product.isDeleted || product.isBlocked) {
+      throw new Error(`Product ${product ? product.name : 'Unknown'} is no longer available`);
+    }
+    if (product.category && product.category.isDeleted) {
+      throw new Error(`Category for ${product.name} is no longer active`);
+    }
+    const variant = product.variants?.find(
+      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+    );
+    if (!variant) {
+      throw new Error(`Variant size ${item.size} not found for product: ${product.name}`);
+    }
+    if (item.quantity > variant.stock) {
+      throw new Error(`Insufficient stock for ${product.name} (Size: ${item.size}). Available: ${variant.stock}`);
+    }
+  }
+
+  // 3. Verify Delivery Address exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error(MESSAGES.USER.NOT_FOUND);
+  }
+  const address = user.addresses.id(addressId);
+  if (!address) {
+    throw new Error("Delivery address not found in profile");
+  }
+
+  // 4. Calculate Total Price Server-Side
+  let totalPrice = 0;
+  cart.items.forEach((item) => {
+    const variant = item.product.variants?.find(
+      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+    );
+    const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+    totalPrice += itemPrice * item.quantity;
+  });
+
+  // 5. Create Razorpay Order (amount in paise: ₹1 = 100 paise)
+  const receiptId = `rcpt_${Date.now().toString().slice(-8)}_${Math.floor(100 + Math.random() * 900)}`;
+  const rzpOrder = await razorpayInstance.orders.create({
+    amount: Math.round(totalPrice * 100),
+    currency: "INR",
+    receipt: receiptId,
+  });
+
+  return {
+    razorpayOrderId: rzpOrder.id,
+    amount: rzpOrder.amount,
+    currency: rzpOrder.currency,
+    keyId: process.env.RAZORPAY_KEY_ID,
+    addressId
+  };
+};
+
 export const getUserOrders = async (userId, search = "", page = 1, limit = 5) => {
   const query = { user: userId };
 
