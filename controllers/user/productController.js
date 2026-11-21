@@ -19,6 +19,8 @@ export const loadProducts = async (req, res) => {
       sort: data.sort,
       price: data.price,
       brand: data.brand,
+      selectedBrands: data.selectedBrands || [],
+      brandQueryString: data.brandQueryString || "",
       user: req.session.user || null,
       error: req.session.error || null,
       success: req.session.success || null

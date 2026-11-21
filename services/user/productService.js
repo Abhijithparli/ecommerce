@@ -13,7 +13,6 @@ export const getPublicProducts = async (queryParams) => {
   const search = queryParams.search?.trim() || "";
   const sort = queryParams.sort || "";
   const price = queryParams.price || "";
-  const brand = queryParams.brand || "";
   const page = parseInt(queryParams.page) || 1;
   const limit = 5;
   const skip = (page - 1) * limit;
@@ -35,18 +34,41 @@ export const getPublicProducts = async (queryParams) => {
     }
   }
 
+  // Normalize brand selection (supports single string or array)
+  let rawBrand = queryParams.brand;
+  let selectedBrands = [];
+  if (rawBrand) {
+    if (Array.isArray(rawBrand)) {
+      selectedBrands = rawBrand
+        .flatMap((b) => (typeof b === "string" ? b.split(",") : b))
+        .map((b) => String(b).trim())
+        .filter(Boolean);
+    } else if (typeof rawBrand === "string") {
+      selectedBrands = rawBrand
+        .split(",")
+        .map((b) => b.trim())
+        .filter(Boolean);
+    }
+  }
+
   // Base filter for public products
   const filter = {
     isDeleted: false,
     isBlocked: false
   };
 
-  // Search filter
+  const andConditions = [];
+
+  // Search filter across name, brand, and description (case-insensitive regex)
   if (search) {
-    filter.name = {
-      $regex: search,
-      $options: "i"
-    };
+    const searchRegex = { $regex: search, $options: "i" };
+    andConditions.push({
+      $or: [
+        { name: searchRegex },
+        { brand: searchRegex },
+        { description: searchRegex }
+      ]
+    });
   }
 
   // Active categories lookup
@@ -54,6 +76,10 @@ export const getPublicProducts = async (queryParams) => {
   const activeCategoryIds = activeCategories.map((c) => c._id);
   const activeCategoryMap = new Map(activeCategories.map((c) => [c._id.toString(), c._id]));
   const activeCategoryNameMap = new Map(activeCategories.map((c) => [c.name.toLowerCase(), c._id]));
+  const normalizeKey = (str) => String(str).toLowerCase().replace(/[\s\-_]/g, "");
+  const activeCategoryNormalizedMap = new Map(
+    activeCategories.map((c) => [normalizeKey(c.name), c._id])
+  );
 
   // Multiple category simultaneous filtering (OR condition: category in selectedCategories)
   if (selectedCategories.length > 0) {
@@ -63,6 +89,8 @@ export const getPublicProducts = async (queryParams) => {
         resolvedCategoryIds.push(activeCategoryMap.get(cat.toString()));
       } else if (activeCategoryNameMap.has(cat.toLowerCase())) {
         resolvedCategoryIds.push(activeCategoryNameMap.get(cat.toLowerCase()));
+      } else if (activeCategoryNormalizedMap.has(normalizeKey(cat))) {
+        resolvedCategoryIds.push(activeCategoryNormalizedMap.get(normalizeKey(cat)));
       }
     }
 
@@ -77,27 +105,39 @@ export const getPublicProducts = async (queryParams) => {
     filter.category = { $in: activeCategoryIds };
   }
 
-  // Price range filter
+  // Price range filter using andConditions to prevent $or collisions
   if (price === "0-1000") {
-    filter.$or = [
-      { salePrice: { $gte: 0, $lte: 1000 } },
-      { "variants.price": { $gte: 0, $lte: 1000 } }
-    ];
+    andConditions.push({
+      $or: [
+        { salePrice: { $gte: 0, $lte: 1000 } },
+        { "variants.price": { $gte: 0, $lte: 1000 } }
+      ]
+    });
   } else if (price === "1000-3000") {
-    filter.$or = [
-      { salePrice: { $gte: 1000, $lte: 3000 } },
-      { "variants.price": { $gte: 1000, $lte: 3000 } }
-    ];
+    andConditions.push({
+      $or: [
+        { salePrice: { $gte: 1000, $lte: 3000 } },
+        { "variants.price": { $gte: 1000, $lte: 3000 } }
+      ]
+    });
   } else if (price === "3000-above") {
-    filter.$or = [
-      { salePrice: { $gte: 3000 } },
-      { "variants.price": { $gte: 3000 } }
-    ];
+    andConditions.push({
+      $or: [
+        { salePrice: { $gte: 3000 } },
+        { "variants.price": { $gte: 3000 } }
+      ]
+    });
   }
 
   // Brand filter
-  if (brand) {
-    filter.brand = brand;
+  if (selectedBrands.length === 1) {
+    filter.brand = selectedBrands[0];
+  } else if (selectedBrands.length > 1) {
+    filter.brand = { $in: selectedBrands };
+  }
+
+  if (andConditions.length > 0) {
+    filter.$and = andConditions;
   }
 
   // Sort options
@@ -110,6 +150,8 @@ export const getPublicProducts = async (queryParams) => {
     sortOption = { name: 1 };
   } else if (sort === "z-a") {
     sortOption = { name: -1 };
+  } else if (sort === "newest") {
+    sortOption = { createdAt: -1 };
   } else {
     sortOption = { createdAt: -1 };
   }
@@ -131,6 +173,10 @@ export const getPublicProducts = async (queryParams) => {
     .map((c) => `category=${encodeURIComponent(c)}`)
     .join("&");
 
+  const brandQueryString = selectedBrands
+    .map((b) => `brand=${encodeURIComponent(b)}`)
+    .join("&");
+
   return {
     products,
     categories,
@@ -142,9 +188,11 @@ export const getPublicProducts = async (queryParams) => {
     category: selectedCategories.length === 1 ? selectedCategories[0] : selectedCategories,
     selectedCategories,
     categoryQueryString,
+    brand: selectedBrands.length === 1 ? selectedBrands[0] : (selectedBrands.length > 1 ? selectedBrands : ""),
+    selectedBrands,
+    brandQueryString,
     sort,
-    price,
-    brand
+    price
   };
 };
 

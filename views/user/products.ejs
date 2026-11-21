@@ -58,13 +58,18 @@
           <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Brands</h3>
           <div class="space-y-3">
             <% brands.forEach(b => { %>
+              <% 
+                const isBrandChecked = (typeof selectedBrands !== 'undefined' && Array.isArray(selectedBrands) && selectedBrands.length > 0)
+                  ? selectedBrands.includes(b)
+                  : (brand === b || (Array.isArray(brand) && brand.includes(b)));
+              %>
               <label class="flex items-center gap-3 text-sm text-gray-400 hover:text-white cursor-pointer select-none">
                 <input 
                   type="checkbox" 
                   name="brand" 
                   value="<%= b %>" 
                   class="rounded bg-zinc-800 border-zinc-700 text-orange-500 focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
-                  <%= brand === b ? 'checked' : '' %>
+                  <%= isBrandChecked ? 'checked' : '' %>
                   onchange="this.form.submit()"
                 >
                 <span><%= b %></span>
@@ -175,23 +180,30 @@
           <% } else if (category) { %>
             <input type="hidden" name="category" value="<%= category %>">
           <% } %>
-          <input type="hidden" name="brand" value="<%= brand %>">
+          <% if (typeof selectedBrands !== 'undefined' && Array.isArray(selectedBrands) && selectedBrands.length > 0) { %>
+            <% selectedBrands.forEach(bVal => { %>
+              <input type="hidden" name="brand" value="<%= bVal %>">
+            <% }) %>
+          <% } else if (brand) { %>
+            <input type="hidden" name="brand" value="<%= brand %>">
+          <% } %>
           <input type="hidden" name="price" value="<%= price %>">
           
           <!-- Search Bar -->
-          <div class="relative flex-1 sm:w-60">
+          <div class="relative flex-1 sm:w-64">
             <input 
               type="text" 
               name="search" 
               value="<%= search %>" 
-              placeholder="Search catalog..." 
-              class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-4 pr-10 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition duration-200"
+              placeholder="Search by name, brand, spec..." 
+              class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-4 pr-10 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition duration-200"
             >
             <% if (search) { %>
               <% 
-                const clearSearchCatPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${category}` : '');
+                const clearSearchCatPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${encodeURIComponent(category)}` : '');
+                const clearSearchBrandPart = (typeof brandQueryString !== 'undefined' && brandQueryString) ? `&${brandQueryString}` : (brand ? `&brand=${encodeURIComponent(brand)}` : '');
               %>
-              <a href="/products?brand=<%= brand %>&price=<%= price %><%= clearSearchCatPart %>" class="absolute right-3 top-2.5 text-xs text-gray-500 hover:text-white" title="Clear Search">✕</a>
+              <a href="/products?price=<%= encodeURIComponent(price || '') %>&sort=<%= encodeURIComponent(sort || '') %><%= clearSearchBrandPart %><%= clearSearchCatPart %>" class="absolute right-3 top-2.5 text-xs text-gray-500 hover:text-white" title="Clear Search">✕</a>
             <% } %>
           </div>
 
@@ -202,6 +214,7 @@
             onchange="this.form.submit()"
           >
             <option value="">Sort By</option>
+            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>New Arrivals</option>
             <option value="low-high" <%= sort === 'low-high' ? 'selected' : '' %>>Price Low to High</option>
             <option value="high-low" <%= sort === 'high-low' ? 'selected' : '' %>>Price High to Low</option>
             <option value="a-z" <%= sort === 'a-z' ? 'selected' : '' %>>A-Z</option>
@@ -219,6 +232,93 @@
       <% if (flashSuccess) { %>
         <div class="bg-green-500/15 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm font-medium">
           <%= flashSuccess %>
+        </div>
+      <% } %>
+
+      <!-- Active Filters & Search Feedback Bar -->
+      <% 
+        const hasActiveSearch = Boolean(search);
+        const hasActiveCategories = (typeof selectedCategories !== 'undefined' && Array.isArray(selectedCategories) && selectedCategories.length > 0);
+        const hasActiveBrands = (typeof selectedBrands !== 'undefined' && Array.isArray(selectedBrands) && selectedBrands.length > 0) || Boolean(brand);
+        const hasActivePrice = Boolean(price);
+        const hasAnyFilters = hasActiveSearch || hasActiveCategories || hasActiveBrands || hasActivePrice;
+      %>
+      <% if (hasAnyFilters) { %>
+        <div class="bg-[#13131a] border border-white/5 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">Active:</span>
+            
+            <% if (hasActiveSearch) { %>
+              <%
+                let clearSearchUrl = `/products?sort=${encodeURIComponent(sort || '')}&price=${encodeURIComponent(price || '')}`;
+                if (typeof categoryQueryString !== 'undefined' && categoryQueryString) clearSearchUrl += `&${categoryQueryString}`;
+                if (typeof brandQueryString !== 'undefined' && brandQueryString) clearSearchUrl += `&${brandQueryString}`;
+              %>
+              <span class="inline-flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/40 text-orange-300 text-xs px-3 py-1 rounded-full font-medium">
+                Search: "<%= search %>"
+                <a href="<%= clearSearchUrl %>" class="hover:text-white ml-1 text-sm font-bold text-decoration-none">✕</a>
+              </span>
+            <% } %>
+
+            <% if (hasActiveCategories) { %>
+              <% selectedCategories.forEach(catId => { %>
+                <% 
+                  const matchedCat = categories.find(c => c._id.toString() === catId || c.name.toLowerCase() === catId.toLowerCase());
+                  const catLabel = matchedCat ? matchedCat.name : catId;
+                  const remainingCats = selectedCategories.filter(c => c !== catId);
+                  let catFilterUrl = `/products?search=${encodeURIComponent(search || '')}&sort=${encodeURIComponent(sort || '')}&price=${encodeURIComponent(price || '')}`;
+                  remainingCats.forEach(rc => { catFilterUrl += `&category=${encodeURIComponent(rc)}`; });
+                  if (typeof brandQueryString !== 'undefined' && brandQueryString) catFilterUrl += `&${brandQueryString}`;
+                %>
+                <span class="inline-flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-gray-300 text-xs px-3 py-1 rounded-full font-medium">
+                  Category: <%= catLabel %>
+                  <a href="<%= catFilterUrl %>" class="hover:text-white ml-1 text-sm font-bold text-decoration-none">✕</a>
+                </span>
+              <% }) %>
+            <% } %>
+
+            <% if (typeof selectedBrands !== 'undefined' && Array.isArray(selectedBrands) && selectedBrands.length > 0) { %>
+              <% selectedBrands.forEach(bName => { %>
+                <%
+                  const remainingBrands = selectedBrands.filter(b => b !== bName);
+                  let brandFilterUrl = `/products?search=${encodeURIComponent(search || '')}&sort=${encodeURIComponent(sort || '')}&price=${encodeURIComponent(price || '')}`;
+                  if (typeof categoryQueryString !== 'undefined' && categoryQueryString) brandFilterUrl += `&${categoryQueryString}`;
+                  remainingBrands.forEach(rb => { brandFilterUrl += `&brand=${encodeURIComponent(rb)}`; });
+                %>
+                <span class="inline-flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-gray-300 text-xs px-3 py-1 rounded-full font-medium">
+                  Brand: <%= bName %>
+                  <a href="<%= brandFilterUrl %>" class="hover:text-white ml-1 text-sm font-bold text-decoration-none">✕</a>
+                </span>
+              <% }) %>
+            <% } else if (brand) { %>
+              <%
+                let clearBrandUrl = `/products?search=${encodeURIComponent(search || '')}&sort=${encodeURIComponent(sort || '')}&price=${encodeURIComponent(price || '')}`;
+                if (typeof categoryQueryString !== 'undefined' && categoryQueryString) clearBrandUrl += `&${categoryQueryString}`;
+              %>
+              <span class="inline-flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-gray-300 text-xs px-3 py-1 rounded-full font-medium">
+                Brand: <%= brand %>
+                <a href="<%= clearBrandUrl %>" class="hover:text-white ml-1 text-sm font-bold text-decoration-none">✕</a>
+              </span>
+            <% } %>
+
+            <% if (hasActivePrice) { %>
+              <%
+                let priceLabel = price === '0-1000' ? 'Under ₹1000' : (price === '1000-3000' ? '₹1000 - ₹3000' : 'Above ₹3000');
+                let clearPriceUrl = `/products?search=${encodeURIComponent(search || '')}&sort=${encodeURIComponent(sort || '')}`;
+                if (typeof categoryQueryString !== 'undefined' && categoryQueryString) clearPriceUrl += `&${categoryQueryString}`;
+                if (typeof brandQueryString !== 'undefined' && brandQueryString) clearPriceUrl += `&${brandQueryString}`;
+              %>
+              <span class="inline-flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-gray-300 text-xs px-3 py-1 rounded-full font-medium">
+                Price: <%= priceLabel %>
+                <a href="<%= clearPriceUrl %>" class="hover:text-white ml-1 text-sm font-bold text-decoration-none">✕</a>
+              </span>
+            <% } %>
+          </div>
+
+          <div class="flex items-center gap-4 text-xs">
+            <span class="text-gray-400">Found <strong class="text-white"><%= totalProducts %></strong> items</span>
+            <a href="/products" class="text-orange-400 hover:text-orange-300 font-semibold underline underline-offset-2">Reset All</a>
+          </div>
         </div>
       <% } %>
 
@@ -340,9 +440,34 @@
             </div>
           <% }) %>
         <% } else { %>
-          <div class="col-span-full text-center py-20 bg-[#13131a] border border-white/5 rounded-2xl">
-            <h2 class="text-xl font-semibold text-gray-500">No Products Found</h2>
-            <p class="text-sm text-gray-600 mt-2">Try adjusting your filters or search terms.</p>
+          <div class="col-span-full text-center py-16 px-6 bg-[#13131a] border border-white/5 rounded-2xl flex flex-col items-center justify-center">
+            <div class="w-16 h-16 mb-4 rounded-2xl bg-zinc-800/80 border border-white/10 flex items-center justify-center text-3xl">
+              🔍
+            </div>
+            <h2 class="text-xl font-bold text-white tracking-wide">No Helmets Found</h2>
+            <p class="text-sm text-gray-400 mt-2 max-w-md">
+              <% if (search) { %>
+                No products matched your search for "<span class="text-orange-400 font-medium"><%= search %></span>".
+              <% } else { %>
+                No products match the selected filters.
+              <% } %>
+              Try broadening your search keywords or resetting your category and price filters.
+            </p>
+            <div class="mt-6 flex flex-wrap gap-3 justify-center">
+              <a href="/products" class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm rounded-lg transition duration-200 shadow-lg shadow-orange-500/20 text-decoration-none">
+                Clear All Filters
+              </a>
+              <% if (search) { %>
+                <%
+                  let clearSearchOnlyUrl = `/products?sort=${encodeURIComponent(sort || '')}&price=${encodeURIComponent(price || '')}`;
+                  if (typeof categoryQueryString !== 'undefined' && categoryQueryString) clearSearchOnlyUrl += `&${categoryQueryString}`;
+                  if (typeof brandQueryString !== 'undefined' && brandQueryString) clearSearchOnlyUrl += `&${brandQueryString}`;
+                %>
+                <a href="<%= clearSearchOnlyUrl %>" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-medium text-sm rounded-lg transition duration-200 text-decoration-none">
+                  Keep Filters, Clear Search
+                </a>
+              <% } %>
+            </div>
           </div>
         <% } %>
       </div>
@@ -350,7 +475,8 @@
       <!-- Pagination Component -->
       <% if (totalPages > 1) { %>
         <% 
-          const catQueryPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${category}` : '');
+          const catQueryPart = (typeof categoryQueryString !== 'undefined' && categoryQueryString) ? `&${categoryQueryString}` : (category ? `&category=${encodeURIComponent(category)}` : '');
+          const brandQueryPart = (typeof brandQueryString !== 'undefined' && brandQueryString) ? `&${brandQueryString}` : (brand ? `&brand=${encodeURIComponent(brand)}` : '');
         %>
         <div class="flex justify-center mt-6">
           <nav aria-label="Page navigation">
@@ -359,7 +485,7 @@
               <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
                 <a 
                   class="page-link" 
-                  href="/products?page=<%= currentPage - 1 %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                  href="/products?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search || '') %><%= catQueryPart %><%= brandQueryPart %>&sort=<%= encodeURIComponent(sort || '') %>&price=<%= encodeURIComponent(price || '') %>"
                 >
                   Previous
                 </a>
@@ -370,7 +496,7 @@
                 <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                   <a 
                     class="page-link" 
-                    href="/products?page=<%= i %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                    href="/products?page=<%= i %>&search=<%= encodeURIComponent(search || '') %><%= catQueryPart %><%= brandQueryPart %>&sort=<%= encodeURIComponent(sort || '') %>&price=<%= encodeURIComponent(price || '') %>"
                   >
                     <%= i %>
                   </a>
@@ -381,7 +507,7 @@
               <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
                 <a 
                   class="page-link" 
-                  href="/products?page=<%= currentPage + 1 %>&search=<%= search %><%= catQueryPart %>&sort=<%= sort %>&price=<%= price %>&brand=<%= brand %>"
+                  href="/products?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search || '') %><%= catQueryPart %><%= brandQueryPart %>&sort=<%= encodeURIComponent(sort || '') %>&price=<%= encodeURIComponent(price || '') %>"
                 >
                   Next
                 </a>
