@@ -55,7 +55,9 @@ import {
 
 import {
   placeOrder,
+  verifyPayment,
   loadOrderSuccess,
+  loadPaymentFailure,
   loadOrders,
   loadOrderDetail,
   cancelOrderAction,
@@ -63,6 +65,8 @@ import {
   returnOrderAction,
   downloadInvoice
 } from "../../controllers/user/orderController.js";
+
+import * as couponController from "../../controllers/user/couponController.js";
 
 
 import{
@@ -144,8 +148,13 @@ router.delete(
 
 // ================= checkout & orders =================
 router.get("/checkout", isAuthenticated, loadCheckout);
+router.post("/checkout/apply-coupon", isAuthenticated, couponController.applyCoupon);
+router.post("/checkout/remove-coupon", isAuthenticated, couponController.removeCoupon);
+router.get("/checkout/available-coupons", isAuthenticated, couponController.getAvailableCoupons);
 router.post("/checkout/place-order", isAuthenticated, placeOrder);
+router.post("/checkout/verify-payment", isAuthenticated, verifyPayment);
 router.get("/checkout/order-success/:orderId", isAuthenticated, loadOrderSuccess);
+router.get("/checkout/payment-failed", isAuthenticated, loadPaymentFailure);
 
 router.get("/profile/orders", isAuthenticated, loadOrders);
 router.get("/profile/orders/:id", isAuthenticated, loadOrderDetail);

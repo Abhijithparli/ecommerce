@@ -100,9 +100,29 @@ razorpaySignature: {
       type: Number,
       default: 0,
     },
+    couponCode: {
+      type: String,
+      default: null,
+    },
     finalPrice: {
       type: Number,
       required: true,
+    },
+    cancelReason: {
+      type: String,
+      default: "",
+    },
+    returnReason: {
+      type: String,
+      default: "",
+    },
+    returnRejectReason: {
+      type: String,
+      default: "",
+    },
+    returnStockRestored: {
+      type: Boolean,
+      default: false,
     },
     status: {
       type: String,

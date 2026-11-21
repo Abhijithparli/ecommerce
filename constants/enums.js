@@ -6,6 +6,7 @@ export const ORDER_STATUS = Object.freeze({
   RETURN_REQUESTED: "Return Requested",
   CANCELLED: "Cancelled",
   RETURNED: "Returned",
+  RETURN_REJECTED: "Return Rejected",
 });
 
 export const PAYMENT_METHOD = Object.freeze({

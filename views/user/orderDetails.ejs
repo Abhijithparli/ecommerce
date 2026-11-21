@@ -44,9 +44,12 @@
   
   .badge-placed { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
   .badge-shipped { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+  .badge-out-for-delivery { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
   .badge-delivered { background: rgba(16, 185, 129, 0.15); color: #10b981; }
   .badge-cancelled { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-  .badge-returned { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+  .badge-returned { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+  .badge-return-requested { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .badge-return-rejected { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -113,7 +116,7 @@
         </div>
 
               <div class="flex items-center gap-3">
-          <span id="orderStatusBadge" class="px-4 py-2 text-sm font-bold rounded-lg uppercase tracking-wider badge-<%= order.status.toLowerCase() %>">
+          <span id="orderStatusBadge" class="px-4 py-2 text-sm font-bold rounded-lg uppercase tracking-wider badge-<%= order.status.toLowerCase().replace(/\s+/g, '-') %>">
             <%= order.status %>
           </span>
           <a href="/profile/orders/<%= order._id %>/invoice" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white font-bold rounded-lg text-sm transition inline-block">
@@ -132,8 +135,41 @@
          </div>
      </div>
 
+      <!-- STATUS & REASON NOTIFICATION BANNERS -->
+      <% if (order.status === 'Cancelled') { %>
+        <div class="p-4 bg-red-950/30 border border-red-500/30 rounded-xl text-red-400 text-sm">
+          <p class="font-bold">⚠️ This order has been Cancelled.</p>
+          <% if (order.cancelReason) { %>
+            <p class="text-xs text-red-300 mt-1"><strong>Reason:</strong> <%= order.cancelReason %></p>
+          <% } %>
+        </div>
+      <% } else if (order.status === 'Return Requested') { %>
+        <div class="p-4 bg-amber-950/30 border border-amber-500/30 rounded-xl text-amber-400 text-sm">
+          <p class="font-bold">📦 Return Requested</p>
+          <p class="text-xs text-amber-200 mt-1">Your return request is currently under review by our admin team.</p>
+          <% if (order.returnReason) { %>
+            <p class="text-xs text-amber-300/90 mt-1"><strong>Your Reason:</strong> <%= order.returnReason %></p>
+          <% } %>
+        </div>
+      <% } else if (order.status === 'Returned') { %>
+        <div class="p-4 bg-purple-950/30 border border-purple-500/30 rounded-xl text-purple-300 text-sm">
+          <p class="font-bold">✓ Return Approved & Restocked</p>
+          <p class="text-xs text-purple-200 mt-1">Your return has been approved and processed successfully.</p>
+          <% if (order.returnReason) { %>
+            <p class="text-xs text-purple-300/80 mt-1"><strong>Reason:</strong> <%= order.returnReason %></p>
+          <% } %>
+        </div>
+      <% } else if (order.status === 'Return Rejected') { %>
+        <div class="p-4 bg-red-950/20 border border-red-500/30 rounded-xl text-red-400 text-sm">
+          <p class="font-bold">✕ Return Request Declined</p>
+          <% if (order.returnRejectReason) { %>
+            <p class="text-xs text-gray-300 mt-1"><strong>Note:</strong> <%= order.returnRejectReason %></p>
+          <% } %>
+        </div>
+      <% } %>
+
       <!-- PROGRESS TRACKER STEPPER -->
-      <% if (order.status !== 'Cancelled') { %>
+      <% if (order.status === 'Placed' || order.status === 'Shipped' || order.status === 'Out for Delivery' || order.status === 'Delivered') { %>
         <div class="py-6 pb-2 border-b border-white/5">
           <h4 class="font-bold text-white text-base mb-6">Delivery Progress</h4>
           <div class="flex items-center w-full">
@@ -144,12 +180,12 @@
                 1
               </div>
               <div class="absolute top-12 left-0 text-xs font-bold text-orange-500">Placed</div>
-              <div class="flex-auto border-t-2 transition duration-500 ease-in-out <%= (order.status === 'Shipped' || order.status === 'Delivered') ? 'border-orange-500' : 'border-gray-700' %>"></div>
+              <div class="flex-auto border-t-2 transition duration-500 ease-in-out <%= (order.status === 'Shipped' || order.status === 'Out for Delivery' || order.status === 'Delivered') ? 'border-orange-500' : 'border-gray-700' %>"></div>
             </div>
 
             <!-- Shipped Step -->
-            <div class="flex items-center relative flex-1 <%= (order.status === 'Shipped' || order.status === 'Delivered') ? 'text-orange-500' : 'text-gray-500' %>">
-              <div class="rounded-full transition duration-500 ease-in-out h-10 w-10 py-3 border-2 <%= (order.status === 'Shipped' || order.status === 'Delivered') ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-700 bg-transparent' %> flex items-center justify-center font-bold">
+            <div class="flex items-center relative flex-1 <%= (order.status === 'Shipped' || order.status === 'Out for Delivery' || order.status === 'Delivered') ? 'text-orange-500' : 'text-gray-500' %>">
+              <div class="rounded-full transition duration-500 ease-in-out h-10 w-10 py-3 border-2 <%= (order.status === 'Shipped' || order.status === 'Out for Delivery' || order.status === 'Delivered') ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-700 bg-transparent' %> flex items-center justify-center font-bold">
                 2
               </div>
               <div class="absolute top-12 left-0 text-xs font-bold">Shipped</div>
@@ -165,10 +201,6 @@
             </div>
 
           </div>
-        </div>
-      <% } else { %>
-        <div class="p-4 bg-red-950/20 border border-red-500/30 rounded-xl text-red-400 text-sm">
-          ⚠️ This order has been <strong>Cancelled</strong>.
         </div>
       <% } %>
 

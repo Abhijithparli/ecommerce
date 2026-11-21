@@ -63,10 +63,12 @@
               <option value="">All Statuses</option>
               <option value="Placed" <%= status === 'Placed' ? 'selected' : '' %>>Placed</option>
               <option value="Shipped" <%= status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-              <option value="out for Delivery" <%= status === 'out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+              <option value="Out for Delivery" <%= status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
               <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-              <option value="Cancelled" <%= status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              <option value="Return Requested" <%= status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
               <option value="Returned" <%= status === 'Returned' ? 'selected' : '' %>>Returned</option>
+              <option value="Return Rejected" <%= status === 'Return Rejected' ? 'selected' : '' %>>Return Rejected</option>
+              <option value="Cancelled" <%= status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
             </select>
           </div>
                     <!-- Sort dropdown -->
@@ -141,12 +143,15 @@
                   </td>
                   <td class="px-6 py-4">
                     <% 
-                                       let statusClass = "bg-gray-100 text-gray-800";
+                      let statusClass = "bg-gray-100 text-gray-800";
                       if (order.status === 'Placed') statusClass = "bg-blue-100 text-blue-800";
                       else if (order.status === 'Shipped') statusClass = "bg-orange-100 text-orange-800";
                       else if (order.status === 'Out for Delivery') statusClass = "bg-purple-100 text-purple-800";
                       else if (order.status === 'Delivered') statusClass = "bg-green-100 text-green-800";
                       else if (order.status === 'Cancelled') statusClass = "bg-red-100 text-red-800";
+                      else if (order.status === 'Return Requested') statusClass = "bg-amber-100 text-amber-800";
+                      else if (order.status === 'Returned') statusClass = "bg-purple-100 text-purple-800";
+                      else if (order.status === 'Return Rejected') statusClass = "bg-gray-200 text-gray-700";
                     %>
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-lg uppercase tracking-wider <%= statusClass %>">
                       <%= order.status %>

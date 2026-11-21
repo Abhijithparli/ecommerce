@@ -44,7 +44,13 @@ import {
   listAdminOrders,
   loadAdminOrderDetail,
   updateAdminOrderStatus,
+  getOrderStatusCounts,
+  rejectReturnAction,
+  approveReturnAction,
+  // rejectReturnAction,
 } from "../../controllers/admin/adminOrderController.js";
+
+import * as couponController from "../../controllers/admin/couponController.js";
 
 const router = express.Router();
 console.log("idfklsdkjl;f");
@@ -147,6 +153,20 @@ router.post("/products/unblock/:id", isAdminAuth, unblockProduct);
 router.get("/orders", isAdminAuth, listAdminOrders);
 router.get("/orders/:id", isAdminAuth, loadAdminOrderDetail);
 router.post("/orders/:id/status", isAdminAuth, updateAdminOrderStatus);
+router.post("/orders/:id/approve-return", isAdminAuth, approveReturnAction);
+router.post("/orders/:id/reject-return", isAdminAuth, rejectReturnAction);
+
+// ================= COUPON MANAGEMENT =================
+router.get("/coupons", isAdminAuth, couponController.loadCoupons);
+router.get("/coupons/add", isAdminAuth, couponController.loadAddCoupon);
+router.post("/coupons/add", isAdminAuth, couponController.addCoupon);
+router.get("/coupons/edit/:id", isAdminAuth, couponController.loadEditCoupon);
+router.post("/coupons/edit/:id", isAdminAuth, couponController.updateCoupon);
+router.post("/coupons/toggle/:id", isAdminAuth, couponController.toggleCoupon);
+router.post("/coupons/delete/:id", isAdminAuth, couponController.deleteCoupon);
+router.get("/orders/status-counts", isAdminAuth, getOrderStatusCounts);
+router.post("/orders/:id/return/approve", isAdminAuth, approveReturnAction);
+router.post("/orders/:id/return/reject", isAdminAuth, rejectReturnAction);
 router.get("/inventory", isAdminAuth, inventoryController.loadInventoryPage);
 router.post("/inventory/:productId/update-stock", isAdminAuth, inventoryController.updateStockAction);
 export default router;

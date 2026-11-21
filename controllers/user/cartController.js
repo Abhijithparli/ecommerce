@@ -39,7 +39,7 @@ export const loadCart = async (req, res) => {
       itemStatus,
       hasUnavailableItems,
       error,
-      user:req.session.user,
+      user: req.session.user,
     });
   } catch (error) {
     console.error("Load cart error:", error);
@@ -124,7 +124,8 @@ export const loadCheckout = async (req, res) => {
       total: data.total,
       itemStatus: data.itemStatus,
       hasUnavailableItems: data.hasUnavailableItems,
-      user:req.session.user,
+      user: req.session.user,
+      appliedCoupon: req.session.appliedCoupon || null,
     });
   } catch (error) {
     console.error("Load checkout error:", error);

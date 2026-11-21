@@ -10,12 +10,14 @@ import {
 } from "../../constants/enums.js";
 import { MESSAGES } from "../../constants/messages.js";
 import razorpayInstance from "../../config/razorpay.js";
+import crypto from "crypto";
+import { validateAndCalculateDiscount, recordCouponUsage } from "./couponService.js";
 
 /**
  * Service to handle Order business logic (User)
  */
 
-export const createOrder = async ({ userId, addressId, paymentMethod }) => {
+export const createOrder = async ({ userId, addressId, paymentMethod, couponCode = null }) => {
   if (!addressId) {
     throw new Error("Delivery address is required");
   }
@@ -69,6 +71,16 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     totalPrice += itemPrice * item.quantity;
   });
 
+  // Calculate Coupon Discount if applied
+  let discount = 0;
+  let appliedCouponCode = null;
+  if (couponCode && couponCode.trim()) {
+    const couponResult = await validateAndCalculateDiscount(userId, couponCode, totalPrice);
+    discount = couponResult.discount;
+    appliedCouponCode = couponResult.couponCode;
+  }
+  const finalPrice = Math.max(0, totalPrice - discount);
+
   // 5. Generate unique Order ID
   const orderId = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -103,8 +115,9 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
     paymentMethod,
     paymentStatus: paymentMethod === PAYMENT_METHOD.COD ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.PAID,
     totalPrice,
-    discount: 0,
-    finalPrice: totalPrice,
+    discount,
+    couponCode: appliedCouponCode,
+    finalPrice,
     status: ORDER_STATUS.PLACED,
     statusHistory: [{ status: ORDER_STATUS.PLACED, updatedAt: new Date() }],
   });
@@ -141,6 +154,11 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
 
     // Save order
     await order.save();
+
+    // Record coupon usage if applied
+    if (appliedCouponCode) {
+      await recordCouponUsage(userId, appliedCouponCode);
+    }
   } catch (err) {
     // Rollback any stock deducted so far
     for (const dItem of deductedItems) {
@@ -161,12 +179,8 @@ export const createOrder = async ({ userId, addressId, paymentMethod }) => {
 
 /**
  * Create Razorpay Gateway Order
- * - Validates address, cart, and variant stock availability
- * - Calculates total price strictly server-side using variant prices
- * - Creates an order on Razorpay API (amount in paise)
- * - DOES NOT deduct stock or clear cart (deferred until payment verification)
  */
-export const createRazorpayOrder = async ({ userId, addressId }) => {
+export const createRazorpayOrder = async ({ userId, addressId, couponCode = null }) => {
   if (!addressId) {
     throw new Error("Delivery address is required");
   }
@@ -220,21 +234,195 @@ export const createRazorpayOrder = async ({ userId, addressId }) => {
     totalPrice += itemPrice * item.quantity;
   });
 
+  // Calculate Coupon Discount if applied
+  let discount = 0;
+  let appliedCouponCode = null;
+  if (couponCode && couponCode.trim()) {
+    const couponResult = await validateAndCalculateDiscount(userId, couponCode, totalPrice);
+    discount = couponResult.discount;
+    appliedCouponCode = couponResult.couponCode;
+  }
+  const finalPrice = Math.max(0, totalPrice - discount);
+
   // 5. Create Razorpay Order (amount in paise: ₹1 = 100 paise)
   const receiptId = `rcpt_${Date.now().toString().slice(-8)}_${Math.floor(100 + Math.random() * 900)}`;
-  const rzpOrder = await razorpayInstance.orders.create({
-    amount: Math.round(totalPrice * 100),
-    currency: "INR",
-    receipt: receiptId,
-  });
+  let rzpOrder;
+  try {
+    rzpOrder = await razorpayInstance.orders.create({
+      amount: Math.round(finalPrice * 100),
+      currency: "INR",
+      receipt: receiptId,
+    });
+  } catch (rzpErr) {
+    const desc = rzpErr?.error?.description || rzpErr?.message || "Could not connect to Razorpay. Please check your Razorpay test keys in .env.";
+    throw new Error(`Razorpay Error: ${desc}`);
+  }
 
   return {
     razorpayOrderId: rzpOrder.id,
     amount: rzpOrder.amount,
     currency: rzpOrder.currency,
     keyId: process.env.RAZORPAY_KEY_ID,
-    addressId
+    addressId,
+    couponCode: appliedCouponCode,
+    discount,
+    finalPrice
   };
+};
+
+/**
+ * Verify Razorpay Payment Signature and Create Paid Order
+ */
+export const verifyAndCreatePaidOrder = async ({
+  userId,
+  addressId,
+  razorpayOrderId,
+  razorpayPaymentId,
+  razorpaySignature,
+  couponCode = null
+}) => {
+  // 1. Verify cryptographic signature
+  const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
+  hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`);
+  const generatedSignature = hmac.digest("hex");
+
+  if (generatedSignature !== razorpaySignature) {
+    throw new Error("Payment verification failed. Invalid signature.");
+  }
+
+  // 2. Prevent duplicate order creation if already processed
+  const existingOrder = await Order.findOne({ razorpayPaymentId });
+  if (existingOrder) {
+    return existingOrder;
+  }
+
+  // 3. Get Cart & Address
+  const cart = await Cart.findOne({ user: userId }).populate({
+    path: "items.product",
+    populate: { path: "category" }
+  });
+  if (!cart || cart.items.length === 0) {
+    throw new Error(MESSAGES.CART.EMPTY);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error(MESSAGES.USER.NOT_FOUND);
+  const address = user.addresses.id(addressId);
+  if (!address) throw new Error("Delivery address not found in profile");
+
+  // 4. Calculate total price server-side
+  let totalPrice = 0;
+  cart.items.forEach((item) => {
+    const variant = item.product.variants?.find(
+      (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+    );
+    const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+    totalPrice += itemPrice * item.quantity;
+  });
+
+  // Calculate Coupon Discount if applied
+  let discount = 0;
+  let appliedCouponCode = null;
+  if (couponCode && couponCode.trim()) {
+    const couponResult = await validateAndCalculateDiscount(userId, couponCode, totalPrice);
+    discount = couponResult.discount;
+    appliedCouponCode = couponResult.couponCode;
+  }
+  const finalPrice = Math.max(0, totalPrice - discount);
+
+  const orderId = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  // 5. Construct Order document
+  const order = new Order({
+    orderId,
+    user: userId,
+    items: cart.items.map((item) => {
+      const variant = item.product.variants?.find(
+        (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+      );
+      const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+      return {
+        product: item.product._id,
+        name: item.product.name,
+        image: item.product.images[0] || "",
+        size: item.size,
+        quantity: item.quantity,
+        price: itemPrice,
+      };
+    }),
+    deliveryAddress: {
+      name: address.name,
+      phone: address.phone,
+      street: address.street,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      country: address.country || "India",
+      type: address.type || "Home",
+    },
+    paymentMethod: PAYMENT_METHOD.RAZORPAY,
+    paymentStatus: PAYMENT_STATUS.PAID,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    totalPrice,
+    discount,
+    couponCode: appliedCouponCode,
+    finalPrice,
+    status: ORDER_STATUS.PLACED,
+    statusHistory: [{ status: ORDER_STATUS.PLACED, updatedAt: new Date() }],
+  });
+
+  // 6. Atomically deduct stock
+  const deductedItems = [];
+  try {
+    for (const item of cart.items) {
+      const res = await Product.updateOne(
+        {
+          _id: item.product._id,
+          variants: {
+            $elemMatch: {
+              size: item.size,
+              stock: { $gte: item.quantity },
+            },
+          },
+        },
+        { $inc: { "variants.$.stock": -item.quantity } }
+      );
+
+      if (res.matchedCount === 0 || res.modifiedCount === 0) {
+        throw new Error(
+          `Insufficient stock for ${item.product.name} (Size: ${item.size}). Order could not be placed.`
+        );
+      }
+
+      deductedItems.push({
+        productId: item.product._id,
+        size: item.size,
+        quantity: item.quantity,
+      });
+    }
+
+    await order.save();
+
+    if (appliedCouponCode) {
+      await recordCouponUsage(userId, appliedCouponCode);
+    }
+  } catch (err) {
+    for (const dItem of deductedItems) {
+      await Product.updateOne(
+        { _id: dItem.productId, "variants.size": dItem.size },
+        { $inc: { "variants.$.stock": dItem.quantity } }
+      );
+    }
+    throw err;
+  }
+
+  // 7. Clear Cart
+  cart.items = [];
+  await cart.save();
+
+  return order;
 };
 
 export const getUserOrders = async (userId, search = "", page = 1, limit = 5) => {
@@ -380,14 +568,7 @@ export const cancelOrderItem = async (orderId, userId, itemId, reason = "") => {
 
 /**
  * Request a return for a delivered order.
- *
- * Only allowed when order status is exactly DELIVERED.
- * Reason is MANDATORY — unlike cancellation, which is optional.
- *
- * NOTE: Stock is NOT restored here. Stock only gets restored once
- * an admin approves the return (the product physically comes back).
- * That approval flow is a separate future step, not part of this function.
- *
+
  * @param {string} orderId  - MongoDB _id of the order
  * @param {string} userId   - must match order.user (ownership check)
  * @param {string} reason   - REQUIRED, cannot be empty

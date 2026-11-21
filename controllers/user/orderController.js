@@ -5,15 +5,19 @@ import { MESSAGES } from "../../constants/messages.js";
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { addressId, paymentMethod } = req.body;
+    const { addressId, paymentMethod, couponCode: bodyCouponCode } = req.body;
+    const couponCode = bodyCouponCode || req.session.appliedCoupon?.code || null;
 
     // Handle COD Flow (Existing logic preserved exactly as is)
     if (paymentMethod === PAYMENT_METHOD.COD) {
       const order = await orderService.createOrder({
         userId,
         addressId,
-        paymentMethod
+        paymentMethod,
+        couponCode
       });
+
+      delete req.session.appliedCoupon;
 
       return res.json({
         success: true,
@@ -26,7 +30,8 @@ export const placeOrder = async (req, res) => {
     if (paymentMethod === PAYMENT_METHOD.RAZORPAY) {
       const rzpData = await orderService.createRazorpayOrder({
         userId,
-        addressId
+        addressId,
+        couponCode
       });
 
       return res.json({
@@ -49,6 +54,50 @@ export const placeOrder = async (req, res) => {
   }
 };
 
+export const verifyPayment = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const {
+      addressId,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      couponCode: bodyCouponCode
+    } = req.body;
+    const couponCode = bodyCouponCode || req.session.appliedCoupon?.code || null;
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment details missing."
+      });
+    }
+
+    const order = await orderService.verifyAndCreatePaidOrder({
+      userId,
+      addressId,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      couponCode
+    });
+
+    delete req.session.appliedCoupon;
+
+    res.json({
+      success: true,
+      message: MESSAGES.ORDER.PLACED,
+      orderId: order._id
+    });
+  } catch (error) {
+    console.error("Verify payment error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Payment verification failed."
+    });
+  }
+};
+
 export const loadOrderSuccess = async (req, res) => {
   try {
     const order = await orderService.getOrderById(req.params.orderId);
@@ -59,6 +108,16 @@ export const loadOrderSuccess = async (req, res) => {
   } catch (error) {
     console.error("Load order success error:", error);
     res.redirect("/");
+  }
+};
+
+export const loadPaymentFailure = async (req, res) => {
+  try {
+    const reason = req.query.reason || "The transaction was cancelled or could not be processed.";
+    res.render("user/paymentFailure", { reason });
+  } catch (error) {
+    console.error("Load payment failure error:", error);
+    res.redirect("/checkout");
   }
 };
 

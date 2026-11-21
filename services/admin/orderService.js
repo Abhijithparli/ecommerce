@@ -65,27 +65,109 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 
   const oldStatus = order.status;
-  if (oldStatus === ORDER_STATUS.CANCELLED || oldStatus === ORDER_STATUS.DELIVERED) {
-    throw new Error(`Cannot change status of a ${oldStatus} order`);
+  if (
+    oldStatus === ORDER_STATUS.CANCELLED ||
+    oldStatus === ORDER_STATUS.RETURNED ||
+    oldStatus === ORDER_STATUS.RETURN_REJECTED
+  ) {
+    throw new Error(`Cannot change status of a finalized (${oldStatus}) order`);
   }
 
   order.status = status;
   order.statusHistory.push({ status, updatedAt: new Date() });
 
-  // If order is cancelled, restore variant stock
+  // If order is cancelled, restore variant stock ONLY for active items
   if (status === ORDER_STATUS.CANCELLED) {
     for (const item of order.items) {
-      await Product.updateOne(
-        { _id: item.product, "variants.size": item.size },
-        { $inc: { "variants.$.stock": item.quantity } }
-      );
+      if (item.status !== "Cancelled") {
+        item.status = "Cancelled";
+        await Product.updateOne(
+          { _id: item.product, "variants.size": item.size },
+          { $inc: { "variants.$.stock": item.quantity } }
+        );
+      }
     }
+  }
+
+  // If order is returned, restore stock if not already restored
+  if (status === ORDER_STATUS.RETURNED && !order.returnStockRestored) {
+    for (const item of order.items) {
+      if (item.status !== "Cancelled") {
+        await Product.updateOne(
+          { _id: item.product, "variants.size": item.size },
+          { $inc: { "variants.$.stock": item.quantity } }
+        );
+      }
+    }
+    order.returnStockRestored = true;
   }
 
   // If order is delivered, set payment status to Paid for COD
   if (status === ORDER_STATUS.DELIVERED && order.paymentMethod === PAYMENT_METHOD.COD) {
     order.paymentStatus = PAYMENT_STATUS.PAID;
   }
+
+  await order.save();
+  return order;
+};
+
+/**
+ * Approve Return: Marks order as Returned and increments variant stock back
+ */
+export const approveReturn = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (order.status !== ORDER_STATUS.RETURN_REQUESTED) {
+    throw new Error(`Cannot approve return for order in status: ${order.status}`);
+  }
+
+  order.status = ORDER_STATUS.RETURNED;
+  order.statusHistory.push({
+    status: ORDER_STATUS.RETURNED,
+    updatedAt: new Date()
+  });
+
+  // Restore variant stock for all active items
+  if (!order.returnStockRestored) {
+    for (const item of order.items) {
+      if (item.status !== "Cancelled") {
+        await Product.updateOne(
+          { _id: item.product, "variants.size": item.size },
+          { $inc: { "variants.$.stock": item.quantity } }
+        );
+      }
+    }
+    order.returnStockRestored = true;
+  }
+
+  await order.save();
+  return order;
+};
+
+/**
+ * Reject Return: Marks order as Return Rejected (no stock change)
+ */
+export const rejectReturn = async (orderId, adminReason = "") => {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error(MESSAGES.ORDER.NOT_FOUND);
+  }
+
+  if (order.status !== ORDER_STATUS.RETURN_REQUESTED) {
+    throw new Error(`Cannot reject return for order in status: ${order.status}`);
+  }
+
+  order.status = ORDER_STATUS.RETURN_REJECTED;
+  if (adminReason) {
+    order.returnRejectReason = adminReason.trim();
+  }
+  order.statusHistory.push({
+    status: ORDER_STATUS.RETURN_REJECTED,
+    updatedAt: new Date()
+  });
 
   await order.save();
   return order;
