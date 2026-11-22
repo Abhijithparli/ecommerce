@@ -1,6 +1,7 @@
 import Cart from "../../models/cartModel.js";
 import Product from "../../models/productModel.js";
 import { MESSAGES } from "../../constants/messages.js";
+import { applyOffersToProducts } from "../common/offerCalculator.js";
 
 /**
  * Service to handle Cart business logic (User)
@@ -178,13 +179,20 @@ export const getUserCart = async (userId) => {
   }
 
   let total = 0;
-  if (cart) {
+  if (cart && cart.items.length > 0) {
+    const products = cart.items.map((i) => i.product).filter(Boolean);
+    const processedProducts = await applyOffersToProducts(products);
+    const prodMap = new Map(processedProducts.map((p) => [p._id.toString(), p]));
+
     cart.items.forEach((item) => {
       if (item.product) {
-        const variant = item.product.variants?.find(
+        const prodId = item.product._id ? item.product._id.toString() : item.product.toString();
+        const p = prodMap.get(prodId) || item.product;
+        item.product = p;
+        const variant = p.variants?.find(
           (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
         );
-        const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
+        const itemPrice = (variant && variant.price !== undefined) ? variant.price : p.salePrice;
         total += itemPrice * item.quantity;
       }
     });

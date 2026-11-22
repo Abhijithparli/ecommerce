@@ -12,6 +12,8 @@ import { MESSAGES } from "../../constants/messages.js";
 import razorpayInstance from "../../config/razorpay.js";
 import crypto from "crypto";
 import { validateAndCalculateDiscount, recordCouponUsage } from "./couponService.js";
+import * as walletService from "./walletService.js";
+import { applyOffersToProducts } from "../common/offerCalculator.js";
 
 /**
  * Service to handle Order business logic (User)
@@ -61,7 +63,21 @@ export const createOrder = async ({ userId, addressId, paymentMethod, couponCode
     throw new Error("Delivery address not found in profile");
   }
 
-  // 4. Calculate Prices (using selected variant price)
+  // 4. Calculate Prices (using selected variant price with best product/category offer applied)
+  if (cart && cart.items.length > 0) {
+    const products = cart.items.map((i) => i.product).filter(Boolean);
+    const processedProducts = await applyOffersToProducts(products);
+    const prodMap = new Map(processedProducts.map((p) => [p._id.toString(), p]));
+
+    cart.items.forEach((item) => {
+      if (item.product) {
+        const prodId = item.product._id ? item.product._id.toString() : item.product.toString();
+        const p = prodMap.get(prodId) || item.product;
+        item.product = p;
+      }
+    });
+  }
+
   let totalPrice = 0;
   cart.items.forEach((item) => {
     const variant = item.product.variants?.find(
@@ -80,6 +96,16 @@ export const createOrder = async ({ userId, addressId, paymentMethod, couponCode
     appliedCouponCode = couponResult.couponCode;
   }
   const finalPrice = Math.max(0, totalPrice - discount);
+
+  // If Wallet payment selected, verify user has sufficient balance upfront
+  if (paymentMethod === PAYMENT_METHOD.WALLET) {
+    const walletBalance = await walletService.getWalletBalance(userId);
+    if (walletBalance < finalPrice) {
+      throw new Error(
+        `Insufficient wallet balance. Available: ₹${walletBalance}, Required: ₹${finalPrice}. Please choose another payment method or add funds.`
+      );
+    }
+  }
 
   // 5. Generate unique Order ID
   const orderId = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -154,6 +180,17 @@ export const createOrder = async ({ userId, addressId, paymentMethod, couponCode
 
     // Save order
     await order.save();
+
+    // If payment method is Wallet, atomically debit the order amount from wallet
+    if (paymentMethod === PAYMENT_METHOD.WALLET) {
+      await walletService.debitWallet(
+        userId,
+        finalPrice,
+        `Payment for Order #${order.orderId}`,
+        order._id,
+        order.orderId
+      );
+    }
 
     // Record coupon usage if applied
     if (appliedCouponCode) {
@@ -484,6 +521,22 @@ export const cancelOrder = async (orderId, userId, reason = "") => {
     }
   }
 
+  // Direct refund to wallet for cancellation if order was paid
+  if (order.paymentStatus === PAYMENT_STATUS.PAID && !order.walletRefunded) {
+    const refundAmount = Math.max(0, order.finalPrice - (order.walletRefundAmount || 0));
+    if (refundAmount > 0) {
+      await walletService.creditWallet(
+        userId,
+        refundAmount,
+        `Refund for cancellation of Order #${order.orderId}`,
+        order._id,
+        order.orderId
+      );
+      order.walletRefunded = true;
+      order.walletRefundAmount = (order.walletRefundAmount || 0) + refundAmount;
+    }
+  }
+
   await order.save();
   return order;
 };
@@ -550,12 +603,34 @@ export const cancelOrderItem = async (orderId, userId, itemId, reason = "") => {
     0
   );
   order.totalPrice = newTotal;
-  order.finalPrice = newTotal - (order.discount || 0);
+  order.finalPrice = Math.max(0, newTotal - (order.discount || 0));
+
+  // Direct refund to wallet for paid item cancellation
+  if (order.paymentStatus === PAYMENT_STATUS.PAID && !item.walletRefunded) {
+    const itemSubtotal = item.price * item.quantity;
+    const discountRatio = order.totalPrice > 0 ? (order.discount || 0) / (order.totalPrice + itemSubtotal) : 0;
+    const itemDiscount = Math.round(itemSubtotal * discountRatio);
+    const itemRefundAmount = Math.max(0, itemSubtotal - itemDiscount);
+
+    if (itemRefundAmount > 0) {
+      await walletService.creditWallet(
+        userId,
+        itemRefundAmount,
+        `Refund for cancellation of "${item.name}" (Order #${order.orderId})`,
+        order._id,
+        order.orderId
+      );
+      item.walletRefunded = true;
+      item.walletRefundAmount = itemRefundAmount;
+      order.walletRefundAmount = (order.walletRefundAmount || 0) + itemRefundAmount;
+    }
+  }
 
   // If NO active items remain, cancel the whole order too
   if (activeItems.length === 0) {
     order.status = ORDER_STATUS.CANCELLED;
     order.cancelReason = reason;
+    order.walletRefunded = true;
     order.statusHistory.push({
       status: ORDER_STATUS.CANCELLED,
       updatedAt: new Date(),
@@ -693,7 +768,8 @@ export const requestReturn = async (orderId, userId, reason) => {
   y += 18;
 
   if (order.discount > 0) {
-    doc.fillColor(grayColor).text("Discount", 400, y, { width: 70 });
+    const discountLabel = order.couponCode ? `Discount (${order.couponCode})` : "Discount";
+    doc.fillColor(grayColor).text(discountLabel, 380, y, { width: 90 });
     doc.fillColor("#ef4444").text(`- Rs.${order.discount}`, 470, y, { width: 65, align: "right" });
     y += 18;
   }

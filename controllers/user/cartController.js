@@ -1,5 +1,6 @@
 import * as cartService from "../../services/user/cartService.js";
 import * as checkoutService from "../../services/user/checkoutService.js";
+import * as wishlistService from "../../services/user/wishlistService.js";
 import { MESSAGES } from "../../constants/messages.js";
 
 // ADD TO CART
@@ -11,6 +12,13 @@ export const addToCart = async (req, res) => {
     const quantity = parseInt(req.body.quantity) || 1;
 
     await cartService.addToCart({ userId, productId, size, quantity });
+
+    // Remove from wishlist when added/moved to cart
+    try {
+      await wishlistService.removeFromWishlist(userId, productId);
+    } catch (wishlistErr) {
+      console.warn("Could not remove from wishlist on cart add:", wishlistErr);
+    }
 
     res.json({
       success: true,
@@ -126,6 +134,7 @@ export const loadCheckout = async (req, res) => {
       hasUnavailableItems: data.hasUnavailableItems,
       user: req.session.user,
       appliedCoupon: req.session.appliedCoupon || null,
+      walletBalance: data.walletBalance || 0,
     });
   } catch (error) {
     console.error("Load checkout error:", error);

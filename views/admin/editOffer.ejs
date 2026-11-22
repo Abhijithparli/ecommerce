@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Offer - Headshield Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-900 font-sans">
+
+<div class="flex w-full min-h-screen">
+
+  <!-- SIDEBAR -->
+  <%- include("../partials/sidebar", {
+    currentPage: "offers"
+  }) %>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-56 p-8">
+
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <a href="/admin/offers" class="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 mb-2">
+          ← Back to Offers
+        </a>
+        <h1 class="text-3xl font-extrabold text-gray-900">Edit Offer: <%= offer.name %></h1>
+        <p class="text-sm text-gray-500 mt-1">Update offer discounts, validity dates, or program rewards</p>
+      </div>
+    </div>
+
+    <!-- FLASH NOTIFICATIONS -->
+    <% if (error) { %>
+      <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
+        <span><%= error %></span>
+        <button onclick="this.parentElement.remove()" class="text-red-800 font-bold">&times;</button>
+      </div>
+    <% } %>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-3xl">
+      <form action="/admin/offers/edit/<%= offer._id %>" method="POST" id="offerForm" class="space-y-6">
+
+        <!-- Offer Name -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Offer Name *</label>
+          <input
+            type="text"
+            name="name"
+            required
+            value="<%= offer.name %>"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+        </div>
+
+        <!-- Offer Type Selection (Read-only on edit) -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Offer Type</label>
+          <input
+            type="hidden"
+            name="offerType"
+            value="<%= offer.offerType %>"
+          >
+          <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 capitalize flex items-center gap-2">
+            <% if (offer.offerType === 'product') { %>📦 Product Offer<% } %>
+            <% if (offer.offerType === 'category') { %>🏷️ Category Offer<% } %>
+            <% if (offer.offerType === 'referral') { %>🤝 Referral Offer<% } %>
+          </div>
+        </div>
+
+        <!-- PRODUCT SELECT (shown when offerType === 'product') -->
+        <% if (offer.offerType === 'product') { %>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Select Target Product *</label>
+            <select
+              name="product"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <% products.forEach(p => { %>
+                <option value="<%= p._id %>" <%= offer.product && offer.product._id.toString() === p._id.toString() ? 'selected' : '' %>>
+                  <%= p.name %> (<%= p.brand %>) - ₹<%= p.regularPrice %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+
+        <!-- CATEGORY SELECT (shown when offerType === 'category') -->
+        <% if (offer.offerType === 'category') { %>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Select Target Category *</label>
+            <select
+              name="category"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <% categories.forEach(c => { %>
+                <option value="<%= c._id %>" <%= offer.category && offer.category._id.toString() === c._id.toString() ? 'selected' : '' %>>
+                  <%= c.name %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+
+        <!-- DISCOUNT VALUE (for Product and Category offers) -->
+        <% if (offer.offerType !== 'referral') { %>
+          <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discount Percentage (%) *</label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    name="discountValue"
+                    min="1"
+                    max="90"
+                    value="<%= offer.discountValue %>"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                  <span class="absolute right-3.5 top-2.5 text-gray-400 font-bold">%</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discount Type</label>
+                <input
+                  type="text"
+                  name="discountType"
+                  value="percentage"
+                  readonly
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
+                >
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- REFERRAL REWARDS (for Referral offer) -->
+        <% if (offer.offerType === 'referral') { %>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-4">
+            <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3">Referral Wallet Bonuses</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Referrer Bonus (₹)</label>
+                <input
+                  type="number"
+                  name="referralReward"
+                  min="0"
+                  value="<%= offer.referralReward %>"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Referee Bonus (₹)</label>
+                <input
+                  type="number"
+                  name="refereeReward"
+                  min="0"
+                  value="<%= offer.refereeReward %>"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- DATE RANGE -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Start Date *</label>
+            <input
+              type="date"
+              name="startDate"
+              required
+              value="<%= offer.startDate ? new Date(offer.startDate).toISOString().split('T')[0] : '' %>"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">End Date *</label>
+            <input
+              type="date"
+              name="endDate"
+              required
+              value="<%= offer.endDate ? new Date(offer.endDate).toISOString().split('T')[0] : '' %>"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+          <a
+            href="/admin/offers"
+            class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition text-sm"
+          >
+            Save Changes
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

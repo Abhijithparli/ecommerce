@@ -67,3 +67,60 @@ export const getUserWishlist = async (userId) => {
 
   return wishlist;
 };
+
+export const toggleWishlist = async (userId, productId) => {
+  const product = await Product.findOne({
+    _id: productId,
+    isDeleted: false,
+    isBlocked: false,
+  }).populate("category");
+
+  if (!product || (product.category && product.category.isDeleted)) {
+    const error = new Error(MESSAGES.PRODUCT.NOT_FOUND);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  let wishlist = await Wishlist.findOne({ user: userId });
+
+  if (!wishlist) {
+    wishlist = new Wishlist({
+      user: userId,
+      products: [{ product: productId }],
+    });
+    await wishlist.save();
+    return { added: true, message: "Added to wishlist successfully" };
+  }
+
+  const existingIndex = wishlist.products.findIndex(
+    (item) => item.product.toString() === productId.toString()
+  );
+
+  if (existingIndex > -1) {
+    wishlist.products.splice(existingIndex, 1);
+    await wishlist.save();
+    return { added: false, message: "Removed from wishlist successfully" };
+  } else {
+    wishlist.products.push({ product: productId });
+    await wishlist.save();
+    return { added: true, message: "Added to wishlist successfully" };
+  }
+};
+
+export const getUserWishlistProductIds = async (userId) => {
+  if (!userId) return [];
+  const wishlist = await Wishlist.findOne({ user: userId }).select("products.product").lean();
+  if (!wishlist || !wishlist.products) return [];
+  return wishlist.products
+    .filter((item) => item && item.product)
+    .map((item) => item.product.toString());
+};
+
+export const isProductInWishlist = async (userId, productId) => {
+  if (!userId || !productId) return false;
+  const wishlist = await Wishlist.findOne({
+    user: userId,
+    "products.product": productId,
+  }).select("_id").lean();
+  return Boolean(wishlist);
+};

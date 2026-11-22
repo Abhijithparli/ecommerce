@@ -47,6 +47,23 @@ const userSchema = new mongoose.Schema(
       default: null,          
     },
 
+    // ── Referral fields ──────────────────────────────────
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    referralRewardsEarned: {
+      type: Number,
+      default: 0,
+    },
+
     // ── Extra profile fields 
     phone: {
       type: String,

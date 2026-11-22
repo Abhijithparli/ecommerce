@@ -53,10 +53,18 @@ const orderSchema = new mongoose.Schema(
           type: String,
           default: "",
         },
-     returnReason: {
-      type: String,
-      default: "",
-    },
+        returnReason: {
+          type: String,
+          default: "",
+        },
+        walletRefunded: {
+          type: Boolean,
+          default: false,
+        },
+        walletRefundAmount: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     deliveryAddress: {
@@ -123,6 +131,14 @@ razorpaySignature: {
     returnStockRestored: {
       type: Boolean,
       default: false,
+    },
+    walletRefunded: {
+      type: Boolean,
+      default: false,
+    },
+    walletRefundAmount: {
+      type: Number,
+      default: 0,
     },
     status: {
       type: String,

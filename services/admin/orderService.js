@@ -6,6 +6,7 @@ import {
   PAYMENT_STATUS
 } from "../../constants/enums.js";
 import { MESSAGES } from "../../constants/messages.js";
+import * as walletService from "../user/walletService.js";
 
 /**
  * Service to handle Order business logic (Admin)
@@ -87,6 +88,21 @@ export const updateOrderStatus = async (orderId, status) => {
         );
       }
     }
+    // Direct refund to wallet on cancellation if order was paid
+    if (order.paymentStatus === PAYMENT_STATUS.PAID && !order.walletRefunded) {
+      const refundAmount = Math.max(0, order.finalPrice - (order.walletRefundAmount || 0));
+      if (refundAmount > 0) {
+        await walletService.creditWallet(
+          order.user,
+          refundAmount,
+          `Refund for cancellation of Order #${order.orderId}`,
+          order._id,
+          order.orderId
+        );
+        order.walletRefunded = true;
+        order.walletRefundAmount = (order.walletRefundAmount || 0) + refundAmount;
+      }
+    }
   }
 
   // If order is returned, restore stock if not already restored
@@ -141,6 +157,22 @@ export const approveReturn = async (orderId) => {
       }
     }
     order.returnStockRestored = true;
+  }
+
+  // Refund to wallet after admin confirmation for returns
+  if (order.paymentStatus === PAYMENT_STATUS.PAID && !order.walletRefunded) {
+    const refundAmount = Math.max(0, order.finalPrice - (order.walletRefundAmount || 0));
+    if (refundAmount > 0) {
+      await walletService.creditWallet(
+        order.user,
+        refundAmount,
+        `Refund for approved return of Order #${order.orderId}`,
+        order._id,
+        order.orderId
+      );
+      order.walletRefunded = true;
+      order.walletRefundAmount = (order.walletRefundAmount || 0) + refundAmount;
+    }
   }
 
   await order.save();

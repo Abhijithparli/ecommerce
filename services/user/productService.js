@@ -4,6 +4,7 @@ import Review from "../../models/reviewModel.js";
 import mongoose from "mongoose";
 import { MESSAGES } from "../../constants/messages.js";
 import { ORDER_STATUS } from "../../constants/enums.js";
+import { applyOffersToProducts } from "../common/offerCalculator.js";
 
 /**
  * Service to handle Product business logic (User)
@@ -156,11 +157,13 @@ export const getPublicProducts = async (queryParams) => {
     sortOption = { createdAt: -1 };
   }
 
-  const products = await Product.find(filter)
+  const rawProducts = await Product.find(filter)
     .populate("category")
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
+
+  const products = await applyOffersToProducts(rawProducts);
 
   const totalProducts = await Product.countDocuments(filter);
   const totalPages = Math.ceil(totalProducts / limit);
@@ -233,9 +236,12 @@ export const getPublicProductDetails = async (productId) => {
     isBlocked: false
   }).limit(4);
 
+  const processedProduct = await applyOffersToProducts(product);
+  const processedRelated = await applyOffersToProducts(relatedProducts);
+
   return {
-    product,
-    relatedProducts,
+    product: processedProduct,
+    relatedProducts: processedRelated,
     reviews,
     averageRating
   };
@@ -272,9 +278,10 @@ export const addProductReview = async (userId, productId, rating, comment) => {
 
 export const getHomePageData = async () => {
   const categories = await Category.find({ isDeleted: false }).limit(3);
-  const products = await Product.find({ isDeleted: false, isBlocked: false })
+  const rawProducts = await Product.find({ isDeleted: false, isBlocked: false })
     .populate("category")
     .sort({ createdAt: -1 })
     .limit(6);
+  const products = await applyOffersToProducts(rawProducts);
   return { categories, products }; 
 };

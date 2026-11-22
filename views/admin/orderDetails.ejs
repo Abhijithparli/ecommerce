@@ -182,7 +182,7 @@
               </div>
               <% if (order.discount > 0) { %>
                 <div class="flex justify-between text-sm text-red-600">
-                  <span>Coupon Discount</span>
+                  <span>Coupon Discount <%= order.couponCode ? `(${order.couponCode})` : '' %></span>
                   <span>- ₹<%= order.discount %></span>
                 </div>
               <% } %>

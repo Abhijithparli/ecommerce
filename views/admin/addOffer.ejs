@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Offer - Headshield Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-900 font-sans">
+
+<div class="flex w-full min-h-screen">
+
+  <!-- SIDEBAR -->
+  <%- include("../partials/sidebar", {
+    currentPage: "offers"
+  }) %>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-56 p-8">
+
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <a href="/admin/offers" class="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 mb-2">
+          ← Back to Offers
+        </a>
+        <h1 class="text-3xl font-extrabold text-gray-900">Create New Offer</h1>
+        <p class="text-sm text-gray-500 mt-1">Configure product discounts, category deals, or referral bonuses</p>
+      </div>
+    </div>
+
+    <!-- FLASH NOTIFICATIONS -->
+    <% if (error) { %>
+      <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
+        <span><%= error %></span>
+        <button onclick="this.parentElement.remove()" class="text-red-800 font-bold">&times;</button>
+      </div>
+    <% } %>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-3xl">
+      <form action="/admin/offers/add" method="POST" id="offerForm" class="space-y-6">
+
+        <!-- Offer Name -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Offer Name *</label>
+          <input
+            type="text"
+            name="name"
+            required
+            placeholder="e.g. Mega Helmet Festive Deal, Riding Category 15%"
+            value="<%= formData.name || '' %>"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+        </div>
+
+        <!-- Offer Type Selection -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Offer Type *</label>
+          <div class="grid grid-cols-3 gap-4">
+            <label class="border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-orange-500 transition has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+              <input
+                type="radio"
+                name="offerType"
+                value="product"
+                onchange="handleTypeChange()"
+                <%= !formData.offerType || formData.offerType === 'product' ? 'checked' : '' %>
+                class="text-orange-500 focus:ring-orange-500"
+              >
+              <span class="text-2xl">📦</span>
+              <span class="text-xs font-bold text-gray-800">Product Offer</span>
+            </label>
+
+            <label class="border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-orange-500 transition has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+              <input
+                type="radio"
+                name="offerType"
+                value="category"
+                onchange="handleTypeChange()"
+                <%= formData.offerType === 'category' ? 'checked' : '' %>
+                class="text-orange-500 focus:ring-orange-500"
+              >
+              <span class="text-2xl">🏷️</span>
+              <span class="text-xs font-bold text-gray-800">Category Offer</span>
+            </label>
+
+            <label class="border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-orange-500 transition has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+              <input
+                type="radio"
+                name="offerType"
+                value="referral"
+                onchange="handleTypeChange()"
+                <%= formData.offerType === 'referral' ? 'checked' : '' %>
+                class="text-orange-500 focus:ring-orange-500"
+              >
+              <span class="text-2xl">🤝</span>
+              <span class="text-xs font-bold text-gray-800">Referral Program</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- PRODUCT SELECT (shown when offerType === 'product') -->
+        <div id="productSelectSection">
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Select Target Product *</label>
+          <select
+            name="product"
+            id="productSelect"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">-- Choose a product --</option>
+            <% products.forEach(p => { %>
+              <option value="<%= p._id %>" <%= formData.product === p._id.toString() ? 'selected' : '' %>>
+                <%= p.name %> (<%= p.brand %>) - ₹<%= p.regularPrice %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <!-- CATEGORY SELECT (shown when offerType === 'category') -->
+        <div id="categorySelectSection" class="hidden">
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Select Target Category *</label>
+          <select
+            name="category"
+            id="categorySelect"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">-- Choose a category --</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c._id %>" <%= formData.category === c._id.toString() ? 'selected' : '' %>>
+                <%= c.name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <!-- DISCOUNT VALUE (for Product and Category offers) -->
+        <div id="discountValueSection">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discount Percentage (%) *</label>
+              <div class="relative">
+                <input
+                  type="number"
+                  name="discountValue"
+                  id="discountValueInput"
+                  min="1"
+                  max="90"
+                  placeholder="e.g. 15"
+                  value="<%= formData.discountValue || '' %>"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                <span class="absolute right-3.5 top-2.5 text-gray-400 font-bold">%</span>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-1">If both product & category offers exist, system automatically applies the largest discount.</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discount Type</label>
+              <input
+                type="text"
+                name="discountType"
+                value="percentage"
+                readonly
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- REFERRAL REWARDS (for Referral offer) -->
+        <div id="referralSection" class="hidden">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-4">
+            <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3">Referral Wallet Bonuses</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Referrer Bonus (₹)</label>
+                <input
+                  type="number"
+                  name="referralReward"
+                  min="0"
+                  placeholder="100"
+                  value="<%= formData.referralReward || 100 %>"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                <span class="text-[11px] text-gray-500">Credited to referring user's wallet</span>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Referee Bonus (₹)</label>
+                <input
+                  type="number"
+                  name="refereeReward"
+                  min="0"
+                  placeholder="50"
+                  value="<%= formData.refereeReward || 50 %>"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                <span class="text-[11px] text-gray-500">Credited to newly joined user's wallet</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATE RANGE -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Start Date *</label>
+            <input
+              type="date"
+              name="startDate"
+              required
+              value="<%= formData.startDate || new Date().toISOString().split('T')[0] %>"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">End Date *</label>
+            <input
+              type="date"
+              name="endDate"
+              required
+              value="<%= formData.endDate || '' %>"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+          <a
+            href="/admin/offers"
+            class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition text-sm"
+          >
+            Create Offer
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function handleTypeChange() {
+    const selectedType = document.querySelector('input[name="offerType"]:checked').value;
+    const prodSec = document.getElementById('productSelectSection');
+    const catSec = document.getElementById('categorySelectSection');
+    const discSec = document.getElementById('discountValueSection');
+    const refSec = document.getElementById('referralSection');
+
+    if (selectedType === 'product') {
+      prodSec.classList.remove('hidden');
+      catSec.classList.add('hidden');
+      discSec.classList.remove('hidden');
+      refSec.classList.add('hidden');
+    } else if (selectedType === 'category') {
+      prodSec.classList.add('hidden');
+      catSec.classList.remove('hidden');
+      discSec.classList.remove('hidden');
+      refSec.classList.add('hidden');
+    } else if (selectedType === 'referral') {
+      prodSec.classList.add('hidden');
+      catSec.classList.add('hidden');
+      discSec.classList.add('hidden');
+      refSec.classList.remove('hidden');
+    }
+  }
+
+  // Trigger on page load
+  document.addEventListener('DOMContentLoaded', handleTypeChange);
+</script>
+
+</body>
+</html>

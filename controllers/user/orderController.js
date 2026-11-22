@@ -26,6 +26,24 @@ export const placeOrder = async (req, res) => {
       });
     }
 
+    // Handle Wallet Flow
+    if (paymentMethod === PAYMENT_METHOD.WALLET) {
+      const order = await orderService.createOrder({
+        userId,
+        addressId,
+        paymentMethod: PAYMENT_METHOD.WALLET,
+        couponCode
+      });
+
+      delete req.session.appliedCoupon;
+
+      return res.json({
+        success: true,
+        message: "Order placed successfully using your Wallet!",
+        orderId: order._id
+      });
+    }
+
     // Handle Razorpay Flow (New isolated branch)
     if (paymentMethod === PAYMENT_METHOD.RAZORPAY) {
       const rzpData = await orderService.createRazorpayOrder({

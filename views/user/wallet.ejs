@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Wallet - HeadShield</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  * { font-family: 'DM Sans', sans-serif; }
+  h1, .brand { font-family: 'Rajdhani', sans-serif; }
+
+  body { background: #0a0a0f; color: #e5e5e5; }
+
+  .sidebar {
+    background: linear-gradient(160deg, #111118, #0d0d14);
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 8px;
+    color: #9ca3af; font-size: 14px;
+    transition: all 0.2s; cursor: pointer; text-decoration: none;
+  }
+  .sidebar-link:hover, .sidebar-link.active {
+    background: rgba(249,115,22,0.12);
+    color: #f97316;
+  }
+  .sidebar-link.active { border-left: 3px solid #f97316; padding-left: 13px; }
+
+  .card {
+    background: #13131a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+  }
+
+  .topbar {
+    background: #0d0d14;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="flex items-center gap-3">
+    <span class="brand text-2xl font-bold text-orange-500">Headshield</span>
+    <span class="text-gray-600 text-sm">/ My Wallet</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <a href="/" class="text-gray-400 hover:text-white text-sm transition">← Back to Store</a>
+    <form action="/logout" method="POST" class="inline m-0">
+      <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition">Logout</button>
+    </form>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="flex flex-1 max-w-6xl mx-auto w-full px-4 py-8 gap-6">
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-56 shrink-0 rounded-xl p-4 h-fit sticky top-8">
+    <div class="text-xs text-gray-600 uppercase tracking-widest mb-3 px-2">Account</div>
+    <a href="/profile" class="sidebar-link">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      My Profile
+    </a>
+    <a href="/profile/addresses" class="sidebar-link">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Addresses
+    </a>
+    <a href="/profile/change-password" class="sidebar-link">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      Change Password
+    </a>
+    <a href="/profile/wallet" class="sidebar-link active">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      My Wallet
+    </a>
+    <div class="border-t border-white/5 mt-3 pt-3">
+      <a href="/profile/orders" class="sidebar-link">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        My Orders
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col gap-6">
+
+    <!-- Flash notifications -->
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="bg-green-500/15 border border-green-500/40 text-green-300 px-4 py-3 rounded-lg text-sm">
+        <%= success %>
+      </div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="bg-red-500/15 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg text-sm">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- Wallet Balance Hero Card -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-[#161622] to-zinc-900 border border-white/10 p-8 shadow-2xl">
+      <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-orange-400 font-semibold mb-2">
+            <span>🛡️</span> HeadShield Secure Wallet
+          </div>
+          <p class="text-gray-400 text-sm">Available Balance</p>
+          <h2 class="text-4xl sm:text-5xl font-black text-white mt-1 tracking-tight">
+            ₹<%= (typeof balance === 'number') ? balance.toLocaleString('en-IN') : 0 %>
+          </h2>
+          <p class="text-xs text-gray-500 mt-2">
+            Use your wallet balance for 1-click instant checkout on helmets and accessories.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:items-end gap-3 shrink-0">
+          <a href="/products" class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-orange-500/20 text-center text-decoration-none">
+            Shop Helmets →
+          </a>
+          <span class="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full font-medium">
+            ✓ Instant Auto-Refunds Active
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Program Card -->
+    <% if (typeof referralCode !== 'undefined' && referralCode) { %>
+      <div class="card p-6 border border-emerald-500/20 bg-emerald-950/10 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <span>🎁</span> Invite Friends & Earn Wallet Balance
+          </div>
+          <h4 class="text-white font-bold text-lg">Your Exclusive Referral Code</h4>
+          <p class="text-xs text-gray-400 mt-1 max-w-md">
+            Share your referral link with fellow riders. When they join, you both get wallet credits to spend on premium helmets!
+          </p>
+          <div class="text-xs text-emerald-400 font-semibold mt-2">
+            Total Referral Earnings: <span class="font-bold text-white">₹<%= referralRewardsEarned || 0 %></span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 w-full md:w-auto shrink-0">
+          <div class="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-xl px-4 py-2">
+            <span class="text-sm font-mono font-black text-orange-400 tracking-wider"><%= referralCode %></span>
+            <button
+              type="button"
+              onclick="copyReferralLink('<%= referralCode %>')"
+              id="copyRefBtn"
+              class="ml-3 px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg text-xs transition"
+            >
+              Copy Link
+            </button>
+          </div>
+          <p id="copyRefMsg" class="text-[11px] text-emerald-400 hidden text-center">✓ Link copied to clipboard!</p>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Transaction History Card -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
+        <div>
+          <h3 class="text-lg font-bold text-white tracking-wide">Transaction History</h3>
+          <p class="text-xs text-gray-400 mt-0.5">All credits, cancellations, return refunds, and wallet payments.</p>
+        </div>
+        <span class="text-xs text-gray-500">Total: <%= totalTransactions %></span>
+      </div>
+
+      <% if (transactions && transactions.length > 0) { %>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-white/5 pb-3">
+                <th class="pb-3 font-semibold">Type</th>
+                <th class="pb-3 font-semibold">Description</th>
+                <th class="pb-3 font-semibold">Date & Time</th>
+                <th class="pb-3 font-semibold text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <% transactions.forEach(txn => { %>
+                <% const isCredit = txn.type === 'credit'; %>
+                <tr class="hover:bg-white/[0.02] transition">
+                  <td class="py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold <%= isCredit ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30' %>">
+                      <%= isCredit ? '↓ Credit' : '↑ Debit' %>
+                    </span>
+                  </td>
+                  <td class="py-4">
+                    <p class="text-white font-medium text-sm leading-tight"><%= txn.description %></p>
+                    <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                      <span class="font-mono text-[11px]"><%= txn.transactionId %></span>
+                      <% if (txn.orderId) { %>
+                        • <a href="/profile/orders/<%= txn.orderId %>" class="text-orange-400 hover:text-orange-300 underline underline-offset-2">View Order</a>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td class="py-4 whitespace-nowrap text-xs text-gray-400">
+                    <%= new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                    <span class="text-gray-600 block text-[11px]">
+                      <%= new Date(txn.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
+                    </span>
+                  </td>
+                  <td class="py-4 whitespace-nowrap text-right">
+                    <span class="font-bold text-base font-mono <%= isCredit ? 'text-emerald-400' : 'text-red-400' %>">
+                      <%= isCredit ? '+' : '-' %> ₹<%= txn.amount.toLocaleString('en-IN') %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="flex justify-center items-center gap-2 mt-6 pt-4 border-t border-white/5">
+            <% if (currentPage > 1) { %>
+              <a href="/profile/wallet?page=<%= currentPage - 1 %>" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-gray-300 hover:bg-zinc-700 text-xs font-semibold transition text-decoration-none">
+                Previous
+              </a>
+            <% } %>
+
+            <span class="text-xs text-gray-400">
+              Page <strong class="text-white"><%= currentPage %></strong> of <strong class="text-white"><%= totalPages %></strong>
+            </span>
+
+            <% if (currentPage < totalPages) { %>
+              <a href="/profile/wallet?page=<%= currentPage + 1 %>" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-gray-300 hover:bg-zinc-700 text-xs font-semibold transition text-decoration-none">
+                Next
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <!-- Empty Transactions State -->
+        <div class="py-16 text-center">
+          <div class="w-16 h-16 mx-auto mb-4 bg-zinc-800/80 rounded-2xl flex items-center justify-center text-3xl border border-white/10">
+            👛
+          </div>
+          <h4 class="text-base font-bold text-white">No Transactions Yet</h4>
+          <p class="text-xs text-gray-400 max-w-sm mx-auto mt-1 mb-6">
+            When you cancel an order or return an item, your refund will appear here instantly.
+          </p>
+          <a href="/products" class="inline-block px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-orange-400 text-xs font-semibold rounded-lg transition border border-white/10 text-decoration-none">
+            Browse Helmets
+          </a>
+        </div>
+      <% } %>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+  function copyReferralLink(code) {
+    const url = window.location.origin + '/signup?ref=' + code;
+    navigator.clipboard.writeText(url).then(() => {
+      const msg = document.getElementById('copyRefMsg');
+      if (msg) {
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

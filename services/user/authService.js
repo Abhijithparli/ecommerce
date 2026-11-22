@@ -1,4 +1,6 @@
 import User from "../../models/userModel.js";
+import Offer from "../../models/offerModel.js";
+import * as walletService from "./walletService.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -55,11 +57,22 @@ export const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+export const generateUniqueReferralCode = async () => {
+  let isUnique = false;
+  let code = "";
+  while (!isUnique) {
+    code = "HS" + crypto.randomBytes(3).toString("hex").toUpperCase();
+    const existing = await User.findOne({ referralCode: code });
+    if (!existing) isUnique = true;
+  }
+  return code;
+};
+
 /**
  * User Authentication Business Logic
  */
 
-export const registerUserPreOtp = async ({ firstName, lastName, email, password, confirmPassword }) => {
+export const registerUserPreOtp = async ({ firstName, lastName, email, password, confirmPassword, referralCode }) => {
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
     throw new Error(MESSAGES.COMMON.ALL_FIELDS_REQUIRED);
   }
@@ -75,6 +88,15 @@ export const registerUserPreOtp = async ({ firstName, lastName, email, password,
     throw new Error("Email already registered");
   }
 
+  let referredBy = null;
+  if (referralCode && referralCode.trim()) {
+    const referrer = await User.findOne({ referralCode: referralCode.trim().toUpperCase() });
+    if (!referrer) {
+      throw new Error("Invalid referral code");
+    }
+    referredBy = referrer._id;
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const otp = generateOTP();
   const otpExpiry = Date.now() + 10 * 60 * 1000;
@@ -84,7 +106,8 @@ export const registerUserPreOtp = async ({ firstName, lastName, email, password,
     email,
     password: hashedPassword,
     otp,
-    otpExpiry
+    otpExpiry,
+    referredBy,
   };
 
   await sendMail(email, "Verify your email - Headshield", otpTemplate(otp));
@@ -103,12 +126,54 @@ export const verifyRegisterOtp = async (tempUser, userOtp) => {
     throw new Error(MESSAGES.AUTH.OTP_EXPIRED);
   }
 
-  return await User.create({
+  const userReferralCode = await generateUniqueReferralCode();
+
+  const newUser = await User.create({
     name: tempUser.name,
     email: tempUser.email,
     password: tempUser.password,
-    isVerified: true
+    isVerified: true,
+    referralCode: userReferralCode,
+    referredBy: tempUser.referredBy || null,
   });
+
+  // Initialize wallet for new user
+  await walletService.getOrCreateWallet(newUser._id);
+
+  // If referred by someone, credit referral rewards
+  if (tempUser.referredBy) {
+    const now = new Date();
+    const activeRefOffer = await Offer.findOne({
+      offerType: "referral",
+      isActive: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    });
+
+    const referrerReward = activeRefOffer ? activeRefOffer.referralReward : 100;
+    const refereeReward = activeRefOffer ? activeRefOffer.refereeReward : 50;
+
+    if (referrerReward > 0) {
+      await walletService.creditWallet(
+        tempUser.referredBy,
+        referrerReward,
+        `Referral bonus for inviting ${newUser.name}`
+      );
+      await User.findByIdAndUpdate(tempUser.referredBy, {
+        $inc: { referralRewardsEarned: referrerReward },
+      });
+    }
+
+    if (refereeReward > 0) {
+      await walletService.creditWallet(
+        newUser._id,
+        refereeReward,
+        "Welcome bonus for joining via referral"
+      );
+    }
+  }
+
+  return newUser;
 };
 
 export const loginUser = async (email, password) => {

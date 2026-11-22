@@ -51,7 +51,8 @@ export const loadHomepage = async (req, res) => {
 
 // ================= SIGNUP =================
 export const loadSignup = (req, res) => {
-  res.render("user/signup", { error: null, success: null });
+  const referralCode = req.query.ref || req.query.token || "";
+  res.render("user/signup", { error: null, success: null, referralCode });
 };
 
 export const signup = async (req, res) => {
@@ -68,7 +69,8 @@ export const signup = async (req, res) => {
     console.error("Signup controller error:", error);
     res.render("user/signup", {
       error: error.message || "Server error",
-      success: null
+      success: null,
+      referralCode: req.body.referralCode || "",
     });
   }
 };

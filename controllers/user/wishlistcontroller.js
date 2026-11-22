@@ -34,7 +34,7 @@ export const addToWishlistAction = async(req,res)=>{
     });
   }catch(error){
     console.error("Add to wishlist error:",error);
-    res.status(error.statuscode || 500).json({
+    res.status(error.statusCode || 500).json({
       success:false,
       message:error.message || "Failed to add to wishlist.",
     });
@@ -56,9 +56,31 @@ export const removeFromWishlistAction = async(req,res)=>{
     });
   }catch(error){
     console.error("Remove from wishlist error:",error);
-    res.status(error.statuscode || 500).json({
+    res.status(error.statusCode || 500).json({
       success:false,
       message:error.message || "Failed to remove from wishlist.",
+    });
+  }
+};
+
+// toggle wishlist item
+export const toggleWishlistAction = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const productId = req.params.productId;
+
+    const result = await wishlistService.toggleWishlist(userId, productId);
+
+    res.json({
+      success: true,
+      added: result.added,
+      message: result.message,
+    });
+  } catch (error) {
+    console.error("Toggle wishlist error:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to update wishlist.",
     });
   }
 };

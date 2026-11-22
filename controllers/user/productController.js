@@ -1,9 +1,13 @@
 import * as productService from "../../services/user/productService.js";
+import * as wishlistService from "../../services/user/wishlistService.js";
 
 //load product listing page
 export const loadProducts = async (req, res) => {
   try {
     const data = await productService.getPublicProducts(req.query);
+    const wishlistProductIds = req.session.user
+      ? await wishlistService.getUserWishlistProductIds(req.session.user.id)
+      : [];
 
     res.render("user/products", {
       products: data.products,
@@ -21,6 +25,7 @@ export const loadProducts = async (req, res) => {
       brand: data.brand,
       selectedBrands: data.selectedBrands || [],
       brandQueryString: data.brandQueryString || "",
+      wishlistProductIds,
       user: req.session.user || null,
       error: req.session.error || null,
       success: req.session.success || null
@@ -38,12 +43,16 @@ export const loadProducts = async (req, res) => {
 export const loadProductDetails = async (req, res) => {
   try {
     const data = await productService.getPublicProductDetails(req.params.id);
+    const isInWishlist = req.session.user
+      ? await wishlistService.isProductInWishlist(req.session.user.id, req.params.id)
+      : false;
 
     res.render("user/productDetails", {
       product: data.product,
       relatedProducts: data.relatedProducts,
       reviews: data.reviews,
       averageRating: data.averageRating,
+      isInWishlist,
       user: req.session.user || null
     });
   } catch (error) {

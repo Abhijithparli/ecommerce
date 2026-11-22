@@ -94,6 +94,18 @@
 
 </div>
 
+                <!-- Referral Code (Optional) -->
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm mb-2 flex items-center justify-between">
+                        <span>Referral Code <span class="text-xs text-gray-400 font-normal">(Optional)</span></span>
+                        <span class="text-xs text-orange-400">🎁 Get welcome bonus into your wallet</span>
+                    </label>
+                    <input type="text" name="referralCode" id="referralCode" 
+                           placeholder="e.g. HS98AB12"
+                           value="<%= typeof referralCode !== 'undefined' ? referralCode : '' %>"
+                           class="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded text-white placeholder-gray-500 uppercase tracking-widest font-mono focus:outline-none focus:border-orange-500">
+                </div>
+
                 <!-- Submit -->
                 <button type="submit"
                         class="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded hover:from-orange-600 hover:to-orange-700 transition shadow-lg">

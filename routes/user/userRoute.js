@@ -67,12 +67,14 @@ import {
 } from "../../controllers/user/orderController.js";
 
 import * as couponController from "../../controllers/user/couponController.js";
+import * as walletController from "../../controllers/user/walletController.js";
 
 
 import{
   loadWishlistPage,
   addToWishlistAction,
-  removeFromWishlistAction  
+  removeFromWishlistAction,
+  toggleWishlistAction
 }from "../../controllers/user/wishlistcontroller.js";
 
 const router = express.Router();
@@ -165,6 +167,7 @@ router.get("/profile/orders/:id/invoice", isAuthenticated, downloadInvoice);
 
 router.get("/wishlist", isAuthenticated, loadWishlistPage);
 router.post("/wishlist/add/:productId", isAuthenticated, addToWishlistAction);
+router.post("/wishlist/toggle/:productId", isAuthenticated, toggleWishlistAction);
 router.delete("/wishlist/remove/:productId", isAuthenticated, removeFromWishlistAction);
 // ================= google auth =================
 router.get("/auth/google",
@@ -244,6 +247,10 @@ router.post("/profile/addresses/:id/default", isAuthenticated, setDefaultAddress
 
 router.get("/set-password", isAuthenticated, loadSetPassword);
 router.post("/set-password", isAuthenticated, savePassword);
+
+// ================= wallet =================
+router.get("/profile/wallet", isAuthenticated, walletController.loadWallet);
+router.get("/wallet", isAuthenticated, walletController.loadWallet);
 
 
 export default router;

@@ -170,6 +170,58 @@
               </div>
             </label>
 
+            <!-- Wallet Payment Option -->
+            <%
+              const userWalletBal = (typeof walletBalance !== 'undefined' && typeof walletBalance === 'number') ? walletBalance : 0;
+              const curDiscount = (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.discount : 0;
+              const curPayable = Math.max(0, total - curDiscount);
+              const canPayWallet = userWalletBal >= curPayable;
+            %>
+            <label class="block cursor-pointer" onclick="handleWalletLabelClick()">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="Wallet" 
+                class="sr-only" 
+                id="walletRadioInput"
+                <%= canPayWallet ? '' : 'disabled' %>
+                onchange="updatePaymentUI()"
+              >
+              <div id="card-Wallet" class="p-5 rounded-xl border-2 border-gray-200 bg-white hover:border-gray-300 transition duration-150 flex items-center justify-between gap-4 <%= canPayWallet ? '' : 'opacity-60 bg-gray-50' %>">
+                <div class="flex items-start sm:items-center gap-4">
+                  <!-- Custom Radio Circle -->
+                  <div id="radio-Wallet" class="w-5 h-5 mt-1 sm:mt-0 rounded-full border-2 border-gray-300 flex items-center justify-center shrink-0">
+                    <div class="w-2.5 h-2.5 rounded-full bg-orange-500 hidden"></div>
+                  </div>
+                  <div class="p-3 bg-emerald-100 text-emerald-600 rounded-xl shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="font-bold text-gray-800 text-lg">HeadShield Wallet</h3>
+                      <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        1-Click Instant
+                      </span>
+                    </div>
+                    <p class="text-gray-500 text-sm mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <span>Available Balance:</span>
+                      <strong class="<%= canPayWallet ? 'text-emerald-600' : 'text-red-500' %> font-mono text-base">₹<span id="walletBalDisplay"><%= userWalletBal %></span></strong>
+                      <span id="walletInsufficientWarning" class="<%= canPayWallet ? 'hidden' : 'inline' %> text-xs text-red-500 font-semibold bg-red-50 px-2 py-0.5 rounded border border-red-200 ml-1">
+                        Insufficient funds for this order
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div id="check-Wallet" class="text-orange-500 hidden shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </label>
+
           </div>
         </div>
 
@@ -316,32 +368,78 @@
     let appliedCouponCode = "<%= (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.code : '' %>";
     let currentDiscount = Number("<%= (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.discount : 0 %>");
     let currentTotal = Number("<%= initialFinal %>");
+    const userWalletBalance = Number("<%= (typeof walletBalance !== 'undefined' && typeof walletBalance === 'number') ? walletBalance : 0 %>");
     const LOGGED_IN_USER_EMAIL = "<%= (typeof user !== 'undefined' && user && user.email) ? user.email : '' %>";
 
     function getButtonLabel(method) {
-      return method === "Razorpay"
-        ? `Proceed to Online Payment • ₹${currentTotal}`
-        : "Place Order (Cash on Delivery)";
+      if (method === "Razorpay") {
+        return `Proceed to Online Payment • ₹${currentTotal}`;
+      } else if (method === "Wallet") {
+        return `Pay ₹${currentTotal} with Wallet`;
+      }
+      return "Place Order (Cash on Delivery)";
+    }
+
+    function handleWalletLabelClick() {
+      if (userWalletBalance < currentTotal) {
+        Swal.fire({
+          icon: "info",
+          title: "Insufficient Wallet Balance",
+          text: `Your wallet balance is ₹${userWalletBalance}, but order total is ₹${currentTotal}. Please choose another payment method.`,
+          confirmButtonColor: "#f97316"
+        });
+        return;
+      }
+      const radio = document.getElementById("walletRadioInput");
+      if (radio && !radio.disabled) {
+        radio.checked = true;
+        updatePaymentUI();
+      }
     }
 
     function updatePaymentUI() {
       const selectedPaymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
       const method = selectedPaymentRadio ? selectedPaymentRadio.value : "COD";
 
-      ["COD", "Razorpay"].forEach((key) => {
+      // Check if wallet can afford current total
+      const walletRadio = document.getElementById("walletRadioInput");
+      const walletWarning = document.getElementById("walletInsufficientWarning");
+      const walletCard = document.getElementById("card-Wallet");
+      const canAffordWallet = userWalletBalance >= currentTotal;
+
+      if (walletRadio) {
+        walletRadio.disabled = !canAffordWallet;
+        if (!canAffordWallet && method === "Wallet") {
+          const codRadio = document.querySelector('input[name="paymentMethod"][value="COD"]');
+          if (codRadio) codRadio.checked = true;
+        }
+      }
+      if (walletWarning) {
+        walletWarning.classList.toggle("hidden", canAffordWallet);
+      }
+      if (walletCard && !canAffordWallet) {
+        walletCard.classList.add("opacity-60", "bg-gray-50");
+      }
+
+      const activeMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || "COD";
+
+      ["COD", "Wallet", "Razorpay"].forEach((key) => {
         const card = document.getElementById(`card-${key}`);
         const radioOuter = document.getElementById(`radio-${key}`);
         const radioDot = radioOuter ? radioOuter.querySelector("div") : null;
         const checkIcon = document.getElementById(`check-${key}`);
-        const isSelected = method === key;
+        const isSelected = activeMethod === key;
 
         if (card) {
           if (isSelected) {
-            card.classList.remove("border-gray-200", "bg-white", "hover:border-gray-300");
+            card.classList.remove("border-gray-200", "bg-white", "hover:border-gray-300", "opacity-60", "bg-gray-50");
             card.classList.add("border-orange-500", "bg-orange-50/40", "shadow-sm");
           } else {
             card.classList.remove("border-orange-500", "bg-orange-50/40", "shadow-sm");
             card.classList.add("border-gray-200", "bg-white", "hover:border-gray-300");
+            if (key === "Wallet" && !canAffordWallet) {
+              card.classList.add("opacity-60", "bg-gray-50");
+            }
           }
         }
         if (radioOuter) {
@@ -358,7 +456,7 @@
 
       const placeOrderBtn = document.getElementById("placeOrderBtn");
       if (placeOrderBtn && !placeOrderBtn.disabled) {
-        placeOrderBtn.innerText = getButtonLabel(method);
+        placeOrderBtn.innerText = getButtonLabel(activeMethod);
       }
     }
 
@@ -591,7 +689,7 @@
         // Disable button & show loading state
         placeOrderBtn.disabled = true;
         placeOrderBtn.classList.add("opacity-60", "cursor-not-allowed");
-        placeOrderBtn.innerText = paymentMethod === "Razorpay" ? "Connecting to Razorpay..." : "Processing Order...";
+        placeOrderBtn.innerText = paymentMethod === "Razorpay" ? "Connecting to Razorpay..." : (paymentMethod === "Wallet" ? "Processing Wallet Payment..." : "Processing Order...");
 
         const response = await fetch("/checkout/place-order", {
           method: "POST",
@@ -618,8 +716,8 @@
           return;
         }
 
-        // 1. If COD, redirect directly to order success
-        if (paymentMethod === "COD") {
+        // 1. If COD or Wallet, redirect directly to order success
+        if (paymentMethod === "COD" || paymentMethod === "Wallet") {
           window.location.href = `/checkout/order-success/${data.orderId}`;
           return;
         }

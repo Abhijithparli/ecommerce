@@ -2,6 +2,8 @@ import Cart from "../../models/cartModel.js";
 import User from "../../models/userModel.js";
 import { MESSAGES } from "../../constants/messages.js";
 import { getCartStockStatus, removeItemsWithoutSize } from "./cartService.js";
+import * as walletService from "./walletService.js";
+import { applyOffersToProducts } from "../common/offerCalculator.js";
 
 /**
  * Service to handle Checkout business logic (User)
@@ -32,23 +34,36 @@ export const getCheckoutData = async (userId) => {
     throw new Error(MESSAGES.USER.NOT_FOUND);
   }
 
-  // 4. Calculate Cart Total with variant pricing
+  // 4. Calculate Cart Total with variant pricing (applying best product/category offers)
   let total = 0;
-  cart.items.forEach((item) => {
-    if (item.product) {
-      const variant = item.product.variants?.find(
-        (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
-      );
-      const itemPrice = (variant && variant.price !== undefined) ? variant.price : item.product.salePrice;
-      total += itemPrice * item.quantity;
-    }
-  });
+  if (cart && cart.items.length > 0) {
+    const products = cart.items.map((i) => i.product).filter(Boolean);
+    const processedProducts = await applyOffersToProducts(products);
+    const prodMap = new Map(processedProducts.map((p) => [p._id.toString(), p]));
+
+    cart.items.forEach((item) => {
+      if (item.product) {
+        const prodId = item.product._id ? item.product._id.toString() : item.product.toString();
+        const p = prodMap.get(prodId) || item.product;
+        item.product = p;
+        const variant = p.variants?.find(
+          (v) => v.size.toUpperCase() === (item.size || "M").toUpperCase()
+        );
+        const itemPrice = (variant && variant.price !== undefined) ? variant.price : p.salePrice;
+        total += itemPrice * item.quantity;
+      }
+    });
+  }
+
+  // 5. Get Wallet Balance
+  const walletBalance = await walletService.getWalletBalance(userId);
 
   return {
     cart,
     addresses: user.addresses || [],
     total,
     itemStatus,
-    hasUnavailableItems
+    hasUnavailableItems,
+    walletBalance,
   };
 };

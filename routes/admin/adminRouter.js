@@ -51,6 +51,9 @@ import {
 } from "../../controllers/admin/adminOrderController.js";
 
 import * as couponController from "../../controllers/admin/couponController.js";
+import * as dashboardController from "../../controllers/admin/dashboardController.js";
+import * as offerController from "../../controllers/admin/offerController.js";
+import * as salesController from "../../controllers/admin/salesController.js";
 
 const router = express.Router();
 console.log("idfklsdkjl;f");
@@ -75,7 +78,9 @@ router.get("/reset-password/:token", getResetPassword);
 router.post("/reset-password/:token", postResetPassword);
 
 // ── Admin Dashboard & Logout ───────────────────────────────
-router.get("/dashboard", isAdminAuth, loadDashboard);
+router.get("/dashboard", isAdminAuth, dashboardController.loadDashboard);
+router.get("/dashboard/chart-data", isAdminAuth, dashboardController.getChartData);
+router.get("/dashboard/ledger", isAdminAuth, dashboardController.loadLedgerBook);
 router.get("/logout", adminLogout);
 
 // ── Admin User Management ──────────────────────────────────
@@ -169,4 +174,19 @@ router.post("/orders/:id/return/approve", isAdminAuth, approveReturnAction);
 router.post("/orders/:id/return/reject", isAdminAuth, rejectReturnAction);
 router.get("/inventory", isAdminAuth, inventoryController.loadInventoryPage);
 router.post("/inventory/:productId/update-stock", isAdminAuth, inventoryController.updateStockAction);
+
+// ================= OFFER MANAGEMENT =================
+router.get("/offers", isAdminAuth, offerController.loadOffers);
+router.get("/offers/add", isAdminAuth, offerController.loadAddOffer);
+router.post("/offers/add", isAdminAuth, offerController.addOffer);
+router.get("/offers/edit/:id", isAdminAuth, offerController.loadEditOffer);
+router.post("/offers/edit/:id", isAdminAuth, offerController.updateOffer);
+router.post("/offers/toggle/:id", isAdminAuth, offerController.toggleOffer);
+router.post("/offers/delete/:id", isAdminAuth, offerController.deleteOffer);
+
+// ================= SALES REPORT =================
+router.get("/sales", isAdminAuth, salesController.loadSalesReport);
+router.get("/sales/download/pdf", isAdminAuth, salesController.downloadPdfReport);
+router.get("/sales/download/excel", isAdminAuth, salesController.downloadExcelReport);
+
 export default router;

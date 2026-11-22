@@ -235,6 +235,20 @@
                 <%= order.paymentStatus %>
               </span>
             </div>
+            <div class="flex justify-between">
+              <span>Items Subtotal:</span>
+              <span class="text-gray-300">₹<%= order.totalPrice %></span>
+            </div>
+            <% if (order.discount && order.discount > 0) { %>
+              <div class="flex justify-between text-green-400 font-medium">
+                <span>Coupon (<%= order.couponCode || 'Discount' %>):</span>
+                <span>- ₹<%= order.discount %></span>
+              </div>
+            <% } %>
+            <div class="flex justify-between">
+              <span>Delivery:</span>
+              <span class="text-green-400 text-xs font-semibold uppercase">Free</span>
+            </div>
             <div class="pt-3 border-t border-white/5 flex justify-between items-center">
               <span>Amount Paid:</span>
               <strong class="text-xl text-orange-500 font-extrabold">₹<%= order.finalPrice %></strong>

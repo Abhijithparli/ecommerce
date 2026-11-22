@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accounting Ledger Book - Headshield Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-900 font-sans">
+
+<div class="flex w-full min-h-screen">
+
+  <!-- SIDEBAR -->
+  <%- include("../partials/sidebar", { currentPage: 'dashboard' }) %>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-56 p-8">
+
+    <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <a href="/admin/dashboard" class="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 mb-2">
+          ← Back to Dashboard
+        </a>
+        <h1 class="text-3xl font-extrabold text-gray-900">General Ledger Book</h1>
+        <p class="text-sm text-gray-500 mt-1">Complete chronological double-entry record of sales credits, debits, and running balance</p>
+      </div>
+
+      <button
+        onclick="window.print()"
+        class="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-xs"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Print Ledger
+      </button>
+    </div>
+
+    <!-- LEDGER TABLE -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-bold text-gray-900 text-base">Accounting Transactions</h3>
+        <span class="text-xs text-gray-500">Sorted newest first</span>
+      </div>
+
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th class="py-4 px-6">Date</th>
+            <th class="py-4 px-6">Entry Type</th>
+            <th class="py-4 px-6">Reference / Customer</th>
+            <th class="py-4 px-6">Description</th>
+            <th class="py-4 px-6 text-right text-emerald-600">Credit (₹)</th>
+            <th class="py-4 px-6 text-right text-rose-600">Debit (₹)</th>
+            <th class="py-4 px-6 text-right text-gray-800">Running Balance (₹)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-sm">
+          <% if (ledger && ledger.length > 0) { %>
+            <% ledger.forEach(entry => { %>
+              <tr class="hover:bg-gray-50/50 transition">
+                <td class="py-4 px-6 text-xs text-gray-600">
+                  <%= new Date(entry.date).toLocaleString() %>
+                </td>
+                <td class="py-4 px-6">
+                  <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                    <%= entry.type.includes('Credit') ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' %>">
+                    <%= entry.type %>
+                  </span>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="font-bold text-gray-900">#<%= entry.orderId %></div>
+                  <div class="text-xs text-gray-500"><%= entry.customer %></div>
+                </td>
+                <td class="py-4 px-6 text-xs text-gray-600">
+                  <%= entry.description %>
+                </td>
+                <td class="py-4 px-6 text-right font-extrabold text-emerald-600">
+                  <%= entry.credit > 0 ? `+ ₹${entry.credit.toLocaleString()}` : '-' %>
+                </td>
+                <td class="py-4 px-6 text-right font-extrabold text-rose-600">
+                  <%= entry.debit > 0 ? `- ₹${entry.debit.toLocaleString()}` : '-' %>
+                </td>
+                <td class="py-4 px-6 text-right font-black text-gray-900">
+                  ₹<%= entry.balance.toLocaleString() %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center py-12 text-gray-400">
+                <p class="text-base font-semibold">No ledger transactions recorded yet.</p>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

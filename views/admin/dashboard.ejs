@@ -3,129 +3,402 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Dashboard</title>
+  <title>Admin Dashboard - Headshield</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100 min-h-screen text-gray-900 font-sans">
 
-<div class="flex min-h-screen">
-<%- include('./partials/sidebar', { currentPage: 'dashboard' }) %>
+<div class="flex w-full min-h-screen">
+  <%- include("../partials/sidebar", { currentPage: 'dashboard' }) %>
 
-  <main class="flex-1 ml-64 p-10">
+  <main class="flex-1 ml-56 p-8">
 
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-semibold text-black">Dashboard</h1>
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-        <input type="text"
-          class="w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-blue-400"
-          placeholder="Search">
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Real-time performance analytics, top sellers, and revenue trends</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a
+          href="/admin/dashboard/ledger"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-xs"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Ledger Book
+        </a>
+        <a
+          href="/admin/sales"
+          class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-xs"
+        >
+          Detailed Sales Report →
+        </a>
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-3 gap-5 mb-8">
-      <div class="bg-white border border-gray-200 rounded-lg p-6 flex justify-between items-start">
+    <!-- STATS OVERVIEW CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      
+      <!-- Total Users -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
         <div>
-          <div class="text-sm text-gray-500 mb-2">Total User</div>
-          <div class="text-3xl font-bold text-black mb-3">30,611</div>
-          <div class="flex items-center gap-1 text-xs text-teal-500"><span>↗</span><span>8.5% Up from last month</span></div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Users</div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1"><%= overview.totalUsers.toLocaleString() %></div>
+          <div class="text-xs text-blue-600 font-semibold">Active Customers</div>
         </div>
         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">👥</div>
       </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-6 flex justify-between items-start">
+
+      <!-- Total Orders -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
         <div>
-          <div class="text-sm text-gray-500 mb-2">Total Order</div>
-          <div class="text-3xl font-bold text-black mb-3">11293</div>
-          <div class="flex items-center gap-1 text-xs text-teal-500"><span>↗</span><span>1.3% Up from last month</span></div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Orders</div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1"><%= overview.totalOrders.toLocaleString() %></div>
+          <div class="text-xs text-orange-600 font-semibold">
+            <%= overview.pendingOrders %> in progress
+          </div>
         </div>
         <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl">📦</div>
       </div>
-      <div class="bg-white border border-gray-200 rounded-lg p-6 flex justify-between items-start">
+
+      <!-- Total Revenue -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
         <div>
-          <div class="text-sm text-gray-500 mb-2">Total Sales</div>
-          <div class="text-3xl font-bold text-black mb-3">$59,999</div>
-          <div class="flex items-center gap-1 text-xs text-red-500"><span>↘</span><span>4.3% Down from last month</span></div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Sales Revenue</div>
+          <div class="text-3xl font-extrabold text-green-600 mb-1">₹<%= overview.totalRevenue.toLocaleString() %></div>
+          <div class="text-xs text-gray-400 font-medium">₹<%= overview.totalDiscount.toLocaleString() %> discounts applied</div>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-2xl">📊</div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-2xl">💰</div>
+      </div>
+
+      <!-- Catalog Overview -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Catalog Size</div>
+          <div class="text-3xl font-extrabold text-purple-600 mb-1"><%= overview.totalProducts %></div>
+          <div class="text-xs text-purple-500 font-semibold"><%= overview.totalCategories %> Categories Active</div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl">🏷️</div>
+      </div>
+
+    </div>
+
+    <!-- REVENUE & ORDERS CHART SECTION -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h2 class="text-lg font-extrabold text-gray-900">Revenue & Sales Trends</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Filter sales analytics dynamically across custom timeframes</p>
+        </div>
+
+        <!-- PERIOD FILTER BUTTONS -->
+        <div class="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+          <button
+            onclick="switchChartPeriod('weekly')"
+            id="btn-weekly"
+            class="chart-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 hover:text-gray-900 transition"
+          >
+            Last 7 Days
+          </button>
+          <button
+            onclick="switchChartPeriod('monthly')"
+            id="btn-monthly"
+            class="chart-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-orange-600 shadow-sm transition"
+          >
+            Monthly
+          </button>
+          <button
+            onclick="switchChartPeriod('yearly')"
+            id="btn-yearly"
+            class="chart-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 hover:text-gray-900 transition"
+          >
+            Yearly
+          </button>
+        </div>
+      </div>
+
+      <!-- CANVAS -->
+      <div class="h-80 relative w-full">
+        <canvas id="salesChart"></canvas>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-lg font-semibold text-black">Sales Details</h2>
-        <div class="flex gap-3">
-          <select class="px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-600 bg-white focus:outline-none">
-            <option>Today</option><option>This Week</option><option>This Month</option>
-          </select>
-          <select class="px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-600 bg-white focus:outline-none">
-            <option>October</option><option>November</option><option>December</option>
-          </select>
+    <!-- TOP 10 RANKINGS SECTION -->
+    <div class="space-y-8">
+      
+      <!-- TOP 10 PRODUCTS -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+              <span class="text-orange-500">🏆</span> Top 10 Best Selling Products
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Ranked by total quantity sold</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                <th class="py-3 px-4 w-12 text-center">Rank</th>
+                <th class="py-3 px-4">Product</th>
+                <th class="py-3 px-4 text-center">Units Sold</th>
+                <th class="py-3 px-4 text-right">Revenue Generated</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+              <% if (topProducts && topProducts.length > 0) { %>
+                <% topProducts.forEach((prod, index) => { %>
+                  <tr class="hover:bg-gray-50/50 transition">
+                    <td class="py-3 px-4 text-center">
+                      <span class="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-extrabold
+                        <%= index === 0 ? 'bg-amber-100 text-amber-800' :
+                            index === 1 ? 'bg-slate-200 text-slate-700' :
+                            index === 2 ? 'bg-amber-600/10 text-amber-700' : 'bg-gray-100 text-gray-600' %>">
+                        #<%= index + 1 %>
+                      </span>
+                    </td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-3">
+                        <img
+                          src="<%= prod.image || '/images/default-helmet.png' %>"
+                          class="w-10 h-10 object-cover rounded-lg border border-gray-100"
+                        >
+                        <div>
+                          <p class="font-bold text-gray-900 text-sm"><%= prod.name %></p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-center font-extrabold text-gray-800">
+                      <%= prod.totalUnitsSold %>
+                    </td>
+                    <td class="py-3 px-4 text-right font-extrabold text-orange-600">
+                      ₹<%= prod.totalRevenue.toLocaleString() %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="text-center py-8 text-gray-400 text-xs">
+                    No product sales recorded yet.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="h-64 relative">
-        <svg class="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#6B9BFF;stop-opacity:0.3"/>
-              <stop offset="100%" style="stop-color:#6B9BFF;stop-opacity:0.05"/>
-            </linearGradient>
-          </defs>
-          <polyline fill="url(#gradient)" stroke="none"
-            points="0,150 40,140 80,120 120,110 160,105 200,125 240,115 280,95 320,50 360,90 400,85 440,80 480,95 520,70 560,140 600,130 640,100 680,110 720,95 760,80 800,85 800,200 0,200"/>
-          <polyline fill="none" stroke="#4F7CFF" stroke-width="2"
-            points="0,150 40,140 80,120 120,110 160,105 200,125 240,115 280,95 320,50 360,90 400,85 440,80 480,95 520,70 560,140 600,130 640,100 680,110 720,95 760,80 800,85"/>
-          <circle cx="320" cy="50" r="4" fill="#4F7CFF"/>
-        </svg>
-        <div class="absolute left-80 top-8 bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-semibold">10,564.77</div>
-      </div>
-    </div>
 
-    <!-- Table -->
-    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <table class="w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">NAME</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">ADDRESS</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">DATE</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">TYPE</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">00001</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">Abhijith TS</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">089 Kutch Green Apt. 448</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">04 Dec 2025</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">Electric</td>
-            <td class="px-6 py-5 text-sm border-t"><span class="px-4 py-1.5 rounded bg-teal-100 text-teal-700 text-xs font-medium">Completed</span></td>
-          </tr>
-          <tr>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">00002</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">shahan</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">979 Immanuel Ferry Suite 526</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">18 Dec 2025</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">Book</td>
-            <td class="px-6 py-5 text-sm border-t"><span class="px-4 py-1.5 rounded bg-purple-100 text-purple-700 text-xs font-medium">Processing</span></td>
-          </tr>
-          <tr>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">00003</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">Aswin kl</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">8587 Frida Ports</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">03 Dec 2025</td>
-            <td class="px-6 py-5 text-sm text-gray-700 border-t">Medicine</td>
-            <td class="px-6 py-5 text-sm border-t"><span class="px-4 py-1.5 rounded bg-red-100 text-red-600 text-xs font-medium">Rejected</span></td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- TOP 10 CATEGORIES & TOP 10 BRANDS GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- TOP 10 CATEGORIES -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
+              <span class="text-purple-500">🏷️</span> Top 10 Best Selling Categories
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Ranked by total quantity sold</p>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-50 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                  <th class="py-2.5 px-3 w-10 text-center">Rank</th>
+                  <th class="py-2.5 px-3">Category Name</th>
+                  <th class="py-2.5 px-3 text-center">Units Sold</th>
+                  <th class="py-2.5 px-3 text-right">Revenue</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 text-xs">
+                <% if (topCategories && topCategories.length > 0) { %>
+                  <% topCategories.forEach((cat, index) => { %>
+                    <tr class="hover:bg-gray-50/50 transition">
+                      <td class="py-2.5 px-3 text-center font-bold text-gray-500">#<%= index + 1 %></td>
+                      <td class="py-2.5 px-3 font-bold text-gray-900"><%= cat.name %></td>
+                      <td class="py-2.5 px-3 text-center font-extrabold text-gray-700"><%= cat.totalUnitsSold %></td>
+                      <td class="py-2.5 px-3 text-right font-extrabold text-purple-600">₹<%= cat.totalRevenue.toLocaleString() %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-6 text-gray-400 text-xs">No category sales recorded yet.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TOP 10 BRANDS -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
+              <span class="text-blue-500">🛡️</span> Top 10 Best Selling Brands
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Ranked by total quantity sold</p>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-50 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                  <th class="py-2.5 px-3 w-10 text-center">Rank</th>
+                  <th class="py-2.5 px-3">Brand Name</th>
+                  <th class="py-2.5 px-3 text-center">Units Sold</th>
+                  <th class="py-2.5 px-3 text-right">Revenue</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 text-xs">
+                <% if (topBrands && topBrands.length > 0) { %>
+                  <% topBrands.forEach((b, index) => { %>
+                    <tr class="hover:bg-gray-50/50 transition">
+                      <td class="py-2.5 px-3 text-center font-bold text-gray-500">#<%= index + 1 %></td>
+                      <td class="py-2.5 px-3 font-bold text-gray-900"><%= b.name %></td>
+                      <td class="py-2.5 px-3 text-center font-extrabold text-gray-700"><%= b.totalUnitsSold %></td>
+                      <td class="py-2.5 px-3 text-right font-extrabold text-blue-600">₹<%= b.totalRevenue.toLocaleString() %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-6 text-gray-400 text-xs">No brand sales recorded yet.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
     </div>
 
   </main>
 </div>
+
+<!-- CLIENT CHART LOGIC -->
+<script>
+  let salesChartInstance = null;
+  const initialLabels = <%- JSON.stringify(initialChart.labels) %>;
+  const initialSales = <%- JSON.stringify(initialChart.salesData) %>;
+  const initialOrders = <%- JSON.stringify(initialChart.ordersData) %>;
+
+  function initChart(labels, sales, orders) {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (salesChartInstance) {
+      salesChartInstance.destroy();
+    }
+
+    salesChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Sales Revenue (₹)',
+            data: sales,
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            fill: true,
+            tension: 0.35,
+            yAxisID: 'y',
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+          {
+            label: 'Orders Count',
+            data: orders,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0.35,
+            yAxisID: 'y1',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: {
+              callback: function(val) {
+                return '₹' + val.toLocaleString();
+              },
+              font: { size: 10 }
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: {
+              stepSize: 1,
+              font: { size: 10 }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 12, weight: 'bold' } }
+          }
+        }
+      }
+    });
+  }
+
+  async function switchChartPeriod(period) {
+    // Update button states
+    document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+      btn.classList.remove('bg-white', 'text-orange-600', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    const activeBtn = document.getElementById('btn-' + period);
+    if (activeBtn) {
+      activeBtn.classList.add('bg-white', 'text-orange-600', 'shadow-sm');
+      activeBtn.classList.remove('text-gray-600');
+    }
+
+    try {
+      const res = await fetch(`/admin/dashboard/chart-data?period=${period}`);
+      const data = await res.json();
+      if (data.success) {
+        initChart(data.labels, data.salesData, data.ordersData);
+      }
+    } catch (err) {
+      console.error('Failed to load chart data:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initChart(initialLabels, initialSales, initialOrders);
+  });
+</script>
 
 </body>
 </html>

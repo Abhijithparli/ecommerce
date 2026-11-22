@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sales Report - Headshield Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-900 font-sans">
+
+<div class="flex w-full min-h-screen">
+
+  <!-- SIDEBAR -->
+  <%- include("../partials/sidebar", {
+    currentPage: "sales"
+  }) %>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-56 p-8">
+
+    <!-- TOP HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900">Sales Reports</h1>
+        <p class="text-sm text-gray-500 mt-1">Detailed sales analytics, discounts, coupon deductions & downloadable statements</p>
+      </div>
+
+      <!-- EXPORT ACTIONS -->
+      <div class="flex items-center gap-3">
+        <a
+          href="/admin/sales/download/pdf?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>"
+          class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Download PDF
+        </a>
+
+        <a
+          href="/admin/sales/download/excel?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Download Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- FILTER TOOLBAR -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 mb-8 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+
+        <!-- QUICK PRESET BUTTONS -->
+        <div class="flex flex-wrap items-center gap-2">
+          <a
+            href="/admin/sales?filter=daily"
+            class="px-4 py-2 rounded-xl text-xs font-bold transition <%= filter === 'daily' ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>"
+          >
+            Today (Daily)
+          </a>
+          <a
+            href="/admin/sales?filter=weekly"
+            class="px-4 py-2 rounded-xl text-xs font-bold transition <%= filter === 'weekly' ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>"
+          >
+            Weekly (Last 7 Days)
+          </a>
+          <a
+            href="/admin/sales?filter=monthly"
+            class="px-4 py-2 rounded-xl text-xs font-bold transition <%= filter === 'monthly' ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>"
+          >
+            This Month
+          </a>
+          <a
+            href="/admin/sales?filter=yearly"
+            class="px-4 py-2 rounded-xl text-xs font-bold transition <%= filter === 'yearly' ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' %>"
+          >
+            This Year
+          </a>
+        </div>
+
+        <!-- ACTIVE RANGE LABEL -->
+        <div class="text-xs text-gray-500 font-medium">
+          Showing: <strong class="text-gray-800"><%= startDate %></strong> to <strong class="text-gray-800"><%= endDate %></strong>
+        </div>
+
+      </div>
+
+      <!-- CUSTOM DATE RANGE FORM -->
+      <form action="/admin/sales" method="GET" class="pt-4 border-t border-gray-100 flex flex-wrap items-end gap-4">
+        <input type="hidden" name="filter" value="custom">
+
+        <div>
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">From Date</label>
+          <input
+            type="date"
+            name="startDate"
+            required
+            value="<%= startDate %>"
+            class="px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">To Date</label>
+          <input
+            type="date"
+            name="endDate"
+            required
+            value="<%= endDate %>"
+            class="px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="bg-gray-900 hover:bg-gray-800 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-sm"
+        >
+          Apply Custom Range
+        </button>
+
+        <% if (filter === 'custom') { %>
+          <a href="/admin/sales?filter=monthly" class="text-xs text-gray-500 hover:text-gray-900 underline self-center">Reset to Monthly</a>
+        <% } %>
+      </form>
+    </div>
+
+    <!-- OVERALL METRICS CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      
+      <!-- Sales Count -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Overall Sales Count</p>
+          <h3 class="text-3xl font-extrabold text-gray-900"><%= metrics.totalSalesCount %></h3>
+          <p class="text-xs text-emerald-600 font-semibold mt-1">Completed / Valid Orders</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl">📦</div>
+      </div>
+
+      <!-- Gross Amount -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Order Amount</p>
+          <h3 class="text-3xl font-extrabold text-gray-900">₹<%= metrics.totalGrossAmount.toLocaleString() %></h3>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Pre-discount Gross</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">💳</div>
+      </div>
+
+      <!-- Total Discounts -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Discount Deductions</p>
+          <h3 class="text-3xl font-extrabold text-red-600">₹<%= metrics.totalDiscountAmount.toLocaleString() %></h3>
+          <p class="text-xs text-red-500 font-semibold mt-1">Coupons & Promotional Offers</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">🏷️</div>
+      </div>
+
+      <!-- Net Revenue -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Net Sales Revenue</p>
+          <h3 class="text-3xl font-extrabold text-green-600">₹<%= metrics.totalNetAmount.toLocaleString() %></h3>
+          <p class="text-xs text-green-600 font-semibold mt-1">Actual Realized Sales</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl">💰</div>
+      </div>
+
+    </div>
+
+    <!-- SALES ORDERS TABLE -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-bold text-gray-900 text-base">Transactions (<%= totalOrders %> Total)</h3>
+        <span class="text-xs text-gray-500">Excludes cancelled and returned orders</span>
+      </div>
+
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th class="py-4 px-6">Order ID & Date</th>
+            <th class="py-4 px-6">Customer</th>
+            <th class="py-4 px-6">Payment</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6 text-right">Gross Price</th>
+            <th class="py-4 px-6 text-right">Discounts</th>
+            <th class="py-4 px-6 text-right">Net Paid</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-sm">
+          <% if (orders && orders.length > 0) { %>
+            <% orders.forEach(order => { %>
+              <tr class="hover:bg-gray-50/50 transition">
+                <td class="py-4 px-6">
+                  <a href="/admin/orders/<%= order._id %>" class="font-bold text-orange-600 hover:underline">
+                    #<%= order.orderId %>
+                  </a>
+                  <div class="text-xs text-gray-400 mt-0.5"><%= new Date(order.createdAt).toLocaleDateString() %></div>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="font-bold text-gray-900"><%= order.user ? order.user.name : 'Unknown User' %></div>
+                  <div class="text-xs text-gray-500"><%= order.user ? order.user.email : 'No email' %></div>
+                </td>
+                <td class="py-4 px-6">
+                  <span class="font-semibold text-gray-700 text-xs"><%= order.paymentMethod %></span>
+                  <div class="text-[11px] <%= order.paymentStatus === 'Paid' ? 'text-green-600 font-bold' : 'text-yellow-600' %>">
+                    <%= order.paymentStatus %>
+                  </div>
+                </td>
+                <td class="py-4 px-6">
+                  <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                    <%= order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                        order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                        'bg-yellow-100 text-yellow-800' %>">
+                    <%= order.status %>
+                  </span>
+                </td>
+                <td class="py-4 px-6 text-right text-gray-600 font-medium">
+                  ₹<%= order.totalPrice %>
+                </td>
+                <td class="py-4 px-6 text-right text-red-600 font-medium">
+                  <% if (order.discount > 0) { %>
+                    - ₹<%= order.discount %>
+                    <% if (order.couponCode) { %>
+                      <div class="text-[10px] text-gray-400">(<%= order.couponCode %>)</div>
+                    <% } %>
+                  <% } else { %>
+                    ₹0
+                  <% } %>
+                </td>
+                <td class="py-4 px-6 text-right font-extrabold text-green-600 text-base">
+                  ₹<%= order.finalPrice %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center py-12 text-gray-400">
+                <p class="text-base font-semibold">No sales found for the selected period.</p>
+                <p class="text-xs mt-1">Try selecting a different date range or preset.</p>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+
+      <!-- PAGINATION -->
+      <% if (totalPages > 1) { %>
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs">
+          <span class="text-gray-500">Page <%= currentPageNum %> of <%= totalPages %></span>
+          <div class="flex gap-1">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a
+                href="/admin/sales?page=<%= i %>&filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>"
+                class="px-3 py-1.5 rounded-md font-bold <%= currentPageNum === i ? 'bg-orange-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' %>"
+              >
+                <%= i %>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

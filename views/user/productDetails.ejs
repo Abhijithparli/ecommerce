@@ -115,7 +115,12 @@
                 ₹<%= (product.variants && product.variants.length > 0 && product.variants[0].price) ? product.variants[0].price : product.salePrice %>
               </span>
               <!-- Slashed regular price -->
-              <% if (product.regularPrice > product.salePrice) { %>
+              <% if (product.bestOffer) { %>
+                <span id="displayedRegularPrice" class="text-xl text-gray-500 line-through">₹<%= product.originalRegularPrice || product.regularPrice %></span>
+                <span id="discountBadge" class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold font-mono">
+                  <%= product.bestOffer.label %>
+                </span>
+              <% } else if (product.regularPrice > product.salePrice) { %>
                 <span id="displayedRegularPrice" class="text-xl text-gray-500 line-through">₹<%= product.regularPrice %></span>
                 <span id="discountBadge" class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold font-mono">
                   <%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>% OFF
@@ -186,13 +191,16 @@
               Buy Now
             </button>
 
-                      <!-- Save button (Wishlist Heart) -->
+            <!-- Save button (Wishlist Heart) -->
+            <% const productInWishlist = (typeof isInWishlist !== 'undefined' && isInWishlist); %>
             <button 
-              onclick="addToWishlist('<%= product._id %>')" 
-              class="w-[50px] h-[50px] bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-red-500 border border-zinc-700 rounded-xl flex items-center justify-center text-2xl transition duration-200 shadow"
-              title="Add to Wishlist"
+              id="wishlistDetailBtn"
+              type="button"
+              onclick="toggleWishlistDetail('<%= product._id %>')" 
+              class="w-[50px] h-[50px] bg-zinc-800 hover:bg-zinc-700 <%= productInWishlist ? 'text-red-500 border-red-500/50' : 'text-gray-300 hover:text-red-500 border-zinc-700' %> border rounded-xl flex items-center justify-center text-2xl transition duration-200 shadow"
+              title="<%= productInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' %>"
             >
-              ♡
+              <span id="wishlistDetailIcon"><%= productInWishlist ? '♥' : '♡' %></span>
             </button>
           </div>
         </div>
@@ -561,28 +569,71 @@
     function buyNow(productId) {
       addToCart(productId, true);
     }
-    /////
-        async function addToWishlist(productId) {
+
+    // Toggle Wishlist on Product Details Page
+    async function toggleWishlistDetail(productId) {
       if (!window.isLoggedIn) {
-        alert("Please login to continue");
-        window.location.href = "/login";
+        Swal.fire({
+          icon: "info",
+          title: "Login Required",
+          text: "Please login to manage your wishlist.",
+          confirmButtonColor: "#f97316"
+        }).then(() => {
+          window.location.href = "/login";
+        });
         return;
       }
 
+      const btn = document.getElementById("wishlistDetailBtn");
+      const icon = document.getElementById("wishlistDetailIcon");
+
       try {
-        const response = await fetch(`/wishlist/add/${productId}`, {
+        const response = await fetch(`/wishlist/toggle/${productId}`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" }
         });
         const data = await response.json();
 
         if (data.success) {
-          alert(data.message);
+          if (data.added) {
+            icon.innerText = "♥";
+            btn.classList.remove("text-gray-300", "border-zinc-700");
+            btn.classList.add("text-red-500", "border-red-500/50");
+            btn.title = "Remove from Wishlist";
+          } else {
+            icon.innerText = "♡";
+            btn.classList.remove("text-red-500", "border-red-500/50");
+            btn.classList.add("text-gray-300", "border-zinc-700");
+            btn.title = "Add to Wishlist";
+          }
+
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+          });
+          Toast.fire({
+            icon: "success",
+            title: data.message
+          });
         } else {
-          alert(data.message || "Failed to add to wishlist");
+          Swal.fire({
+            icon: "warning",
+            title: "Wishlist",
+            text: data.message || "Failed to update wishlist.",
+            confirmButtonColor: "#f97316"
+          });
         }
       } catch (error) {
         console.error("Wishlist error:", error);
-        alert("Something went wrong");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong. Please try again.",
+          confirmButtonColor: "#f97316"
+        });
       }
     }
   </script>
