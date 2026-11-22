@@ -159,8 +159,14 @@ export const approveReturn = async (orderId) => {
     order.returnStockRestored = true;
   }
 
-  // Refund to wallet after admin confirmation for returns
-  if (order.paymentStatus === PAYMENT_STATUS.PAID && !order.walletRefunded) {
+  // Refund to wallet after admin confirmation for returns (handles Razorpay, Wallet, and COD delivered orders)
+  const isPaidOrDelivered =
+    order.paymentStatus === PAYMENT_STATUS.PAID ||
+    order.paymentMethod === PAYMENT_METHOD.COD ||
+    order.paymentMethod === PAYMENT_METHOD.WALLET ||
+    order.paymentMethod === PAYMENT_METHOD.RAZORPAY;
+
+  if (isPaidOrDelivered && !order.walletRefunded) {
     const refundAmount = Math.max(0, order.finalPrice - (order.walletRefundAmount || 0));
     if (refundAmount > 0) {
       await walletService.creditWallet(
@@ -172,6 +178,7 @@ export const approveReturn = async (orderId) => {
       );
       order.walletRefunded = true;
       order.walletRefundAmount = (order.walletRefundAmount || 0) + refundAmount;
+      order.paymentStatus = PAYMENT_STATUS.PAID;
     }
   }
 

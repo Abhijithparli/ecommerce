@@ -170,6 +170,11 @@
               <div class="text-sm text-gray-600 space-y-2">
                 <p>Method: <strong class="text-gray-800"><%= order.paymentMethod %></strong></p>
                 <p>Status: <span class="font-bold <%= order.paymentStatus === 'Paid' ? 'text-green-600' : 'text-yellow-600' %>"><%= order.paymentStatus %></span></p>
+                <% if (order.walletRefunded) { %>
+                  <p class="text-xs text-purple-700 font-bold bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 mt-1">
+                    <span>👛</span> Wallet Refunded: ₹<%= order.walletRefundAmount || order.finalPrice %>
+                  </p>
+                <% } %>
               </div>
             </div>
 

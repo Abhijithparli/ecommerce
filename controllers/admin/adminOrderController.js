@@ -101,7 +101,7 @@ export const approveReturnAction = async (req, res) => {
   try {
     const orderId = req.params.id;
     await orderService.approveReturn(orderId);
-    req.session.success = "Return approved successfully! Stock has been restored.";
+    req.session.success = "Return approved successfully! Stock has been restored and refund credited to customer wallet.";
     res.redirect(`/admin/orders/${orderId}`);
   } catch (error) {
     console.error("Approve return error:", error);
@@ -113,7 +113,8 @@ export const approveReturnAction = async (req, res) => {
 export const rejectReturnAction = async (req, res) => {
   try {
     const orderId = req.params.id;
-    await orderService.rejectReturn(orderId);
+    const reason = req.body.reason || "";
+    await orderService.rejectReturn(orderId, reason);
     req.session.success = "Return request has been rejected.";
     res.redirect(`/admin/orders/${orderId}`);
   } catch (error) {
