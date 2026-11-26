@@ -118,3 +118,4 @@ export const unblockUser = async (userId) => {
   await User.findByIdAndUpdate(userId, { isBlocked: false });
   return true;
 };
+ 

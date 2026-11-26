@@ -9,7 +9,7 @@ import { MESSAGES } from "../../constants/messages.js";
 import * as walletService from "../user/walletService.js";
 
 /**
- * Service to handle Order business logic (Admin)
+ * Service to handle Order business logic 
  */
 
 export const getAdminOrders = async (search = "", status = "", sort = "", page = 1, limit = 10) => {
@@ -43,7 +43,7 @@ export const getAdminOrders = async (search = "", status = "", sort = "", page =
     .skip(skip)
     .limit(limit);
 
-  return {
+  return { 
     orders,
     currentPage: page,
     totalPages,
